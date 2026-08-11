@@ -1145,6 +1145,18 @@ body.in-fullscreen #img-car { will-change: transform; }
   font-size: 14px; line-height: 1.2; color: #1b2236;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
+#label-wheel {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#label-wheel.expanded {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.bb-sec-header:has(#label-wheel.expanded) {
+  overflow: visible;
+}
 .bb-swatches-wrap { position: relative; }
 #bottombar .swatch-fade { width: 56px; background: none; }
 .bb-swatches {
@@ -1491,7 +1503,7 @@ body.in-fullscreen #img-car { will-change: transform; }
           </div>
           <div class="bb-sec-header">
             <span class="bb-sec-title">Wheels</span>
-            <span class="bb-sec-value" id="label-wheel">Alloy 21" 'Mataro', Black</span>
+            <span class="bb-sec-value" id="label-wheel">Leichtmetallräder "Mataró" 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht</span>
           </div>
         </div>
 
@@ -1658,11 +1670,11 @@ const ID7_THUMBS = [
 ];
 
 const ID7_WHEEL_THUMBS = [
-  { name: "Mataró 21\"",    src: "assets/media/id7/exterior/variants/wheels/wheel1.webp" },
-  { name: "Hudson 19\"",    src: "assets/media/id7/exterior/variants/wheels/wheel2.webp" },
-  { name: "Bergen 19\"",    src: "assets/media/id7/exterior/variants/wheels/wheel3.webp" },
-  { name: "Trondheim 20\"", src: "assets/media/id7/exterior/variants/wheels/wheel4.webp" },
-  { name: "Montreal 20\"",  src: "assets/media/id7/exterior/variants/wheels/wheel5.webp" }
+  { name: 'Leichtmetallräder "Mataró" 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht',     src: "assets/media/id7/exterior/variants/wheels/wheel1.webp" },
+  { name: 'Leichtmetallräder "Hudson" 8 J x 19 vorn, 8,5 J x 19 hinten, in Schwarz, Oberfläche glanzgedreht',     src: "assets/media/id7/exterior/variants/wheels/wheel2.webp" },
+  { name: 'Leichtmetallräder "Bergen" 8 J x 19 vorn, 8,5 J x 19 hinten, in Schwarz, Volkswagen R',                src: "assets/media/id7/exterior/variants/wheels/wheel3.webp" },
+  { name: 'Leichtmetallräder "Trondheim" 8,5 J x 20 vorn, 9,5 J x 20 hinten',                                     src: "assets/media/id7/exterior/variants/wheels/wheel4.webp" },
+  { name: 'Leichtmetallräder "Montreal" 8,5 J x 20 vorn, 9,5 J x 20 hinten, in Schwarz, Oberfläche glanzgedreht', src: "assets/media/id7/exterior/variants/wheels/wheel5.webp" },
 ];
 
 const POLO_COLOUR_FOLDER = {
@@ -2754,6 +2766,15 @@ const PANO_STEP = 0.1745;
 })();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+// Wheel label expand/collapse on click
+(function () {
+  const lbl = document.getElementById('label-wheel');
+  lbl.addEventListener('click', () => lbl.classList.toggle('expanded'));
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#label-wheel')) lbl.classList.remove('expanded');
+  }, { capture: true });
+})();
 
 // Disclaimer toggle
 const disclaimerPanel = document.getElementById('disclaimer');
