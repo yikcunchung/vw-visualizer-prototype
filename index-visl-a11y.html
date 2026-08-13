@@ -11,6 +11,7 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; min-height: 100%; background: #f6f5f2; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 :root { interpolate-size: allow-keywords; }
 
 @font-face {
@@ -763,6 +764,9 @@ body.in-fullscreen #img-car { will-change: transform; }
 .btn-swatch:focus-visible         { outline: 2px solid #C86C03; outline-offset: -1px; }
 .btn-swatch.selected:focus-visible { outline: 2px solid #C86C03; outline-offset: 0; }
 .select-native:focus-visible { outline: 2px solid #C86C03; border-color: #C86C03; }
+#btn-a11y.active:focus-visible,
+#btn-a11y:hover:focus-visible { outline-color: #1B2236; }
+#btn-toggle-view:hover:focus-visible { background: #fff; }
 
 /* ── DISCLAIMER PANEL ── */
 #disclaimer {
@@ -1404,32 +1408,33 @@ body.in-fullscreen #img-car { will-change: transform; }
     <div id="visualizer">
 
     <!-- VISUALIZER -->
-    <div id="media" role="button" tabindex="0" aria-label="Zoom car image">
-      <img id="img-car" alt="VW ID. Polo" draggable="false">
+    <div id="media" role="region" tabindex="0" aria-label="Vehicle viewer" aria-roledescription="3D viewer">
+      <span id="media-status" class="sr-only" aria-live="polite"></span>
+      <img id="img-car" alt="VW ID. Polo, exterior view" draggable="false">
 
       <!-- Accessibility button (bottom-right) -->
-      <button class="vis-btn" id="btn-a11y" title="Display accessibility buttons" aria-label="Display accessibility buttons">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.94308 7.87513L4.67346 11.514C4.64225 11.6052 4.5938 11.689 4.53095 11.7605C4.4681 11.832 4.39212 11.8898 4.30747 11.9304C4.18031 11.9923 4.03831 12.0136 3.89947 11.9916C3.76063 11.9696 3.63119 11.9054 3.52758 11.8071C3.42396 11.7087 3.35082 11.5807 3.31743 11.4392C3.28403 11.2977 3.29189 11.1491 3.34 11.0122L4.22519 8.4696C4.29544 8.27827 4.35094 8.08146 4.39117 7.88102C4.42694 7.67751 4.45251 7.47222 4.46777 7.26596C4.50181 6.89369 4.52593 6.49051 4.54437 6.10352C4.56281 5.71654 4.57558 5.34132 4.58551 5.03085C4.59828 4.64386 4.49756 4.61884 4.19824 4.54527L4.13582 4.53056L1.5824 4.03174C1.49056 4.01494 1.40282 3.97952 1.3242 3.92751C1.24558 3.87549 1.17761 3.80791 1.1242 3.72862C1.04484 3.60851 1.00164 3.46668 1.00005 3.32108C0.998454 3.17548 1.03855 3.03266 1.11526 2.91072C1.19196 2.78877 1.30183 2.69317 1.43095 2.63603C1.56006 2.57889 1.70262 2.56278 1.84058 2.58973L4.58409 3.12386C4.69332 3.13416 4.79971 3.14741 4.91178 3.16065C5.24939 3.20863 5.58957 3.23468 5.93032 3.23863C6.35448 3.23004 6.77786 3.19713 7.19852 3.14005C7.32619 3.12533 7.44677 3.10915 7.56735 3.09738L10.1562 2.59415C10.3399 2.55464 10.5312 2.5922 10.6882 2.69862C10.766 2.75324 10.8326 2.82336 10.8841 2.9049C10.9356 2.98644 10.9709 3.07778 10.9881 3.17362C11.0052 3.26945 11.0039 3.36786 10.984 3.46314C10.9642 3.55842 10.9263 3.64866 10.8726 3.72862C10.8199 3.80841 10.7526 3.87664 10.6745 3.92941C10.5963 3.98218 10.5089 4.01845 10.4173 4.03615L7.94327 4.51879C7.86099 4.53791 7.78722 4.55116 7.72197 4.56146C7.46379 4.60707 7.33612 4.63062 7.35172 5.01172C7.36307 5.28982 7.3957 5.62236 7.43826 5.96962C7.48791 6.37721 7.55316 6.80981 7.62125 7.20563C7.66523 7.46607 7.70637 7.67502 7.76311 7.87513C7.81985 8.07525 7.87517 8.27978 7.96029 8.52551L8.82704 11.0122C8.87515 11.1491 8.88301 11.2977 8.84962 11.4392C8.81622 11.5807 8.74308 11.7087 8.63947 11.8071C8.53585 11.9054 8.40642 11.9696 8.26757 11.9916C8.12873 12.0136 7.98673 11.9923 7.85957 11.9304C7.77492 11.8898 7.69894 11.832 7.63609 11.7605C7.57324 11.689 7.52479 11.6052 7.49358 11.514L6.2197 7.88249L6.07785 7.61322L5.93599 7.87513H5.94308ZM5.99841 6.92648e-07C6.28822 -0.000254866 6.56914 0.103734 6.79332 0.294248C7.01749 0.484762 7.17105 0.750012 7.22781 1.0448C7.28457 1.33959 7.24103 1.64567 7.10461 1.91089C6.96819 2.17611 6.74733 2.38406 6.47966 2.4993C6.21199 2.61454 5.91408 2.62994 5.63669 2.54287C5.35931 2.45581 5.11961 2.27167 4.95844 2.02184C4.79727 1.772 4.7246 1.47193 4.75283 1.17275C4.78105 0.873566 4.90842 0.593794 5.11322 0.381103C5.22924 0.260159 5.36718 0.16422 5.5191 0.0988132C5.67102 0.0334064 5.83392 -0.000175874 5.99841 6.92648e-07Z" fill="#1B2236"/></svg>
+      <button class="vis-btn" id="btn-a11y" aria-label="Display accessibility buttons" aria-expanded="false" aria-controls="btn-a11y-group">
+        <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.94308 7.87513L4.67346 11.514C4.64225 11.6052 4.5938 11.689 4.53095 11.7605C4.4681 11.832 4.39212 11.8898 4.30747 11.9304C4.18031 11.9923 4.03831 12.0136 3.89947 11.9916C3.76063 11.9696 3.63119 11.9054 3.52758 11.8071C3.42396 11.7087 3.35082 11.5807 3.31743 11.4392C3.28403 11.2977 3.29189 11.1491 3.34 11.0122L4.22519 8.4696C4.29544 8.27827 4.35094 8.08146 4.39117 7.88102C4.42694 7.67751 4.45251 7.47222 4.46777 7.26596C4.50181 6.89369 4.52593 6.49051 4.54437 6.10352C4.56281 5.71654 4.57558 5.34132 4.58551 5.03085C4.59828 4.64386 4.49756 4.61884 4.19824 4.54527L4.13582 4.53056L1.5824 4.03174C1.49056 4.01494 1.40282 3.97952 1.3242 3.92751C1.24558 3.87549 1.17761 3.80791 1.1242 3.72862C1.04484 3.60851 1.00164 3.46668 1.00005 3.32108C0.998454 3.17548 1.03855 3.03266 1.11526 2.91072C1.19196 2.78877 1.30183 2.69317 1.43095 2.63603C1.56006 2.57889 1.70262 2.56278 1.84058 2.58973L4.58409 3.12386C4.69332 3.13416 4.79971 3.14741 4.91178 3.16065C5.24939 3.20863 5.58957 3.23468 5.93032 3.23863C6.35448 3.23004 6.77786 3.19713 7.19852 3.14005C7.32619 3.12533 7.44677 3.10915 7.56735 3.09738L10.1562 2.59415C10.3399 2.55464 10.5312 2.5922 10.6882 2.69862C10.766 2.75324 10.8326 2.82336 10.8841 2.9049C10.9356 2.98644 10.9709 3.07778 10.9881 3.17362C11.0052 3.26945 11.0039 3.36786 10.984 3.46314C10.9642 3.55842 10.9263 3.64866 10.8726 3.72862C10.8199 3.80841 10.7526 3.87664 10.6745 3.92941C10.5963 3.98218 10.5089 4.01845 10.4173 4.03615L7.94327 4.51879C7.86099 4.53791 7.78722 4.55116 7.72197 4.56146C7.46379 4.60707 7.33612 4.63062 7.35172 5.01172C7.36307 5.28982 7.3957 5.62236 7.43826 5.96962C7.48791 6.37721 7.55316 6.80981 7.62125 7.20563C7.66523 7.46607 7.70637 7.67502 7.76311 7.87513C7.81985 8.07525 7.87517 8.27978 7.96029 8.52551L8.82704 11.0122C8.87515 11.1491 8.88301 11.2977 8.84962 11.4392C8.81622 11.5807 8.74308 11.7087 8.63947 11.8071C8.53585 11.9054 8.40642 11.9696 8.26757 11.9916C8.12873 12.0136 7.98673 11.9923 7.85957 11.9304C7.77492 11.8898 7.69894 11.832 7.63609 11.7605C7.57324 11.689 7.52479 11.6052 7.49358 11.514L6.2197 7.88249L6.07785 7.61322L5.93599 7.87513H5.94308ZM5.99841 6.92648e-07C6.28822 -0.000254866 6.56914 0.103734 6.79332 0.294248C7.01749 0.484762 7.17105 0.750012 7.22781 1.0448C7.28457 1.33959 7.24103 1.64567 7.10461 1.91089C6.96819 2.17611 6.74733 2.38406 6.47966 2.4993C6.21199 2.61454 5.91408 2.62994 5.63669 2.54287C5.35931 2.45581 5.11961 2.27167 4.95844 2.02184C4.79727 1.772 4.7246 1.47193 4.75283 1.17275C4.78105 0.873566 4.90842 0.593794 5.11322 0.381103C5.22924 0.260159 5.36718 0.16422 5.5191 0.0988132C5.67102 0.0334064 5.83392 -0.000175874 5.99841 6.92648e-07Z" fill="#1B2236"/></svg>
       </button>
 
       <!-- Touch controls bar (slides in when a11y active) -->
-      <div id="btn-a11y-group" inert>
-        <button class="touch-ctrl-btn" id="btn-zoom-in" title="Zoom in" aria-label="Zoom in"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M5.25 0C8.46176 -0.000201288 10.5 2.35051 10.5 5.25C10.5 6.47643 10.1336 7.60338 9.46973 8.49707L12 11.0303L11.5303 11.501L11.0596 11.9707L8.53809 9.44629C7.67682 10.1076 6.56151 10.4999 5.25 10.5C2.03835 10.5002 0.000149098 8.15033 0 5.25098C0 2.35148 2.03824 0.000201741 5.25 0ZM5.25 1.33008C2.82481 1.33023 1.33008 3.03288 1.33008 5.25098C1.33026 7.46888 2.82496 9.17007 5.25 9.16992C7.67519 9.16977 9.16992 7.46809 9.16992 5.25C9.16988 3.03195 7.67516 1.32993 5.25 1.33008ZM5.89941 4.58008H7.66504V5.91016H5.89941V7.67578H4.56934V5.91016H2.83496V4.58008H4.56934V2.8457H5.89941V4.58008Z" fill="#1B2236"/></svg></button>
-        <button class="touch-ctrl-btn" id="btn-zoom-out" title="Zoom out" aria-label="Zoom out" disabled><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M5.25 6.10352e-05C8.46176 -0.000140253 10.5 2.35057 10.5 5.25006C10.5 6.47649 10.1336 7.60344 9.46973 8.49713L12 11.0303L11.5303 11.501L11.0596 11.9708L8.53809 9.44635C7.67684 10.1075 6.56143 10.5 5.25 10.5001C2.03849 10.5001 0.000149094 8.15031 0 5.25104C0 2.35162 2.03838 0.000381913 5.25 6.10352e-05ZM5.25 1.33014C2.82495 1.33041 1.33008 3.03302 1.33008 5.25104C1.33026 7.46886 2.8251 9.17002 5.25 9.16998C7.67519 9.16983 9.16992 7.46816 9.16992 5.25006C9.16988 3.03201 7.67516 1.32999 5.25 1.33014ZM7.66504 5.92584H2.83496V4.59576H7.66504V5.92584Z" fill="#1B2236"/></svg></button>
-        <button class="touch-ctrl-btn" id="btn-rot-left" title="Rotate left" aria-label="Rotate left"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#tc-cl)"><path d="M32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16C0 7.16344 7.16345 0 16 0C24.8366 0 32 7.16345 32 16Z" fill="white"/><path d="M12 16C11.9983 15.5607 12.1668 15.1378 12.47 14.82L17.07 10L18 10.94L13.39 15.76C13.2678 15.8967 13.2678 16.1033 13.39 16.24L18 21.06L17.07 22L12.47 17.18C12.1685 16.861 12.0004 16.4389 12 16Z" fill="#1B2236"/></g><defs><clipPath id="tc-cl"><path d="M32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16C0 7.16344 7.16345 0 16 0C24.8366 0 32 7.16345 32 16Z" fill="white"/></clipPath></defs></svg></button>
-        <button class="touch-ctrl-btn" id="btn-rot-right" title="Rotate right" aria-label="Rotate right"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#tc-cr)"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/><path d="M20 16C20.0017 16.4393 19.8332 16.8622 19.53 17.18L14.93 22L14 21.06L18.61 16.24C18.7322 16.1033 18.7322 15.8967 18.61 15.76L14 10.94L14.93 10L19.53 14.82C19.8315 15.139 19.9996 15.5611 20 16Z" fill="#1B2236"/></g><defs><clipPath id="tc-cr"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/></clipPath></defs></svg></button>
-        <button class="touch-ctrl-btn interior-only" id="btn-tilt-up" title="Tilt up" aria-label="Tilt up"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#ti-u)"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/><path d="M20.7837 19.0923L16.0371 14.1304L15.9941 14.0845L15.9546 14.1255L11.2168 19.0913L10.2549 18.1733L14.9888 13.2114C15.2384 12.906 15.606 12.721 16 12.7026C16.3929 12.7213 16.7586 12.9085 17.0034 13.2163L21.7446 18.1723L20.7837 19.0923Z" fill="#1B2236"/></g><defs><clipPath id="ti-u"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/></clipPath></defs></svg></button>
-        <button class="touch-ctrl-btn interior-only" id="btn-tilt-down" title="Tilt down" aria-label="Tilt down"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#ti-d)"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/><path d="M11.2158 12.8052L15.9624 17.7671L16.0054 17.813L16.045 17.772L20.7827 12.8062L21.7447 13.7242L17.0107 18.686C16.7611 18.9914 16.3935 19.1764 15.9995 19.1948C15.6066 19.1761 15.2409 18.9889 14.9961 18.6811L10.2549 13.7251L11.2158 12.8052Z" fill="#1B2236"/></g><defs><clipPath id="ti-d"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/></clipPath></defs></svg></button>
+      <div id="btn-a11y-group" role="group" aria-label="Accessibility controls" inert>
+        <button class="touch-ctrl-btn" id="btn-zoom-in" aria-label="Zoom in"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M5.25 0C8.46176 -0.000201288 10.5 2.35051 10.5 5.25C10.5 6.47643 10.1336 7.60338 9.46973 8.49707L12 11.0303L11.5303 11.501L11.0596 11.9707L8.53809 9.44629C7.67682 10.1076 6.56151 10.4999 5.25 10.5C2.03835 10.5002 0.000149098 8.15033 0 5.25098C0 2.35148 2.03824 0.000201741 5.25 0ZM5.25 1.33008C2.82481 1.33023 1.33008 3.03288 1.33008 5.25098C1.33026 7.46888 2.82496 9.17007 5.25 9.16992C7.67519 9.16977 9.16992 7.46809 9.16992 5.25C9.16988 3.03195 7.67516 1.32993 5.25 1.33008ZM5.89941 4.58008H7.66504V5.91016H5.89941V7.67578H4.56934V5.91016H2.83496V4.58008H4.56934V2.8457H5.89941V4.58008Z" fill="#1B2236"/></svg></button>
+        <button class="touch-ctrl-btn" id="btn-zoom-out" aria-label="Zoom out" disabled><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M5.25 6.10352e-05C8.46176 -0.000140253 10.5 2.35057 10.5 5.25006C10.5 6.47649 10.1336 7.60344 9.46973 8.49713L12 11.0303L11.5303 11.501L11.0596 11.9708L8.53809 9.44635C7.67684 10.1075 6.56143 10.5 5.25 10.5001C2.03849 10.5001 0.000149094 8.15031 0 5.25104C0 2.35162 2.03838 0.000381913 5.25 6.10352e-05ZM5.25 1.33014C2.82495 1.33041 1.33008 3.03302 1.33008 5.25104C1.33026 7.46886 2.8251 9.17002 5.25 9.16998C7.67519 9.16983 9.16992 7.46816 9.16992 5.25006C9.16988 3.03201 7.67516 1.32999 5.25 1.33014ZM7.66504 5.92584H2.83496V4.59576H7.66504V5.92584Z" fill="#1B2236"/></svg></button>
+        <button class="touch-ctrl-btn" id="btn-rot-left" aria-label="Rotate left"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#tc-cl)"><path d="M32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16C0 7.16344 7.16345 0 16 0C24.8366 0 32 7.16345 32 16Z" fill="white"/><path d="M12 16C11.9983 15.5607 12.1668 15.1378 12.47 14.82L17.07 10L18 10.94L13.39 15.76C13.2678 15.8967 13.2678 16.1033 13.39 16.24L18 21.06L17.07 22L12.47 17.18C12.1685 16.861 12.0004 16.4389 12 16Z" fill="#1B2236"/></g><defs><clipPath id="tc-cl"><path d="M32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16C0 7.16344 7.16345 0 16 0C24.8366 0 32 7.16345 32 16Z" fill="white"/></clipPath></defs></svg></button>
+        <button class="touch-ctrl-btn" id="btn-rot-right" aria-label="Rotate right"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#tc-cr)"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/><path d="M20 16C20.0017 16.4393 19.8332 16.8622 19.53 17.18L14.93 22L14 21.06L18.61 16.24C18.7322 16.1033 18.7322 15.8967 18.61 15.76L14 10.94L14.93 10L19.53 14.82C19.8315 15.139 19.9996 15.5611 20 16Z" fill="#1B2236"/></g><defs><clipPath id="tc-cr"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/></clipPath></defs></svg></button>
+        <button class="touch-ctrl-btn interior-only" id="btn-tilt-up" aria-label="Tilt up"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#ti-u)"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/><path d="M20.7837 19.0923L16.0371 14.1304L15.9941 14.0845L15.9546 14.1255L11.2168 19.0913L10.2549 18.1733L14.9888 13.2114C15.2384 12.906 15.606 12.721 16 12.7026C16.3929 12.7213 16.7586 12.9085 17.0034 13.2163L21.7446 18.1723L20.7837 19.0923Z" fill="#1B2236"/></g><defs><clipPath id="ti-u"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/></clipPath></defs></svg></button>
+        <button class="touch-ctrl-btn interior-only" id="btn-tilt-down" aria-label="Tilt down"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#ti-d)"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/><path d="M11.2158 12.8052L15.9624 17.7671L16.0054 17.813L16.045 17.772L20.7827 12.8062L21.7447 13.7242L17.0107 18.686C16.7611 18.9914 16.3935 19.1764 15.9995 19.1948C15.6066 19.1761 15.2409 18.9889 14.9961 18.6811L10.2549 13.7251L11.2158 12.8052Z" fill="#1B2236"/></g><defs><clipPath id="ti-d"><path d="M0 16C0 7.16344 7.16344 0 16 0C24.8366 0 32 7.16344 32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16Z" fill="white"/></clipPath></defs></svg></button>
       </div>
 
       <!-- Interior button (bottom-left) -->
-      <button class="btn-toggle-view" id="btn-toggle-view" title="Toggle interior view" aria-label="Toggle interior view">
+      <button class="btn-toggle-view" id="btn-toggle-view" aria-label="Toggle interior view" aria-pressed="false">
         <!-- Exterior mode: show interior 360° icon (from Figma 24px/interior 360) -->
-        <div class="icon-ext-mode">
+        <div class="icon-ext-mode" aria-hidden="true">
           <svg width="24" height="24" viewBox="10 10 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.8918 24.061C12.5124 24.2838 11.6301 24.8951 11.6301 25.77C11.6307 27.4994 15.5036 29.2876 21.9836 29.2876C22.2949 29.2876 22.5994 29.2802 22.9026 29.2719C22.565 28.9366 22.1257 28.5066 21.5403 27.9448L22.4612 26.9858C25.0062 29.4258 25.0129 29.518 25.0354 29.8198C25.054 30.1047 25.062 30.2338 22.8987 33.0014L21.8508 32.1831C22.3887 31.4952 22.7741 30.9878 23.0637 30.5991C22.7086 30.6104 22.3485 30.6177 21.9827 30.6177C14.9955 30.6176 10.3005 28.6691 10.3 25.77C10.3 24.2076 11.6422 23.2525 12.219 22.9145L12.8918 24.061ZM31.6272 22.9077C31.7098 22.9435 33.6106 23.8109 33.6106 25.7788C33.6103 27.7885 30.8985 29.6265 27.0149 30.2466L26.8059 28.9341C30.1874 28.3931 32.2801 26.8755 32.2805 25.7788C32.2805 24.6829 31.1347 24.1448 31.0842 24.1216L31.6272 22.9077ZM30.261 11.6665C29.9679 16.0485 29.2074 18.9897 28.4143 21.0063C27.6258 23.0112 26.7882 24.1199 26.4729 24.6665L26.2815 24.9985H17.0491L16.9016 24.5346L16.0657 21.895C15.8054 21.0729 16.2316 20.0121 17.2766 19.8823C18.515 19.7288 19.7206 19.9943 20.7629 20.1665C21.6767 20.3174 22.5132 20.4095 23.3586 20.2427V19.9546C23.3586 19.4738 23.5666 19.0072 23.7756 18.6128C23.9807 18.2259 24.2877 17.7366 24.5315 17.3081C25.0569 16.3847 25.5295 15.3538 25.5295 14.1196C25.5295 13.6463 25.5108 13.1695 25.4875 12.7632C25.433 11.8065 26.184 10.9575 27.1741 10.9575H30.3079L30.261 11.6665ZM27.1741 12.2876C26.9801 12.2876 26.8021 12.4617 26.8147 12.687C26.8388 13.1096 26.8596 13.6133 26.8596 14.1196C26.8596 15.7046 26.2466 16.9814 25.6868 17.9653C25.388 18.4904 25.1523 18.8549 24.9504 19.2358C24.7527 19.6091 24.6887 19.8251 24.6887 19.9546V21.2466L24.2239 21.393C22.8969 21.8116 21.6551 21.6622 20.5461 21.479C19.3986 21.2894 18.4377 21.079 17.4407 21.2026C17.4003 21.2076 17.3718 21.2245 17.3479 21.268C17.3196 21.3196 17.3055 21.4028 17.3342 21.4936L18.0227 23.6684H25.5276C25.9386 23.0173 26.5502 22.1102 27.176 20.519C27.8702 18.7539 28.5651 16.1588 28.8811 12.2876H27.1741Z" fill="#1B2236"/></svg>
         </div>
         <!-- Interior mode: show exterior 360° icon -->
-        <div class="icon-int-mode">
+        <div class="icon-int-mode" aria-hidden="true">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.5751 9.39701C16.5971 9.32301 17.5541 9.21401 18.4941 9.08501C18.3341 8.69501 18.0861 8.18001 17.7871 7.60501C15.8411 7.83701 13.8881 7.96401 11.9331 7.96401C10.0301 7.96401 8.12608 7.84401 6.22608 7.62401C5.92708 8.20001 5.67908 8.71701 5.51908 9.10401C6.51908 9.23301 7.52508 9.34401 8.52808 9.41301L8.43608 10.739C7.40408 10.668 6.36908 10.555 5.33908 10.421V14.003H7.57908V13.787V12.457L8.91008 12.457H15.1241H16.4531V13.787V14.003H18.6811V10.401C17.7101 10.534 16.7231 10.647 15.6711 10.724L15.5751 9.39701ZM8.39008 4.66301C8.00908 4.66301 7.94708 4.70701 7.49808 5.33401C7.30308 5.66301 7.10408 6.01001 6.90908 6.35801C10.3061 6.71401 13.7171 6.71001 17.1051 6.34301C16.9051 5.98501 16.7011 5.63001 16.5011 5.29501C16.1661 4.76101 16.0261 4.66301 15.5761 4.66301L8.39008 4.66301ZM20.4261 5.87901L20.6601 7.18801C20.245 7.26171 19.8278 7.32321 19.4108 7.38467C19.3356 7.39576 19.2603 7.40685 19.1851 7.41801C19.6361 8.31701 20.0111 9.18601 20.0111 9.58601V14.146C20.0111 14.802 19.4861 15.333 18.8391 15.333H16.2961C15.6471 15.333 15.1241 14.802 15.1241 14.146V13.787H8.91008V14.138C8.91008 14.794 8.37808 15.333 7.73008 15.333L5.18108 15.333C4.53408 15.333 4.00908 14.802 4.00908 14.146L4.00908 9.58601C4.00908 9.19201 4.37908 8.33501 4.82608 7.44101C4.75092 7.43016 4.67573 7.41939 4.60053 7.40861C4.19047 7.34984 3.77992 7.29099 3.37008 7.22001L3.59908 5.90901C4.22508 6.01901 4.85208 6.11001 5.48008 6.19501C5.96608 5.30901 6.38408 4.60601 6.38408 4.60601C6.39096 4.59639 6.39783 4.5868 6.40468 4.57721C6.8818 3.9103 7.29481 3.33301 8.39008 3.33301L15.5761 3.33301C16.7571 3.33301 17.2421 3.97401 17.6431 4.61301C17.6431 4.61301 18.0541 5.30201 18.5321 6.17501C19.1641 6.08801 19.7961 5.99101 20.4261 5.87901ZM11.206 10.0704C11.206 10.5214 11.567 10.8874 12.014 10.8874C12.46 10.8874 12.822 10.5214 12.822 10.0704C12.822 9.61841 12.46 9.25241 12.014 9.25241C11.567 9.25241 11.206 9.61841 11.206 10.0704ZM16.8544 18.9185L17.0654 20.2305C20.9484 19.6095 23.6604 17.7715 23.6604 15.7625C23.6604 13.7935 21.7574 12.9265 21.6764 12.8915L21.1334 14.1055C21.1824 14.1275 22.3304 14.6665 22.3304 15.7625C22.3304 16.8585 20.2364 18.3765 16.8544 18.9185ZM12.509 16.9688C15.055 19.4088 15.063 19.5078 15.084 19.8038V19.8039C15.105 20.0948 15.1137 20.2152 12.948 22.9858L11.9 22.1648C12.434 21.4828 12.821 20.9748 13.113 20.5828C12.758 20.5948 12.398 20.6018 12.032 20.6018C5.04398 20.6018 0.349976 18.6538 0.349976 15.7538C0.349976 14.1888 1.69198 13.2358 2.26898 12.8978L2.93998 14.0458C2.56098 14.2678 1.67998 14.8768 1.67998 15.7538C1.67998 17.4838 5.55198 19.2718 12.032 19.2718C12.344 19.2718 12.649 19.2648 12.952 19.2558C12.614 18.9208 12.175 18.4918 11.589 17.9298L12.509 16.9688Z" fill="#1B2236"/></svg>
         </div>
       </button>
@@ -1440,27 +1445,27 @@ body.in-fullscreen #img-car { will-change: transform; }
       <!-- Rotate overlay -->
       <div id="hint-rotate" class="hidden">
         <img class="hint-turntable" src="data:image/svg+xml;base64,PHN2ZyBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBvdmVyZmxvdz0idmlzaWJsZSIgc3R5bGU9ImRpc3BsYXk6IGJsb2NrOyIgdmlld0JveD0iMCAwIDgzNi43NjggMTE1LjkyNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggaWQ9InR1cm50YWJsZSIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00MTguMzg0IDBDNTI5Ljk4OCAwIDYzNC44NDggNS45MDc0OCA3MTMuNzgyIDE2LjYwNzhDNzU5LjczMSAyMi44NDk3IDgzNi43NjggMzYuNDQ4IDgzNi43NjggNTcuNDAyOEM4MzYuNzY4IDc4LjM1NzcgNzU5LjczMSA5MS45NTYgNzEzLjc4MiA5OC4xOTc5QzY3OS43NDIgMTAyLjc2OCA2NDAuODU1IDEwNi41NTcgNTk4LjcgMTA5LjIzM1YxMDguNjc1QzU5OC43IDEwOC4zNDEgNTk4LjcgMTA4LjAwNiA1OTguNTk1IDEwNy43ODRDNjQwLjc0OSAxMDQuOTk3IDY3OS41MzIgMTAxLjMxOSA3MTMuNTcxIDk2Ljc0ODhDNzkwLjkyNSA4Ni4yNzE0IDgzNS4yOTMgNzEuODkyOSA4MzUuMjkzIDU3LjQwMjhDODM1LjI5MyA0Mi45MTI4IDc5MC45MjUgMjguNTM0MiA3MTMuNTcxIDE4LjA1NjhDNjM0Ljc0MiA3LjM1NjQ4IDUyOS44ODMgMS41NjA0NyA0MTguMzg0IDEuNTYwNDdDMzA2Ljg4NSAxLjU2MDQ3IDIwMi4wMjYgNy4zNTY0OCAxMjMuMDkxIDE4LjA1NjhDNDUuODQzMSAyOC42NDU3IDEuNDc1NDEgNDIuOTEyOCAxLjQ3NTQxIDU3LjQwMjhDMS40NzU0MSA3MS44OTI5IDQ1Ljg0MzEgODYuMjcxNCAxMjMuMTk3IDk2Ljc0ODlDMTU3LjIzNyAxMDEuMzE5IDE5Ni4wMTkgMTA1LjEwOCAyMzguMTczIDEwNy43ODRDMjM4LjE3MyAxMDguMDA2IDIzOC4wNjggMTA4LjM0MSAyMzguMDY4IDEwOC41NjRWMTA5LjIzM0MxOTUuOTEzIDEwNi40NDYgMTU3LjAyNiAxMDIuNzY4IDEyMi45ODYgOTguMTk3OUM3Ny4wMzc1IDkxLjk1NiAwIDc4LjM1NzcgMCA1Ny40MDI4QzAgMzYuNDQ4IDc3LjAzNzUgMjIuODQ5NyAxMjIuOTg2IDE2LjYwNzhDMjAxLjkyIDUuOTA3NDggMzA2Ljc4IDAgNDE4LjM4NCAwWk00MTguMzg0IDExMy4yNDVDNDcyLjY1OCAxMTMuMjQ1IDUyNS4zNTEgMTExLjc5NiA1NzQuMjUxIDEwOS4yMzNDNTczLjUxMyAxMDkuMDEgNTcyLjY3IDEwOC42NzUgNTcxLjgyNyAxMDguMzQxQzU2OS4yOTcgMTA3LjQ0OSA1NjYuNDUyIDEwNi40NDYgNTY2LjQ1MiAxMDYuMjIzQzU2Ni40NTIgMTA1LjU1NCA1OTIuOTA0IDEwOC4zNDEgNTkyLjkwNCAxMDguNzg3QzU5Mi45MDQgMTA5LjY3OCA1NjUuNTA0IDExNi45MjMgNTY1LjUwNCAxMTUuODA5QzU2NS41MDQgMTE1LjM2MyA1NjkuMDg3IDExMy41OCA1NzIuMDM4IDExMi4wMTlDNTcyLjk4NiAxMTEuNTczIDU3My44MjkgMTExLjEyNyA1NzQuNTY3IDExMC42ODJDNTI1LjU2MiAxMTMuMzU3IDQ3Mi43NjQgMTE0LjgwNiA0MTguNDkgMTE0LjgwNkMzNjQuMTEgMTE0LjgwNiAzMTEuNDE3IDExMy4zNTcgMjYyLjQxMiAxMTAuNjgyQzI2My4xNSAxMTEuMDE2IDI2My45OTMgMTExLjU3MyAyNjUuMDQ3IDExMi4wMTlDMjY3Ljk5OCAxMTMuNTggMjcxLjU4MSAxMTUuMzYzIDI3MS41ODEgMTE1LjgwOUMyNzEuNTgxIDExNi44MTIgMjQ0LjE4IDEwOS42NzggMjQ0LjE4IDEwOC43ODdDMjQ0LjE4IDEwOC4zNDEgMjcwLjYzMiAxMDUuNTU0IDI3MC42MzIgMTA2LjIyM0MyNzAuNjMyIDEwNi40NDYgMjY3Ljc4NyAxMDcuNDQ5IDI2NS4yNTggMTA4LjM0MUMyNjQuNDE1IDEwOC42NzUgMjYzLjU3MiAxMDguODk4IDI2Mi45MzkgMTA5LjEyMUMzMTEuNzMzIDExMS45MDggMzY0LjIxNSAxMTMuMjQ1IDQxOC4zODQgMTEzLjI0NVoiIGZpbGw9InVybCgjcGFpbnQwX2xpbmVhcl8wXzQpIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfMF80IiB4MT0iNDE4LjM4NCIgeTE9IjMyLjY2NDgiIHgyPSI0MTguMzg0IiB5Mj0iOTQuMjUxMyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBzdG9wLWNvbG9yPSIjMUIyMjM2IiBzdG9wLW9wYWNpdHk9IjAiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSJ3aGl0ZSIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo=" alt="">
-        <span class="label-rotate">Drag to rotate</span>
+        <span class="label-rotate" aria-hidden="true">Drag to rotate</span>
       </div>
 
       <!-- Pano canvas for interior 360° -->
-      <canvas id="image-interior"></canvas>
+      <canvas id="image-interior" role="img" aria-label="Interior 360° panorama view — use the accessibility controls to pan"></canvas>
 
       <!-- Fullscreen button (top-right, mobile only) -->
-      <button class="vis-btn" id="btn-fullscreen" title="Enter fullscreen mode" aria-label="Enter fullscreen mode">
-        <span class="icon-fs-enter">
+      <button class="vis-btn" id="btn-fullscreen" aria-label="Enter fullscreen mode">
+        <span class="icon-fs-enter" aria-hidden="true">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.6651 10.3348H4.00006V11.6649H1.07526L0.968811 11.6591C0.818216 11.6423 0.675794 11.5916 0.542053 11.4579C0.408354 11.3242 0.357612 11.1817 0.340881 11.0311L0.335022 10.9003V7.99988H1.6651V10.3348ZM11.6651 7.99988V10.9003L11.6592 11.0311C11.6425 11.1817 11.5917 11.3242 11.4581 11.4579C11.3244 11.5916 11.1819 11.6423 11.0313 11.6591L10.9249 11.6649H8.00006V10.3348H10.335V7.99988H11.6651ZM4.00006 1.66492H1.6651V3.99988H0.335022V1.10046L0.340881 0.968628C0.357634 0.818097 0.408364 0.675559 0.542053 0.54187C0.675766 0.4082 0.818251 0.357427 0.968811 0.340698L1.07526 0.334839H4.00006V1.66492ZM11.0313 0.340698C11.1819 0.357434 11.3244 0.408184 11.4581 0.54187C11.5918 0.675562 11.6425 0.818094 11.6592 0.968628L11.6651 1.10046V3.99988H10.335V1.66492H8.00006V0.334839H10.9249L11.0313 0.340698Z" fill="#1B2236"/></svg>
         </span>
-        <span class="icon-fs-exit">
+        <span class="icon-fs-exit" aria-hidden="true">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7.96875 4.65918C7.81816 4.64244 7.67573 4.59174 7.54199 4.45801C7.40826 4.32427 7.35756 4.18184 7.34082 4.03125L7.33496 3.90039L7.33496 1H8.66504L8.66504 3.33496H11L11 4.66504H8.0752L7.96875 4.65918ZM1 3.33496H3.33496V1L4.66504 1V3.90039L4.65918 4.03125C4.64244 4.18184 4.59174 4.32427 4.45801 4.45801C4.32427 4.59174 4.18184 4.64244 4.03125 4.65918L3.9248 4.66504H1L1 3.33496ZM7.33496 11V8.09961L7.34082 7.96875C7.35756 7.81816 7.40826 7.67573 7.54199 7.54199C7.67573 7.40826 7.81816 7.35756 7.96875 7.34082L8.0752 7.33496H11V8.66504H8.66504V11H7.33496ZM3.33496 8.66504L1 8.66504V7.33496L3.9248 7.33496L4.03125 7.34082C4.18184 7.35756 4.32427 7.40826 4.45801 7.54199C4.59174 7.67573 4.64244 7.81816 4.65918 7.96875L4.66504 8.09961V11L3.33496 11V8.66504Z" fill="#1B2236"/></svg>
         </span>
       </button>
 
       <!-- Disclaimer overlay -->
-      <div id="disclaimer">
+      <div id="disclaimer" role="dialog" aria-label="Vehicle specification" aria-modal="false">
         <div class="disclaimer-body">
           <div class="disclaimer-text">
-            <span class="disclaimer-i">i</span>
+            <span class="disclaimer-i" aria-hidden="true">i</span>
             <div class="label-group" id="label-group">
               <p>Pro Match Plus 77kWh 286 PS 1-Speed Automatic 5 Door;&nbsp; 14.8 kWh/62mi &nbsp;and&nbsp; CO2 emissions: &nbsp;0 g/km &nbsp;and&nbsp; Efficiency class: &nbsp;A</p>
               <p>UK specification may vary. Images are for illustrative purposes only and some options may incur an extra cost.</p>
@@ -1468,8 +1473,8 @@ body.in-fullscreen #img-car { will-change: transform; }
           </div>
         </div>
         <div class="disclaimer-close-wrap">
-          <button class="btn-close" id="btn-close" aria-label="Close disclaimer">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <button class="btn-close" id="btn-close" aria-label="Close specification panel">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M20.9559 3.98495L20.0139 3.04395L11.9999 11.0589L3.98495 3.04395L3.04395 3.98495L11.0589 11.9999L3.04395 20.0149L3.98495 20.9559L11.9999 12.9409L20.0139 20.9559L20.9559 20.0149L12.9409 11.9999L20.9559 3.98495Z" fill="white"/>
             </svg>
           </button>
@@ -1484,41 +1489,41 @@ body.in-fullscreen #img-car { will-change: transform; }
       <div id="selector-group">
 
         <!-- Colour section -->
-        <div class="bb-section exterior-only" id="selector-colour">
+        <div class="bb-section exterior-only" id="selector-colour" role="group" aria-labelledby="title-colour">
           <div class="bb-swatches-wrap">
-            <div class="swatch-fade left"  id="fade-left-colour"><button class="swatch-arrow" id="bb-scroll-left-colour"><svg viewBox="0 0 10.5024 21" preserveAspectRatio="none"><use href="#icon-chevron-left"/></svg></button></div>
-            <div class="bb-swatches" id="grid-colour"></div>
-            <div class="swatch-fade right" id="fade-right-colour"><button class="swatch-arrow" id="bb-scroll-right-colour"><svg viewBox="0 0 10.5 21" preserveAspectRatio="none"><use href="#icon-chevron-right"/></svg></button></div>
+            <div class="swatch-fade left"  id="fade-left-colour"><button class="swatch-arrow" id="bb-scroll-left-colour" aria-label="Scroll colours left"><svg aria-hidden="true" viewBox="0 0 10.5024 21" preserveAspectRatio="none"><use href="#icon-chevron-left"/></svg></button></div>
+            <div class="bb-swatches" id="grid-colour" role="radiogroup" aria-labelledby="title-colour"></div>
+            <div class="swatch-fade right" id="fade-right-colour"><button class="swatch-arrow" id="bb-scroll-right-colour" aria-label="Scroll colours right"><svg aria-hidden="true" viewBox="0 0 10.5 21" preserveAspectRatio="none"><use href="#icon-chevron-right"/></svg></button></div>
           </div>
           <div class="bb-sec-header">
-            <span class="bb-sec-title">Colours</span>
-            <span class="bb-sec-value" id="label-colour">Grenadilla Black Metallic</span>
+            <span class="bb-sec-title" id="title-colour">Colours</span>
+            <span class="bb-sec-value" id="label-colour" aria-live="polite">Grenadilla Black Metallic</span>
           </div>
         </div>
 
         <!-- Wheel section -->
-        <div class="bb-section exterior-only" id="selector-wheel">
+        <div class="bb-section exterior-only" id="selector-wheel" role="group" aria-labelledby="title-wheel">
           <div class="bb-swatches-wrap">
-            <div class="swatch-fade left"  id="fade-left-wheel"><button class="swatch-arrow" id="bb-scroll-left-wheel"><svg viewBox="0 0 10.5024 21" preserveAspectRatio="none"><use href="#icon-chevron-left"/></svg></button></div>
-            <div class="bb-swatches" id="grid-wheel"></div>
-            <div class="swatch-fade right" id="fade-right-wheel"><button class="swatch-arrow" id="bb-scroll-right-wheel"><svg viewBox="0 0 10.5 21" preserveAspectRatio="none"><use href="#icon-chevron-right"/></svg></button></div>
+            <div class="swatch-fade left"  id="fade-left-wheel"><button class="swatch-arrow" id="bb-scroll-left-wheel" aria-label="Scroll wheels left"><svg aria-hidden="true" viewBox="0 0 10.5024 21" preserveAspectRatio="none"><use href="#icon-chevron-left"/></svg></button></div>
+            <div class="bb-swatches" id="grid-wheel" role="radiogroup" aria-labelledby="title-wheel" lang="de"></div>
+            <div class="swatch-fade right" id="fade-right-wheel"><button class="swatch-arrow" id="bb-scroll-right-wheel" aria-label="Scroll wheels right"><svg aria-hidden="true" viewBox="0 0 10.5 21" preserveAspectRatio="none"><use href="#icon-chevron-right"/></svg></button></div>
           </div>
           <div class="bb-sec-header">
-            <span class="bb-sec-title">Wheels</span>
-            <span class="bb-sec-value" id="label-wheel" role="button" tabindex="0" aria-expanded="false" title="Leichtmetallräder &quot;Mataró&quot; 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht">Leichtmetallräder "Mataró" 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht</span>
+            <span class="bb-sec-title" id="title-wheel">Wheels</span>
+            <span class="bb-sec-value" id="label-wheel" role="button" tabindex="0" aria-expanded="false" aria-live="polite" lang="de">Leichtmetallräder "Mataró" 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht</span>
           </div>
         </div>
 
         <!-- Material section (interior mode only) -->
-        <div class="bb-section interior-only" id="selector-material">
+        <div class="bb-section interior-only" id="selector-material" role="group" aria-labelledby="title-material">
           <div class="bb-swatches-wrap">
-            <div class="swatch-fade left"  id="bb-fade-left-material"><button class="swatch-arrow" id="bb-scroll-left-material"><svg viewBox="0 0 10.5024 21" preserveAspectRatio="none"><use href="#icon-chevron-left"/></svg></button></div>
-            <div class="bb-swatches" id="grid-material"></div>
-            <div class="swatch-fade right" id="bb-fade-right-material"><button class="swatch-arrow" id="bb-scroll-right-material"><svg viewBox="0 0 10.5 21" preserveAspectRatio="none"><use href="#icon-chevron-right"/></svg></button></div>
+            <div class="swatch-fade left"  id="bb-fade-left-material"><button class="swatch-arrow" id="bb-scroll-left-material" aria-label="Scroll materials left"><svg aria-hidden="true" viewBox="0 0 10.5024 21" preserveAspectRatio="none"><use href="#icon-chevron-left"/></svg></button></div>
+            <div class="bb-swatches" id="grid-material" role="radiogroup" aria-labelledby="title-material"></div>
+            <div class="swatch-fade right" id="bb-fade-right-material"><button class="swatch-arrow" id="bb-scroll-right-material" aria-label="Scroll materials right"><svg aria-hidden="true" viewBox="0 0 10.5 21" preserveAspectRatio="none"><use href="#icon-chevron-right"/></svg></button></div>
           </div>
           <div class="bb-sec-header">
-            <span class="bb-sec-title">Materials</span>
-            <span class="bb-sec-value" id="label-material">Material 1</span>
+            <span class="bb-sec-title" id="title-material">Materials</span>
+            <span class="bb-sec-value" id="label-material" aria-live="polite">Material 1</span>
           </div>
         </div>
 
@@ -1539,14 +1544,14 @@ body.in-fullscreen #img-car { will-change: transform; }
               <option value="grandcalifornia">600</option>
             </optgroup>
           </select>
-          <div class="select-chevron-icon">
+          <div class="select-chevron-icon" aria-hidden="true">
             <svg fill="none" preserveAspectRatio="none" viewBox="0 0 21.95 11.427">
               <path d="M10.975 11.427C10.525 11.427 10.102 11.249 9.786 10.927L0 0.93L0.95 0L10.735 9.996C10.865 10.127 11.084 10.128 11.215 9.995L20.999 0L21.95 0.93L12.165 10.926C11.848 11.25 11.425 11.427 10.975 11.427Z" fill="#293043"/>
             </svg>
           </div>
         </div>
-        <button class="btn-info" id="btn-info" aria-label="Show model information">
-          <span class="icon-info">
+        <button class="btn-info" id="btn-info" aria-label="Show model information" aria-expanded="false" aria-controls="disclaimer">
+          <span class="icon-info" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M12 1C18.374 1 23 5.626 23 12C23 18.374 18.374 23 12 23C5.626 23 1 18.374 1 12C1 5.626 5.626 1 12 1ZM12 2.33008C6.397 2.33008 2.33008 6.397 2.33008 12C2.33008 17.603 6.397 21.6699 12 21.6699C17.603 21.6699 21.6699 17.603 21.6699 12C21.6699 6.397 17.603 2.33008 12 2.33008ZM12.7832 15.6562L15.3857 15.6553V16.9854L8.41895 16.9863V15.6562H11.4531V11.3369H9.41406V10.0068H12.7832V15.6562ZM12 6.49316C12.4419 6.49316 12.7743 6.78789 12.7744 7.30371C12.7744 7.81971 12.442 8.11523 12 8.11523C11.558 8.11523 11.2256 7.81971 11.2256 7.30371C11.2257 6.78789 11.5581 6.49316 12 6.49316Z" fill="#293043"/>
             </svg>
@@ -1942,6 +1947,9 @@ function updateCarImage() {
   const frames = activeFrames();
   const src = frames[rotFrame] ?? frames[0];
   if (src && !carImg.src.endsWith(src)) carImg.src = src;
+  const MODEL_NAMES = { idpolo: 'VW ID. Polo', id7: 'VW ID.7', grandcalifornia: 'VW Grand California' };
+  const colorStr = currentThumbs()[selectedColor]?.name ?? '';
+  carImg.alt = (MODEL_NAMES[selectedModel] ?? selectedModel) + (colorStr ? ', ' + colorStr : '') + ', exterior view';
 }
 
 // ── Drag to rotate / pan ──
@@ -1997,9 +2005,11 @@ media.addEventListener('pointerup', e => {
 
 const btnZoomIn  = document.getElementById('btn-zoom-in');
 const btnZoomOut = document.getElementById('btn-zoom-out');
+const mediaStatus = document.getElementById('media-status');
 function syncZoomBtns() {
   btnZoomIn.disabled  = isZoomed;
   btnZoomOut.disabled = !isZoomed;
+  mediaStatus.textContent = isZoomed ? 'Zoomed in' : 'Zoomed out';
 }
 btnZoomIn.addEventListener('click', () => {
   isZoomed = true;
@@ -2035,6 +2045,8 @@ window.addEventListener('touchend',  endDrag);
 function makeSwatchBtn(src, alt, idx, isSelected, onClick) {
   const btn = document.createElement('button');
   btn.className = 'btn-swatch' + (isSelected ? ' selected' : '');
+  btn.setAttribute('role', 'radio');
+  btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
   btn.innerHTML = `
     <div class="stroke">
       <div class="img-swatch">
@@ -2042,7 +2054,7 @@ function makeSwatchBtn(src, alt, idx, isSelected, onClick) {
       </div>
       <div class="stroke-inset"></div>
     </div>
-    <div class="checkmark">
+    <div class="checkmark" aria-hidden="true">
       <div class="fill-tick"></div>
       <div class="badge">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
@@ -2097,8 +2109,11 @@ function selectColor(idx) {
   if (!_fCache.has(`${selectedModel}|${idx}|${selectedWheel}`)) { rotFrame = 0; rotation = 0; }
   refreshWheelAvailability();
   [colorGrid, mColorGrid].forEach(g =>
-    g.querySelectorAll('.btn-swatch').forEach((b, i) =>
-      b.className = 'btn-swatch' + (i === idx ? ' selected' : '')));
+    g.querySelectorAll('.btn-swatch').forEach((b, i) => {
+      const sel = i === idx;
+      b.className = 'btn-swatch' + (sel ? ' selected' : '');
+      b.setAttribute('aria-checked', sel ? 'true' : 'false');
+    }));
   colorName.textContent = currentThumbs()[idx].name;
   mColorName.textContent = currentThumbs()[idx].name;
   carImg.className = 'draggable';
@@ -2195,8 +2210,11 @@ function selectWheel(idx) {
   rotation = (rotFrame / frameCount()) * 360;
   if (!_fCache.has(`${selectedModel}|${selectedColor}|${idx}`)) { rotFrame = 0; rotation = 0; }
   [wheelGrid, mWheelGrid].forEach(g =>
-    g.querySelectorAll('.btn-swatch').forEach((b, i) =>
-      b.className = 'btn-swatch' + (i === idx ? ' selected' : '')));
+    g.querySelectorAll('.btn-swatch').forEach((b, i) => {
+      const sel = i === idx;
+      b.className = 'btn-swatch' + (sel ? ' selected' : '');
+      b.setAttribute('aria-checked', sel ? 'true' : 'false');
+    }));
   wheelName.textContent = currentWheels()[idx].name;
   wheelName.title = currentWheels()[idx].name;
   mWheelName.textContent = currentWheels()[idx].name;
@@ -2230,8 +2248,11 @@ function buildMaterialGrid() {
 
 function selectMaterial(idx) {
   selectedMaterial = idx;
-  document.getElementById('grid-material').querySelectorAll('.btn-swatch').forEach((b, i) =>
-    b.className = 'btn-swatch' + (i === idx ? ' selected' : ''));
+  document.getElementById('grid-material').querySelectorAll('.btn-swatch').forEach((b, i) => {
+    const sel = i === idx;
+    b.className = 'btn-swatch' + (sel ? ' selected' : '');
+    b.setAttribute('aria-checked', sel ? 'true' : 'false');
+  });
   document.getElementById('label-material').textContent = MATERIAL_IMGS[idx].name;
 }
 
@@ -2376,7 +2397,7 @@ function enterInterior() {
     revealSwatches(document.getElementById('grid-material'));
   });
   btnToggleView.setAttribute('aria-label', 'Toggle exterior view');
-  btnToggleView.setAttribute('title', 'Toggle exterior view');
+  btnToggleView.setAttribute('aria-pressed', 'true');
   pano.start();
   startAutoRotate();
 }
@@ -2391,7 +2412,7 @@ function exitInterior() {
     document.getElementById('bottombar').classList.remove('interior-mode');
   });
   btnToggleView.setAttribute('aria-label', 'Toggle interior view');
-  btnToggleView.setAttribute('title', 'Toggle interior view');
+  btnToggleView.setAttribute('aria-pressed', 'false');
   pano.reset();
 }
 
@@ -2400,7 +2421,10 @@ document.getElementById('btn-toggle-view').addEventListener('click', () => {
 });
 
 document.getElementById('btn-fullscreen').addEventListener('click', () => {
-  document.body.classList.toggle('in-fullscreen');
+  const isFS = document.body.classList.toggle('in-fullscreen');
+  const fsBtn = document.getElementById('btn-fullscreen');
+  const fsLabel = isFS ? 'Exit fullscreen mode' : 'Enter fullscreen mode';
+  fsBtn.setAttribute('aria-label', fsLabel);
   requestAnimationFrame(updateBBConstraint);
   requestAnimationFrame(() => { if (window.updateBBArrows) window.updateBBArrows(); });
 });
@@ -2688,21 +2712,29 @@ document.addEventListener('mousedown', ({ target }) => {
 });
 
 document.addEventListener('keydown', e => {
-  const tag = document.activeElement?.tagName;
+  const active = document.activeElement;
+  const tag = active?.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  // Only intercept arrow keys when #media or body has focus — let widgets handle their own keys
+  const mediaFocused = active === media || active === document.body || active == null;
   if (interiorMode) {
-    if (e.key === 'ArrowLeft')  { e.preventDefault(); pano.pan(-PANO_STEP, 0); }
-    if (e.key === 'ArrowRight') { e.preventDefault(); pano.pan( PANO_STEP, 0); }
-    if (e.key === 'ArrowUp')    { e.preventDefault(); pano.pan(0,  PANO_STEP); }
-    if (e.key === 'ArrowDown')  { e.preventDefault(); pano.pan(0, -PANO_STEP); }
+    if (mediaFocused) {
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); stopAutoRotate(); pano.pan(-PANO_STEP, 0); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); stopAutoRotate(); pano.pan( PANO_STEP, 0); }
+      if (e.key === 'ArrowUp')    { e.preventDefault(); stopAutoRotate(); pano.pan(0,  PANO_STEP); }
+      if (e.key === 'ArrowDown')  { e.preventDefault(); stopAutoRotate(); pano.pan(0, -PANO_STEP); }
+    }
   } else {
-    if (e.key === 'ArrowLeft')  stepLeft();
-    if (e.key === 'ArrowRight') stepRight();
+    if (mediaFocused) {
+      if (e.key === 'ArrowLeft')  stepLeft();
+      if (e.key === 'ArrowRight') stepRight();
+    }
   }
-  if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === media) {
+  if ((e.key === 'Enter' || e.key === ' ') && active === media) {
     e.preventDefault();
     isZoomed = !isZoomed;
     media.classList.toggle('zoomed', isZoomed);
+    syncZoomBtns();
   }
 });
 
@@ -2715,11 +2747,12 @@ const PANO_STEP = 0.1745;
     const active = btn.classList.toggle('active');
     bar.classList.toggle('visible', active);
     bar.inert = !active;
+    btn.setAttribute('aria-expanded', active ? 'true' : 'false');
   });
-  document.getElementById('btn-rot-left').addEventListener('click',  () => interiorMode ? pano.pan(-PANO_STEP, 0) : stepLeft());
-  document.getElementById('btn-rot-right').addEventListener('click', () => interiorMode ? pano.pan( PANO_STEP, 0) : stepRight());
-  document.getElementById('btn-tilt-up').addEventListener('click',   () => pano.pan(0,  PANO_STEP));
-  document.getElementById('btn-tilt-down').addEventListener('click', () => pano.pan(0, -PANO_STEP));
+  document.getElementById('btn-rot-left').addEventListener('click',  () => { stopAutoRotate(); interiorMode ? pano.pan(-PANO_STEP, 0) : stepLeft(); });
+  document.getElementById('btn-rot-right').addEventListener('click', () => { stopAutoRotate(); interiorMode ? pano.pan( PANO_STEP, 0) : stepRight(); });
+  document.getElementById('btn-tilt-up').addEventListener('click',   () => { stopAutoRotate(); pano.pan(0,  PANO_STEP); });
+  document.getElementById('btn-tilt-down').addEventListener('click', () => { stopAutoRotate(); pano.pan(0, -PANO_STEP); });
 })();
 
 // ── Bottom bar swatch scroll arrows ──
@@ -2739,6 +2772,10 @@ const PANO_STEP = 0.1745;
       if (!bbAnimating) {
         fl.classList.toggle('show', left);
         fr.classList.toggle('show', right);
+        const flBtn = fl.querySelector('.swatch-arrow');
+        const frBtn = fr.querySelector('.swatch-arrow');
+        if (flBtn) flBtn.disabled = !left;
+        if (frBtn) frBtn.disabled = !right;
       }
       let mask = 'none';
       if (left && right) mask = 'linear-gradient(90deg, transparent 0, black 44px, black calc(100% - 44px), transparent 100%)';
@@ -2756,8 +2793,8 @@ const PANO_STEP = 0.1745;
       const max = el.scrollWidth - el.clientWidth;
       el.scrollTo({ left: dir > 0 ? Math.min(max, el.scrollLeft + 180) : Math.max(0, el.scrollLeft - 180), behavior: 'smooth' });
     }
-    btn.addEventListener('pointerdown', () => { didPointer = true; doScroll(); });
-    btn.addEventListener('click',       () => { if (didPointer) { didPointer = false; return; } doScroll(); });
+    btn.addEventListener('pointerup', () => { didPointer = true; doScroll(); });
+    btn.addEventListener('click',     () => { if (didPointer) { didPointer = false; return; } doScroll(); });
   }
 
   bbGrids.forEach(({ el }) => {
@@ -2797,11 +2834,17 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
 // Disclaimer toggle
 const disclaimerPanel = document.getElementById('disclaimer');
-document.getElementById('btn-info').addEventListener('click', () => {
-  disclaimerPanel.classList.toggle('is-open');
+const btnInfo  = document.getElementById('btn-info');
+const btnClose = document.getElementById('btn-close');
+btnInfo.addEventListener('click', () => {
+  const isOpen = disclaimerPanel.classList.toggle('is-open');
+  btnInfo.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  if (isOpen) btnClose.focus();
 });
-document.getElementById('btn-close').addEventListener('click', () => {
+btnClose.addEventListener('click', () => {
   disclaimerPanel.classList.remove('is-open');
+  btnInfo.setAttribute('aria-expanded', 'false');
+  btnInfo.focus();
 });
 
 // Show disclaimer when visualizer loads in
