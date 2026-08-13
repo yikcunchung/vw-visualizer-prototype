@@ -1083,7 +1083,7 @@ body.in-fullscreen #img-car { will-change: transform; }
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  height: calc(100dvh - 52px - 76px);
+  min-height: calc(100dvh - 52px - 76px);
   position: relative;
   z-index: 1;
   width: 100dvw;
@@ -1092,13 +1092,11 @@ body.in-fullscreen #img-car { will-change: transform; }
 #page-layout { gap: 12px; padding-top: 0; padding-bottom: 0; }
 #img-car { inset: 0; width: 100%; height: 100%; object-position: center 16%; }
 #media {
-  flex: 1 0 0;
-  min-height: 0;
+  flex: 0 0 calc(100dvh - 52px - 76px - 110px);
   width: 100%;
-  height: auto;
 }
 @media (max-width: 959px) {
-  #media { height: auto; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 20px; flex: none; }
+  #media { height: auto; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 20px; flex: none; min-height: 0; }
   #visualizer { height: auto; }
 }
 
@@ -1134,7 +1132,8 @@ body.in-fullscreen #img-car { will-change: transform; }
 #bottombar.interior-mode .bb-section.interior-only { display: flex; }
 #bottombar.interior-mode .bb-section.exterior-only { display: none; }
 .bb-sec-header {
-  display: flex; align-items: baseline; overflow: hidden; max-width: 100%; gap: 8px;
+  display: flex; align-items: baseline; gap: 8px;
+  width: 100%; min-width: 0;
 }
 .bb-sec-title {
   font-family: 'VW Head', 'Inter', sans-serif;
@@ -1144,6 +1143,21 @@ body.in-fullscreen #img-car { will-change: transform; }
   font-family: 'VW Text', 'Inter', sans-serif;
   font-size: 14px; line-height: 1.2; color: #1b2236;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+#label-wheel {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  flex: 1 1 0%;
+  min-width: 160px;
+}
+#label-wheel.expanded {
+  white-space: normal;
+  text-overflow: clip;
+  overflow: visible;
+}
+#label-wheel:focus-visible {
+  outline-offset: -3px;
+  border-radius: 2px;
 }
 .bb-swatches-wrap { position: relative; }
 #bottombar .swatch-fade { width: 56px; background: none; }
@@ -1491,7 +1505,7 @@ body.in-fullscreen #img-car { will-change: transform; }
           </div>
           <div class="bb-sec-header">
             <span class="bb-sec-title">Wheels</span>
-            <span class="bb-sec-value" id="label-wheel">Alloy 21" 'Mataro', Black</span>
+            <span class="bb-sec-value" id="label-wheel" role="button" tabindex="0" aria-expanded="false" title="Leichtmetallräder &quot;Mataró&quot; 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht">Leichtmetallräder "Mataró" 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht</span>
           </div>
         </div>
 
@@ -1636,9 +1650,9 @@ const POLO_THUMBS = [
 ];
 
 const POLO_WHEEL_THUMBS = [
-  { name: "Edinburgh 17\"", src: "assets/media/idpolo/exterior/variants/wheels/wheel1.webp" },
-  { name: "Linz 18\"",      src: "assets/media/idpolo/exterior/variants/wheels/wheel2.webp" },
-  { name: "Stahlräder 17\"",src: "assets/media/idpolo/exterior/variants/wheels/wheel3.webp" }
+  { name: "4 Leichtmetallräder \"Edinburgh\" 7 J x 17 in Schwarz, Oberfläche glanzgedreht", src: "assets/media/idpolo/exterior/variants/wheels/wheel1.webp" },
+  { name: "4 Leichtmetallräder \"Linz\" 7 J x 18 in Schwarz, Oberfläche glanzgedreht",      src: "assets/media/idpolo/exterior/variants/wheels/wheel2.webp" },
+  { name: "Stahlräder 7 J x 17",                                                              src: "assets/media/idpolo/exterior/variants/wheels/wheel3.webp" }
 ];
 
 const ID7_THUMBS = [
@@ -1658,11 +1672,11 @@ const ID7_THUMBS = [
 ];
 
 const ID7_WHEEL_THUMBS = [
-  { name: "Mataró 21\"",    src: "assets/media/id7/exterior/variants/wheels/wheel1.webp" },
-  { name: "Hudson 19\"",    src: "assets/media/id7/exterior/variants/wheels/wheel2.webp" },
-  { name: "Bergen 19\"",    src: "assets/media/id7/exterior/variants/wheels/wheel3.webp" },
-  { name: "Trondheim 20\"", src: "assets/media/id7/exterior/variants/wheels/wheel4.webp" },
-  { name: "Montreal 20\"",  src: "assets/media/id7/exterior/variants/wheels/wheel5.webp" }
+  { name: 'Leichtmetallräder "Mataró" 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht',     src: "assets/media/id7/exterior/variants/wheels/wheel1.webp" },
+  { name: 'Leichtmetallräder "Hudson" 8 J x 19 vorn, 8,5 J x 19 hinten, in Schwarz, Oberfläche glanzgedreht',     src: "assets/media/id7/exterior/variants/wheels/wheel2.webp" },
+  { name: 'Leichtmetallräder "Bergen" 8 J x 19 vorn, 8,5 J x 19 hinten, in Schwarz, Volkswagen R',                src: "assets/media/id7/exterior/variants/wheels/wheel3.webp" },
+  { name: 'Leichtmetallräder "Trondheim" 8,5 J x 20 vorn, 9,5 J x 20 hinten',                                     src: "assets/media/id7/exterior/variants/wheels/wheel4.webp" },
+  { name: 'Leichtmetallräder "Montreal" 8,5 J x 20 vorn, 9,5 J x 20 hinten, in Schwarz, Oberfläche glanzgedreht', src: "assets/media/id7/exterior/variants/wheels/wheel5.webp" },
 ];
 
 const POLO_COLOUR_FOLDER = {
@@ -2130,36 +2144,38 @@ function updateBBConstraint() {
     .filter(s => getComputedStyle(s).display !== 'none');
   if (!allSects.length) return;
 
-  // Reset widths; temporarily set longest labels for accurate measurement
+  // Reset section widths
   allSects.forEach(s => s.style.width = '');
 
-  const prevLabels = allSects.map(s => s.querySelector('.bb-sec-value')?.textContent ?? '');
-  const labelMap = {
-    'selector-colour':   currentThumbs().map(t => t.name),
-    'selector-wheel':    currentWheels().map(t => t.name),
-    'selector-material': MATERIAL_IMGS.map(t => t.name),
-  };
+  // Measure swatch-only widths — hide headers so labels don't drive section width
   allSects.forEach(s => {
-    const names = labelMap[s.id];
-    if (!names?.length) return;
-    const longest = names.reduce((a, b) => a.length > b.length ? a : b);
-    const valEl = s.querySelector('.bb-sec-value');
-    if (valEl) valEl.textContent = longest;
+    const h = s.querySelector('.bb-sec-header');
+    if (h) h.style.display = 'none';
+  });
+  const swatchWidths = allSects.map(s => s.scrollWidth);
+  const panelNat    = panel.scrollWidth;
+  const totalSwatch = swatchWidths.reduce((a, b) => a + b, 0);
+  const overhead    = panelNat - totalSwatch;
+  allSects.forEach(s => {
+    const h = s.querySelector('.bb-sec-header');
+    if (h) h.style.display = '';
   });
 
-  // Measure natural widths
-  const natWidths = allSects.map(s => s.scrollWidth);
-  const totalNat  = natWidths.reduce((a, b) => a + b, 0);
-  const panelNat  = panel.scrollWidth;
-  const overhead  = panelNat - totalNat; // padding + gaps + select-row width
+  // Each section must also accommodate its header: title + gap + value min-width
+  const natWidths = allSects.map((s, i) => {
+    const title    = s.querySelector('.bb-sec-title');
+    const value    = s.querySelector('.bb-sec-value');
+    const headerMin = (title ? title.scrollWidth : 0) + 8
+                    + (value ? parseFloat(getComputedStyle(value).minWidth) || 0 : 0);
+    return Math.max(swatchWidths[i], headerMin);
+  });
+  const totalNat = natWidths.reduce((a, b) => a + b, 0);
 
   const maxW = media.clientWidth;
 
-  if (panelNat <= maxW) {
-    // Fits — lock each section to its longest-label width
+  if (totalNat + overhead <= maxW) {
     allSects.forEach((s, i) => { s.style.width = natWidths[i] + 'px'; });
   } else {
-    // Overflow — greedy: narrower sections keep natural width first
     const available = maxW - overhead;
     const sectData  = allSects.map((s, i) => ({ s, w: natWidths[i] }));
     const order     = [...sectData].sort((a, b) => a.w - b.w);
@@ -2172,12 +2188,6 @@ function updateBBConstraint() {
     });
     sectData.forEach(({ s }) => { s.style.width = Math.max(0, allocs.get(s)) + 'px'; });
   }
-
-  // Restore actual labels
-  allSects.forEach((s, i) => {
-    const valEl = s.querySelector('.bb-sec-value');
-    if (valEl) valEl.textContent = prevLabels[i];
-  });
 }
 
 function selectWheel(idx) {
@@ -2188,6 +2198,7 @@ function selectWheel(idx) {
     g.querySelectorAll('.btn-swatch').forEach((b, i) =>
       b.className = 'btn-swatch' + (i === idx ? ' selected' : '')));
   wheelName.textContent = currentWheels()[idx].name;
+  wheelName.title = currentWheels()[idx].name;
   mWheelName.textContent = currentWheels()[idx].name;
   updateCarImage();
   scrollSwatchIntoView(wheelGrid, idx);
@@ -2235,6 +2246,8 @@ function selectModel(modelId) {
     if (window.updateBBArrows) window.updateBBArrows();
     colorName.textContent = currentThumbs()[0]?.name ?? '';
     wheelName.textContent = currentWheels()[0]?.name ?? '';
+  wheelName.title = currentWheels()[0]?.name ?? '';
+    wheelName.title = currentWheels()[0]?.name ?? '';
     carImg.className = 'draggable';
     if (!pillDismissed) rotatePill.classList.remove('hidden');
     updateCarImage();
@@ -2333,7 +2346,7 @@ function animateBBWidth(fn) {
   } else {
     for (const sec of collapsing) {
       sec.style.display = sec.style.position = sec.style.left =
-        sec.style.top = sec.style.width = sec.style.overflow = '';
+        sec.style.top = sec.style.width = sec.style.overflow = sec.style.opacity = '';
     }
     panel.style.width = '';
   }
@@ -2427,6 +2440,16 @@ function initVisualizer() {
   wheelName.textContent = currentWheels()[0]?.name ?? '';
   requestAnimationFrame(updateBBConstraint);
   requestAnimationFrame(() => { if (window.updateBBArrows) window.updateBBArrows(); });
+  // Pin #select-model at its collapsed-state centre (grids now in DOM, layout settled next frame)
+  if (window.innerWidth >= 960) {
+    requestAnimationFrame(() => {
+      const sm = document.getElementById('select-model');
+      const ws = document.getElementById('wrapper-selector');
+      const mt = Math.round(sm.getBoundingClientRect().top - ws.getBoundingClientRect().top);
+      sm.style.alignSelf = 'flex-start';
+      sm.style.marginTop = mt + 'px';
+    });
+  }
 }
 
 // Defer visualizer until user scrolls near the explore CTA
@@ -2754,6 +2777,23 @@ const PANO_STEP = 0.1745;
 })();
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+// Wheel label accordion — toggle on click/Enter/Space, collapse on Escape
+(function () {
+  const lbl = document.getElementById('label-wheel');
+
+  function toggle(force) {
+    const next = force !== undefined ? force : !lbl.classList.contains('expanded');
+    lbl.classList.toggle('expanded', next);
+    lbl.setAttribute('aria-expanded', String(next));
+  }
+
+  lbl.addEventListener('click', () => toggle());
+  lbl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    if (e.key === 'Escape') toggle(false);
+  });
+})();
 
 // Disclaimer toggle
 const disclaimerPanel = document.getElementById('disclaimer');
