@@ -1,0 +1,200 @@
+# Visualizer — WCAG 2.2 AA implementation contract
+
+**Reference implementation:** `index-visl.html` (vanilla HTML/JS)
+**Target:** production vw.com — AEM + React SPA Editor + styled-components
+**Scope:** `#visualizer` — the whole component, comprising its two direct children:
+
+```
+#visualizer
+├── #media       3D viewer: car image, zoom, rotate/tilt, interior panorama, spec panel
+└── #bottombar   colour / wheel / material selectors, model picker
+```
+
+`#visualizer` is the component this contract governs. The surrounding page (topbar, subnav, hero,
+highlights, NBA bar) is **outside scope for the production port**, but has also been brought up to
+A/AA in the reference file so that an axe/WAVE/Lighthouse run on it is meaningful rather than
+misleading — see *Page-level fixes* below.
+
+**Standard:** WCAG 2.2 Level A + AA — the levels EN 301 549 clause 9 requires
+**Date:** 2026-08-14
+
+---
+
+## How to use this document
+
+The HTML is a **behavioural spec, not shippable code**. Roughly half the compliance work lives in
+JavaScript, not markup — so a port that copies the DOM and rewrites the logic will silently drop it.
+
+Each item below is an **invariant**: a statement that must remain true in the production build,
+whatever the framework. Verify invariants, not code shape.
+
+> **Do not treat a clean axe/WAVE/Lighthouse run as done.** The original file passed all three while
+> containing genuine Level A failures. Items marked **[tool-invisible]** cannot be detected by any
+> automated checker — they need a real keypress, or the accessibility tree.
+
+---
+
+## Verification recipe
+
+Run this against the ported component before sign-off.
+
+```bash
+# 1. Serve the app, then drive a real browser
+chrome --headless --remote-debugging-port=9333 http://localhost:<port>/<route>
+
+# 2. Dump the accessibility tree for the component subtree
+#    CDP: DOM.querySelector -> Accessibility.queryAXTree
+#    PASS = every interactive node has a NON-EMPTY, UNIQUE accessible name
+
+# 3. Dispatch real keys (Input.dispatchKeyEvent), assert document.activeElement after each
+#    Tab / Shift+Tab / Enter / Space / Arrow keys / Escape
+
+# 4. Reflow: Emulation.setDeviceMetricsOverride 320x256 @1x
+#    PASS = document.scrollWidth <= window.innerWidth
+```
+
+In CI: `jest-axe` on components covers the structural half; Playwright with real key presses and
+`expect(page.locator(':focus'))` assertions covers the behavioural half. Both are needed.
+
+---
+
+## PART A — Structural invariants (markup)
+
+These port cleanly to JSX.
+
+| # | Invariant | SC | Notes for React/AEM |
+|---|---|---|---|
+| A1 | The viewer container is **not** an interactive role. It is `role="region"` + `aria-label` + `aria-roledescription="3D viewer"`, and is focusable (`tabIndex={0}`) for arrow-key/zoom handling. | 4.1.2 | **Originally `role="button"` wrapping 10 `<button>`s** — nested interactive controls. In React this recurs as `<ClickableCard><Button/></ClickableCard>`: the violation exists in *neither* component's source. |
+| A2 | Every decorative icon/SVG is `aria-hidden="true"`. (40 in the reference; 0 unnamed graphics remain in the a11y tree.) | 1.1.1 | Put it on the SVG/wrapper inside the icon component so every consumer inherits it. |
+| A3 | Each swatch group is `role="radiogroup"` with `aria-labelledby` → its visible title; each swatch is `role="radio"` with `aria-checked`. | 1.3.1, 4.1.2 | **AEM risk:** `EditableComponent` injects a wrapper `<div>` around authorable components. A radiogroup must *own* its radios — if each swatch becomes separately authorable, ownership breaks and the group collapses in the a11y tree. Keep a group as **one** component, or wire `aria-owns` explicitly. |
+| A4 | The spec/disclaimer panel is `role="dialog"` with an accessible name. | 4.1.2 | If it is non-modal, keep `aria-modal="false"`. Do not set `aria-modal="true"` without a focus trap. |
+| A5 | German product strings inside the English UI carry `lang="de"`. | 3.1.2 | Applies to the wheel names (`Leichtmetallräder …`) on the label **and** the swatch grid. Drive from content locale, not hardcoded. |
+| A6 | Icon-only buttons have an `aria-label` and **no** duplicate `title` with the same text. | — | Redundant `title` is a WAVE alert. Losing `title` also loses the hover tooltip — accepted trade. |
+| A7 | A visually hidden `aria-live="polite"` region exists for status announcements. | 4.1.3 | `.sr-only` = `position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap`. Do **not** use `display:none`. |
+
+---
+
+## PART B — Behavioural invariants (JavaScript)
+
+**This is the half a developer reading the HTML will not see.** Every item here is
+**[tool-invisible]** unless stated otherwise.
+
+| # | Invariant | SC | Why it exists |
+|---|---|---|---|
+| B1 | **Image alt text must never be interpolated into a markup string.** Set it as a property/prop. | 4.1.2, 1.1.1 | **Level A failure found in the original.** Wheel names contain `"` (`Leichtmetallräder "Mataró"`, `16" Silver`), which terminated `alt="…"` early. All five wheel radios ended up with the identical name `"Leichtmetallräder "` — indistinguishable to a screen reader. JSX `alt={name}` is safe; `dangerouslySetInnerHTML` is **not**. |
+| B2 | Selection state (`aria-checked`, `aria-expanded`, `aria-pressed`) must be **derived from state**, never set imperatively in one code path only. | 4.1.2 | The original updated CSS classes but not ARIA. In React use `aria-checked={i === selected}` so desync is impossible. |
+| B3 | Single-pointer actions fire on **up-event**, not down-event. | **2.5.2** | Swatch scroll-arrows fired on `pointerdown` — no way to abort by dragging off. Use `onPointerUp` / `onClick`. *Exception (W3C note): controls that emulate a keyboard key press may use the down-event.* |
+| B4 | Auto-rotation (interior panorama) must be stoppable **by keyboard**, not only by mouse. | **2.2.2** | `stopAutoRotate()` was bound only to `mousedown`, so a keyboard user could never stop indefinite motion. Now also called from arrow keys and every rotate/tilt control. In React: cancel the rAF in the effect **and** on any interaction; clean up on unmount or it leaks. |
+| B5 | Zoom state must announce, and must keep dependent controls in sync, on **every** path (pointer tap, buttons, Enter/Space). | 4.1.3 | Keyboard zoom updated state but never re-synced the zoom-in/out `disabled` flags — a functional bug as well as an a11y one. Derive `disabled` from state. |
+| B6 | Opening the spec panel moves focus into it; closing returns focus to the trigger. | 2.4.3 | **React trap:** if the panel is conditionally rendered (`{open && <Panel/>}`), unmounting while focus is inside drops focus to `<body>`. Prefer keeping it mounted and hidden, or explicitly restore focus. Effect dependency mistakes break this **silently**. |
+| B7 | Arrow keys only drive the viewer when the viewer (or body) has focus. | 2.1.1 | Otherwise arrow keys hijack `<select>`, scroll containers and other widgets. Guard on `document.activeElement`. |
+| B8 | A hidden/non-functional control must be **removed from the tab order** (`disabled`), not just visually hidden. | **2.4.7** | Scroll-arrows kept `tabindex=0` while at `opacity:0; pointer-events:none` — keyboard users landed on an invisible, dead button with no visible focus. Matches BITV finding #8. |
+| B9 | Non-active control groups are hidden from AT with `inert`, not just CSS. | 4.1.2 | React support is version-dependent; set via ref if the pinned React version lacks the prop. |
+| B10 | Drag interactions must have a single-pointer, non-drag alternative. | **2.5.7** | Drag-to-rotate is covered by the rotate/tilt buttons + arrow keys. *W3C exempts only path-dependent underlying functions (e.g. freehand drawing) — reaching a view angle is endpoint-based, so no exemption applies.* |
+| B11 | List `key`s must be stable across filtering. | 2.4.3 | **React trap:** wheel availability is filtered per colour. Index-based keys remount swatches and throw focus to `<body>` mid-keyboard-navigation. |
+
+---
+
+## PART C — Visual / CSS invariants
+
+| # | Invariant | SC | Notes |
+|---|---|---|---|
+| C1 | Every interactive control has a visible focus indicator with **≥3:1** contrast against its adjacent background — **in every state**, including hover and active. | 1.4.11, 2.4.7 | The orange ring (`#C86C03`) is 3.75:1 on white but only **2.04:1** on the tan hover/active fill (`#CCBDAB`). Reference switches the ring to navy `#1B2236` (8.61:1) when the control is hovered or active. **This cannot be ported as-is** — it uses ID specificity (`#btn-a11y.active:focus-visible`), which styled-components cannot generate. Re-express as prop-driven component styles (`$active`, `$hovered`). |
+| C2 | Text and icon contrast ≥ **4.5:1** (≥3:1 for large text). | 1.4.3 | Reference measures ≥8.4:1 throughout. Verify **composited** values — the disclaimer sits on `rgba(0,0,0,0.7)` over photography, so compute against the blend, not the declared colour. |
+| C3 | Selected-state indicators ≥ **3:1**. | 1.4.11 | Selected swatch border `#997F67` = 3.76:1. |
+| C4 | Every target ≥ **24×24** CSS px. | 2.5.8 | Smallest in the reference is the close button at exactly 24×24. Scroll-arrows 28, touch controls 32, swatches 48. |
+| C5 | No horizontal scrolling / content loss at **320×256** CSS px. | 1.4.10 | Verified at 1× emulation. Sufficient techniques: **C31** (flexbox), **C32** (media queries + grid), **C34** (un-fix sticky elements). |
+
+---
+
+## PART D — What breaks specifically in an AEM + React + styled-components port
+
+1. **`EditableComponent` wrapper vs `role="radiogroup"`** — see A3. Highest-risk item.
+2. **ID-specificity CSS** — C1 must be rewritten as component styles.
+3. **`createGlobalStyle` injection order** — a global `:focus-visible` rule is not guaranteed to
+   beat component styles. Scope focus styles to the component.
+4. **Conditional rendering vs focus** — see B6.
+5. **rAF cleanup** — see B4.
+6. **`dangerouslySetInnerHTML`** — the one route back to B1.
+7. **Unstable keys** — see B11.
+
+---
+
+## PART E — What automated tools will not catch
+
+The original file passed **axe DevTools, WAVE and Lighthouse** while failing WCAG at Level A.
+
+| Failure | Why no tool sees it |
+|---|---|
+| Five radios sharing one accessible name (B1) | No rule checks sibling name uniqueness; `alt` was present and non-empty |
+| Action on down-event (B3) | Requires observing event timing |
+| Un-pausable motion (B4) | Requires interacting over time |
+| Focus lost on close (B6) | Requires a real keypress and an `activeElement` assertion |
+| Tabbable invisible control (B8) | Static snapshot shows a styled button |
+| Ring contrast in hover+focus (C1) | No tool composes two simultaneous pseudo-states |
+
+Additionally, **24 of the 56 A/AA criteria have no ACT Rules at all** — either too new
+(2.4.11, 2.5.7, 2.5.8, 3.2.6, 3.3.7, 3.3.8) or not machine-decidable (3.2.3, 3.3.3, 2.4.5). Those
+can only be assessed by a human.
+
+---
+
+## PART F — Page-level fixes (outside the component, applied to the reference file)
+
+WCAG conformance is defined **per full page** (spec §5.2.2 *Full pages*), so a conformant component
+does not make the page conformant. These were fixed in `index-visl.html` so the reference is
+genuinely exemplary — none are required for the component port, but all are required for a
+page-level claim.
+
+| Fix | SC | Was |
+|---|---|---|
+| 7 subnav tabs → `<button type="button">` with `aria-current` tracked in JS | **2.1.1 (A)** | `<div>`s with click handlers — keyboard users could not reach or activate them. **No automated tool flags this.** |
+| Skip link + `role="banner"` / `role="main"` landmarks | **2.4.1 (A)** | no bypass mechanism at all; skip link is now the first tab stop |
+| `.label-header-midpage` → `<h2>` | 1.3.1 (A) | styled as a section heading but marked up as `<p>` |
+| `aria-hidden="true"` on 17 further decorative SVGs | 1.1.1 (A) | unnamed graphics exposed in the accessibility tree |
+
+Verified after the fixes, page-wide: **310 accessibility-tree nodes, 47 interactive controls,
+0 unnamed, 0 duplicate role+name pairs**; landmarks `banner`, `main`, `navigation` ×2 (named),
+`region: Vehicle viewer`.
+
+**Still deliberately unchanged:** the four `.topbar-tab` items and four `.topbar-cta` icons have no
+click handlers in this prototype. They are inert for mouse and keyboard alike, so parity holds and
+adding button semantics would invent affordance that does not exist.
+
+---
+
+## PART G — Discretionary decisions (where an auditor could disagree)
+
+24 of the 56 A/AA criteria have **no machine-testable ACT rule**, and several of those apply
+directly here (1.4.11, 1.4.13, 2.5.1, 2.5.2, 2.5.8, 2.4.11). For those, "passes" reflects a
+**judgement**, not a test result. The six calls below are defensible but contestable — if an
+external audit challenges this component, expect it to be on one of these.
+
+| Decision in the reference | Argument against | If challenged |
+|---|---|---|
+| `aria-roledescription="3D viewer"` on `#media` | Overrides the announced role; some auditors treat it as noise, and AT support varies | Drop the attribute — `role="region"` + label alone still conforms |
+| `role="dialog" aria-modal="false"` on the spec panel | A non-modal dialog is semantically ambiguous; AT may still imply modality | Use `role="region"` with `aria-live="polite"`; no focus trap is implied |
+| `<canvas role="img">` with one static `aria-label` for the interior panorama | The view **changes** as the user pans; a single fixed label cannot describe it | Announce orientation changes through the existing `#media-status` live region |
+| Rotate/tilt controls live behind the `#btn-a11y` toggle (`inert` when closed) | 2.1.1 **Intent Note 2** permits a separate keyboard mode but explicitly asks how users *discover* it | Expose the group by default, or announce its availability on `#media` focus |
+| Swatch strips use `overflow-x: auto` | Judged bounded sub-widgets rather than primary content under 1.4.10 — arguable either way | Already mitigated: scroll arrows + every swatch individually focusable |
+| `#label-wheel` is `role="button"` **and** `aria-live="polite"` | A live region on an interactive control is unusual and may double-announce | Move the live region to a sibling element |
+
+**Editorial limit, not a code issue:** `img#img-car` alt is generated from state
+(`"VW ID.7, Grenadilla Black Metallic, exterior view"`). Whether that accurately describes every
+rotation frame is a **content** judgement that cannot be verified programmatically.
+
+**What has not been tested at all:** real screen-reader output. The accessibility tree confirms what
+is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. The defensible claim is:
+
+> *"This component meets WCAG 2.2 A/AA on every automated and runtime check available, with six
+> documented discretionary decisions, pending screen-reader verification."*
+
+That is stronger than a tool-clean claim, and unlike a tool-clean claim it is true.
+
+---
+
+## Source of truth
+
+Criterion wording, Intent, Benefits, Examples, Techniques and ACT Rules for all 56 A/AA criteria:
+`~/Documents/j-vault/md/wcag22-full-reference.md` — verbatim from W3C, diffed against the normative
+spec (87/87 criteria, 0 level mismatches, 0.998 mean text fidelity on quoted normative text).
