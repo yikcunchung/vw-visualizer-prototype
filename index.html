@@ -1457,7 +1457,7 @@ body.in-fullscreen #img-car { will-change: transform; }
     <div id="visualizer">
 
     <!-- VISUALIZER -->
-    <div id="media" role="region" tabindex="0" aria-label="Vehicle viewer" aria-roledescription="3D viewer">
+    <div id="media" role="region" tabindex="0" aria-label="Vehicle viewer" aria-roledescription="3D viewer" aria-describedby="media-help">
       <!-- SC 2.4.11: the disclaimer overlays the viewer controls on narrow screens.
            It is position:absolute, so placing it first changes tab order only —
            the user reaches its close button before the controls it covers. -->
@@ -1483,6 +1483,15 @@ body.in-fullscreen #img-car { will-change: transform; }
         </div>
       </div>
 
+      <!-- SC 1.3.1 / SC 2.1.1 Intent note 2: the viewer's keyboard alternative
+           (arrow keys, Enter/Space) is real but was announced nowhere. The only
+           operating hint on screen is #hint-rotate, which says "Drag to rotate",
+           is aria-hidden, and fades after ~3s — so AT users were told nothing.
+           This description is persistent and mode-accurate; setMediaHelp()
+           rewrites it when interior mode toggles, because the arrow keys do
+           different things in each mode. NOT a live region: it is read on
+           focus, and must not interrupt #media-status announcements. -->
+      <span id="media-help" class="sr-only">Use the left and right arrow keys to rotate the car. Press Enter or Space to zoom in or out.</span>
       <span id="media-status" class="sr-only" aria-live="polite"></span>
       <img id="img-car" alt="VW ID. Polo, exterior view" draggable="false">
 
@@ -2452,9 +2461,21 @@ media.addEventListener('mousedown', stopAutoRotate);
 
 const btnToggleView = document.getElementById('btn-toggle-view');
 
+// The arrow keys do different things per mode (see the keydown handler): exterior
+// steps left/right only, interior pans on all four axes. A single static
+// description would be wrong in one of the two, so it is rewritten on toggle.
+const mediaHelp = document.getElementById('media-help');
+function setMediaHelp() {
+  if (!mediaHelp) return;
+  mediaHelp.textContent = interiorMode
+    ? 'Use the arrow keys to look around the interior. Press Enter or Space to zoom in or out.'
+    : 'Use the left and right arrow keys to rotate the car. Press Enter or Space to zoom in or out.';
+}
+
 function enterInterior() {
   animateBBWidth(() => {
     interiorMode = true;
+    setMediaHelp();   // inside the callback: animateBBWidth defers, so the flag is only true here
     media.classList.add('interior-mode');
     media.parentElement.classList.add('interior-mode');
     document.getElementById('bottombar').classList.add('interior-mode');
@@ -2471,6 +2492,7 @@ function exitInterior() {
   stopAutoRotate();
   animateBBWidth(() => {
     interiorMode = false;
+    setMediaHelp();
     updateCarImage();
     media.classList.remove('interior-mode');
     media.parentElement.classList.remove('interior-mode');
@@ -2786,8 +2808,13 @@ document.addEventListener('keydown', e => {
   const active = document.activeElement;
   const tag = active?.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-  // Only intercept arrow keys when #media or body has focus — let widgets handle their own keys
-  const mediaFocused = active === media || active === document.body || active == null;
+  // Only intercept arrow keys when #media itself has focus — let widgets handle their own keys.
+  // Treating body/null as "media focused" hijacked the browser's own arrow-key page scrolling:
+  // in interior mode ArrowDown was preventDefault()ed and panned the panorama while the page
+  // stayed put (measured: scrollY 400 -> 400), for a user who had focused nothing at all.
+  // The viewer now behaves like any focusable widget, which is also what #media-help promises:
+  // the instruction is announced when you focus it, and that is when the keys act.
+  const mediaFocused = active === media;
   if (interiorMode) {
     if (mediaFocused) {
       if (e.key === 'ArrowLeft')  { e.preventDefault(); stopAutoRotate(); pano.pan(-PANO_STEP, 0); }
