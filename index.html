@@ -11,6 +11,19 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; min-height: 100%; background: #f6f5f2; }
+/* SC 2.4.11 Focus Not Obscured: the browser scrolls a focused control into the
+   *layout* viewport, which it considers satisfied even when our position:fixed
+   bars cover it. #btn-toggle-view landed entirely behind #nbabar (76px) with
+   0 of 5 test points visible. scroll-padding tells scroll-into-view to leave
+   clearance for those bars. Measured: topbar 64 + subnav 52 top, nbabar 76 bottom. */
+html {
+  scroll-padding-top: 120px;
+  scroll-padding-bottom: 84px;
+}
+@media (max-width: 959px) {
+  /* topbar 64 + subnav-sm 46 top; nbabar-sm 78 bottom (+ safe-area inset) */
+  html { scroll-padding-top: 116px; scroll-padding-bottom: 96px; }
+}
 /* SC 2.4.1 — visible only on keyboard focus */
 .skip-link {
   position: absolute; top: -100%; left: 8px; z-index: 9999;
@@ -72,8 +85,14 @@ html, body { width: 100%; min-height: 100%; background: #f6f5f2; }
 #topbar svg path     { transition: fill 0.4s ease; }
 .topbar-hidden #topbar { transform: translateY(-100%); }
 .topbar-hidden #subnav { transform: translateY(-64px); }
-.stage-visible #subnav { opacity: 0; pointer-events: none; }
-.stage-visible #subnav-sm { opacity: 0; pointer-events: none; }
+/* SC 2.4.7 Focus Visible: opacity:0 + pointer-events:none removes these bars from
+   sight and from the mouse, but leaves every child in the tab order. From the top of
+   the page, Tab twice landed on an invisible .subnav-tab (measured effective opacity
+   0) — 12 such stops at 1440px, 7 here and 5 in #nbabar. axe reports none of them.
+   visibility:hidden takes them out of the tab order and the accessibility tree; the
+   delay on the visibility slot lets the 0.3s opacity fade finish first. */
+.stage-visible #subnav { opacity: 0; pointer-events: none; visibility: hidden; transition-delay: 0s, 0s, 0.3s; }
+.stage-visible #subnav-sm { opacity: 0; pointer-events: none; visibility: hidden; }
 .topbar-container {
   display: flex; align-items: center; justify-content: space-between;
   width: 100%; padding: 0 calc(100vw / 24); box-sizing: border-box;
@@ -866,7 +885,8 @@ body.in-fullscreen #img-car { will-change: transform; }
   display: flex; align-items: center; justify-content: flex-start;
   padding: 0 calc(100vw / 24);
   position: fixed; top: 64px; left: 0; right: 0; z-index: 9;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  /* visibility is transitioned so .stage-visible can delay it past the fade — see SC 2.4.7 note above */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0s;
 }
 .subnav-top {
   font-family: 'VW Text', 'Inter', sans-serif;
@@ -902,9 +922,10 @@ body.in-fullscreen #img-car { will-change: transform; }
   display: flex; align-items: center;
   border-top: 1px solid rgba(41,48,67,0.12);
   z-index: 8;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s;
 }
-.stage-visible #nbabar { opacity: 0; transform: translateY(100%); pointer-events: none; }
+/* same SC 2.4.7 fix: 5 focusable links/CTA in here were tabbable while invisible */
+.stage-visible #nbabar { opacity: 0; transform: translateY(100%); pointer-events: none; visibility: hidden; transition-delay: 0s, 0s, 0.3s; }
 .nbabar-inner {
   display: flex; align-items: center; justify-content: flex-end;
   width: 100%; padding: 0 calc(100vw / 24); gap: 32px;
@@ -1330,12 +1351,12 @@ body.in-fullscreen #img-car { will-change: transform; }
   </nav>
 
   <!-- MOBILE SUBNAV -->
-  <div id="subnav-sm">
+  <nav id="subnav-sm" aria-label="Page sections">
     <span class="subnav-sm-label" id="subnav-sm-label">Explore</span>
     <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 15.427C11.525 15.427 11.102 15.249 10.786 14.927L1 4.93L1.95 4L11.735 13.996C11.865 14.127 12.084 14.128 12.215 13.995L21.999 4L22.95 4.93L13.165 14.926C12.848 15.25 12.425 15.427 12 15.427Z" fill="#293043"/>
     </svg>
-  </div>
+  </nav>
 
   <!-- MAIN BODY: media + sidebar -->
   <div id="page-layout" role="main" tabindex="-1">
@@ -1365,7 +1386,7 @@ body.in-fullscreen #img-car { will-change: transform; }
             <p class="price-content"><span class="currency">£</span><span class="amount"> 51,445.00^</span></p>
           </div>
         </div>
-        <div class="tiles">
+        <div class="tiles" tabindex="0" role="group" aria-label="Technical data">
           <div class="tile-technical">
             <span class="label-wrapper">Electric range combined (WLTP):</span>
             <p>364–433 miles</p>
@@ -1444,7 +1465,41 @@ body.in-fullscreen #img-car { will-change: transform; }
     <div id="visualizer">
 
     <!-- VISUALIZER -->
-    <div id="media" role="region" tabindex="0" aria-label="Vehicle viewer" aria-roledescription="3D viewer">
+    <div id="media" role="region" tabindex="0" aria-label="Vehicle viewer" aria-roledescription="3D viewer" aria-describedby="media-help">
+      <!-- SC 2.4.11: the disclaimer overlays the viewer controls on narrow screens.
+           It is position:absolute, so placing it first changes tab order only —
+           the user reaches its close button before the controls it covers. -->
+      <!-- Disclaimer overlay -->
+      <div id="disclaimer" role="dialog" aria-label="Vehicle specification" aria-modal="false">
+        <div class="disclaimer-body">
+          <div class="disclaimer-text">
+            <span class="disclaimer-i" aria-hidden="true">i</span>
+            <!-- tabindex=0: this block scrolls (SC 1.4.10 fix), and a scrollable
+                 region must be keyboard-scrollable — ACT rule 0ssw9k / SC 2.1.1 -->
+            <div class="label-group" id="label-group" tabindex="0" role="group" aria-label="Vehicle specification details">
+              <p>Pro Match Plus 77kWh 286 PS 1-Speed Automatic 5 Door;&nbsp; 14.8 kWh/62mi &nbsp;and&nbsp; CO2 emissions: &nbsp;0 g/km &nbsp;and&nbsp; Efficiency class: &nbsp;A</p>
+              <p>UK specification may vary. Images are for illustrative purposes only and some options may incur an extra cost.</p>
+            </div>
+          </div>
+        </div>
+        <div class="disclaimer-close-wrap">
+          <button class="btn-close" id="btn-close" aria-label="Close specification panel">
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M20.9559 3.98495L20.0139 3.04395L11.9999 11.0589L3.98495 3.04395L3.04395 3.98495L11.0589 11.9999L3.04395 20.0149L3.98495 20.9559L11.9999 12.9409L20.0139 20.9559L20.9559 20.0149L12.9409 11.9999L20.9559 3.98495Z" fill="white"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- SC 1.3.1 / SC 2.1.1 Intent note 2: the viewer's keyboard alternative
+           (arrow keys, Enter/Space) is real but was announced nowhere. The only
+           operating hint on screen is #hint-rotate, which says "Drag to rotate",
+           is aria-hidden, and fades after ~3s — so AT users were told nothing.
+           This description is persistent and mode-accurate; setMediaHelp()
+           rewrites it when interior mode toggles, because the arrow keys do
+           different things in each mode. NOT a live region: it is read on
+           focus, and must not interrupt #media-status announcements. -->
+      <span id="media-help" class="sr-only">Use the left and right arrow keys to rotate the car. Press Enter or Space to zoom in or out.</span>
       <span id="media-status" class="sr-only" aria-live="polite"></span>
       <img id="img-car" alt="VW ID. Polo, exterior view" draggable="false">
 
@@ -1496,26 +1551,6 @@ body.in-fullscreen #img-car { will-change: transform; }
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7.96875 4.65918C7.81816 4.64244 7.67573 4.59174 7.54199 4.45801C7.40826 4.32427 7.35756 4.18184 7.34082 4.03125L7.33496 3.90039L7.33496 1H8.66504L8.66504 3.33496H11L11 4.66504H8.0752L7.96875 4.65918ZM1 3.33496H3.33496V1L4.66504 1V3.90039L4.65918 4.03125C4.64244 4.18184 4.59174 4.32427 4.45801 4.45801C4.32427 4.59174 4.18184 4.64244 4.03125 4.65918L3.9248 4.66504H1L1 3.33496ZM7.33496 11V8.09961L7.34082 7.96875C7.35756 7.81816 7.40826 7.67573 7.54199 7.54199C7.67573 7.40826 7.81816 7.35756 7.96875 7.34082L8.0752 7.33496H11V8.66504H8.66504V11H7.33496ZM3.33496 8.66504L1 8.66504V7.33496L3.9248 7.33496L4.03125 7.34082C4.18184 7.35756 4.32427 7.40826 4.45801 7.54199C4.59174 7.67573 4.64244 7.81816 4.65918 7.96875L4.66504 8.09961V11L3.33496 11V8.66504Z" fill="#1B2236"/></svg>
         </span>
       </button>
-
-      <!-- Disclaimer overlay -->
-      <div id="disclaimer" role="dialog" aria-label="Vehicle specification" aria-modal="false">
-        <div class="disclaimer-body">
-          <div class="disclaimer-text">
-            <span class="disclaimer-i" aria-hidden="true">i</span>
-            <div class="label-group" id="label-group">
-              <p>Pro Match Plus 77kWh 286 PS 1-Speed Automatic 5 Door;&nbsp; 14.8 kWh/62mi &nbsp;and&nbsp; CO2 emissions: &nbsp;0 g/km &nbsp;and&nbsp; Efficiency class: &nbsp;A</p>
-              <p>UK specification may vary. Images are for illustrative purposes only and some options may incur an extra cost.</p>
-            </div>
-          </div>
-        </div>
-        <div class="disclaimer-close-wrap">
-          <button class="btn-close" id="btn-close" aria-label="Close specification panel">
-            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M20.9559 3.98495L20.0139 3.04395L11.9999 11.0589L3.98495 3.04395L3.04395 3.98495L11.0589 11.9999L3.04395 20.0149L3.98495 20.9559L11.9999 12.9409L20.0139 20.9559L20.9559 20.0149L12.9409 11.9999L20.9559 3.98495Z" fill="white"/>
-            </svg>
-          </button>
-        </div>
-      </div>
 
     </div><!-- /media -->
 
@@ -2104,6 +2139,9 @@ function makeSwatchBtn(src, alt, idx, isSelected, onClick) {
   imgEl.src = src;
   imgEl.alt = alt;
   btn.addEventListener('click', () => onClick(idx));
+  // SC 2.4.11: selecting centres the swatch, but tabbing did not — the browser's
+  // minimal scroll parks it at the scrollport edge, under the floating arrow.
+  btn.addEventListener('focus', () => scrollSwatchIntoView(btn.parentElement, idx));
   return btn;
 }
 
@@ -2431,9 +2469,21 @@ media.addEventListener('mousedown', stopAutoRotate);
 
 const btnToggleView = document.getElementById('btn-toggle-view');
 
+// The arrow keys do different things per mode (see the keydown handler): exterior
+// steps left/right only, interior pans on all four axes. A single static
+// description would be wrong in one of the two, so it is rewritten on toggle.
+const mediaHelp = document.getElementById('media-help');
+function setMediaHelp() {
+  if (!mediaHelp) return;
+  mediaHelp.textContent = interiorMode
+    ? 'Use the arrow keys to look around the interior. Press Enter or Space to zoom in or out.'
+    : 'Use the left and right arrow keys to rotate the car. Press Enter or Space to zoom in or out.';
+}
+
 function enterInterior() {
   animateBBWidth(() => {
     interiorMode = true;
+    setMediaHelp();   // inside the callback: animateBBWidth defers, so the flag is only true here
     media.classList.add('interior-mode');
     media.parentElement.classList.add('interior-mode');
     document.getElementById('bottombar').classList.add('interior-mode');
@@ -2450,6 +2500,7 @@ function exitInterior() {
   stopAutoRotate();
   animateBBWidth(() => {
     interiorMode = false;
+    setMediaHelp();
     updateCarImage();
     media.classList.remove('interior-mode');
     media.parentElement.classList.remove('interior-mode');
@@ -2765,8 +2816,13 @@ document.addEventListener('keydown', e => {
   const active = document.activeElement;
   const tag = active?.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-  // Only intercept arrow keys when #media or body has focus — let widgets handle their own keys
-  const mediaFocused = active === media || active === document.body || active == null;
+  // Only intercept arrow keys when #media itself has focus — let widgets handle their own keys.
+  // Treating body/null as "media focused" hijacked the browser's own arrow-key page scrolling:
+  // in interior mode ArrowDown was preventDefault()ed and panned the panorama while the page
+  // stayed put (measured: scrollY 400 -> 400), for a user who had focused nothing at all.
+  // The viewer now behaves like any focusable widget, which is also what #media-help promises:
+  // the instruction is announced when you focus it, and that is when the keys act.
+  const mediaFocused = active === media;
   if (interiorMode) {
     if (mediaFocused) {
       if (e.key === 'ArrowLeft')  { e.preventDefault(); stopAutoRotate(); pano.pan(-PANO_STEP, 0); }
@@ -2886,15 +2942,39 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 const disclaimerPanel = document.getElementById('disclaimer');
 const btnInfo  = document.getElementById('btn-info');
 const btnClose = document.getElementById('btn-close');
+// Who opened the panel decides where focus goes when it closes. Returning focus
+// to the trigger is only correct if the trigger opened it — the panel also
+// auto-opens on scroll, and sending focus to #btn-info in that case throws the
+// user forward past every viewer control to something they never touched.
+let disclaimerOpener = null;
+
+function closeDisclaimer() {
+  if (!disclaimerPanel.classList.contains('is-open')) return;
+  const focusWasInside = disclaimerPanel.contains(document.activeElement);
+  disclaimerPanel.classList.remove('is-open');
+  btnInfo.setAttribute('aria-expanded', 'false');
+  if (focusWasInside) {
+    // focus would otherwise be orphaned on a hidden element
+    if (disclaimerOpener) disclaimerOpener.focus();     // user opened it -> go back
+    else media.focus();                                 // auto-opened -> stay put; Tab continues forward
+  }
+  disclaimerOpener = null;
+}
+
 btnInfo.addEventListener('click', () => {
   const isOpen = disclaimerPanel.classList.toggle('is-open');
   btnInfo.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  if (isOpen) btnClose.focus();
+  if (isOpen) { disclaimerOpener = btnInfo; btnClose.focus(); }
+  else disclaimerOpener = null;
 });
-btnClose.addEventListener('click', () => {
-  disclaimerPanel.classList.remove('is-open');
-  btnInfo.setAttribute('aria-expanded', 'false');
-  btnInfo.focus();
+btnClose.addEventListener('click', closeDisclaimer);
+
+// SC 2.4.11 Focus Not Obscured: on narrow screens the panel overlays the viewer
+// controls, and it opens itself on scroll rather than by user action. W3C Note 2
+// only forgives an overlay if the user can reveal the focused component WITHOUT
+// advancing focus — so Escape must dismiss it from anywhere.
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDisclaimer();
 });
 
 // Show disclaimer when visualizer loads in
