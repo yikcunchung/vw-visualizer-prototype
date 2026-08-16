@@ -577,6 +577,12 @@ body.in-fullscreen { overflow: hidden; }
 body.in-fullscreen #visualizer {
   position: fixed;
   width: 100dvh; height: 100dvw;
+  /* the base rule sets min-height: calc(100dvh - 128px); min-height beats height,
+     so the rotated container grew past the screen and pushed #bottombar out of
+     the viewport in portrait. Reset it and clamp. */
+  min-height: 0; max-height: 100dvw; max-width: 100dvh;
+  margin-left: 0;               /* base rule uses calc(50% - 50dvw) for the full-bleed row */
+  overflow: hidden;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%) rotate(90deg);
   z-index: 1000;
@@ -584,13 +590,13 @@ body.in-fullscreen #visualizer {
   gap: 0; flex-shrink: 0;
 }
 body.in-fullscreen #media {
-  flex: 1 0 0; min-height: 0;
+  flex: 1 1 0; min-height: 0;
   width: 100%; height: auto;
   aspect-ratio: unset; border-radius: 0; overflow: hidden;
 }
 body.in-fullscreen #bottombar {
   position: static; transform: none;
-  flex-shrink: 0; align-self: stretch;
+  flex: 0 0 auto; align-self: stretch;
   width: 100%;
   display: grid; grid-template-columns: 1fr;
   background: rgba(255, 255, 255, 0.60);
@@ -782,8 +788,13 @@ body.in-fullscreen #img-car { will-change: transform; }
   display: none;
   position: absolute; bottom: 0; left: 50%; right: auto;
   transform: translateX(-50%);
-  width: 100%; min-width: 370px; max-width: 1400px;
-  align-items: flex-start;
+  /* SC 1.4.10: a hard 370px floor exceeds a 320px viewport and pushed the close
+     button off-screen (min-width beats max-width), making the panel impossible to
+     dismiss. min() keeps the 370px floor only while it fits. */
+  width: 100%; min-width: min(370px, 100%); max-width: 1400px;
+  /* never taller than half its wrapper (#media) — keeps the close button on screen */
+  max-height: 50%;
+  align-items: stretch;
   border-radius: 4px 4px 0 0; overflow: hidden;
   background-color: rgba(0,0,0,0.7);
   z-index: 4;
@@ -808,12 +819,12 @@ body.in-fullscreen #img-car { will-change: transform; }
   #disclaimer { max-height: 150px; }
 }
 .disclaimer-body {
-  flex: 1 0 0; min-width: 0;
+  flex: 1 1 0; min-width: 0; min-height: 0;
   padding: 16px 48px 16px 16px;
   display: flex; flex-direction: column;
 }
 .disclaimer-text {
-  display: grid;
+  display: grid; min-height: 0;
   margin: 0; padding: 0;
   grid-template-columns: max-content 1fr;
   gap: 12px 8px;
@@ -825,7 +836,12 @@ body.in-fullscreen #img-car { will-change: transform; }
   font-size: 0.88rem; line-height: 150%; letter-spacing: calc(-0.02em + 0.02rem);
   color: rgb(255,255,255); padding-right: 16px;
 }
-.label-group { flex: 1; min-width: 0; }
+.label-group {
+  flex: 1; min-width: 0; min-height: 0;
+  overflow-y: auto;                 /* text scrolls; the close button does not move */
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
 .label-group p {
   margin: unset;
   font-family: 'VW Text', sans-serif; font-weight: normal;
@@ -2111,9 +2127,12 @@ function scrollSwatchIntoView(grid, idx) {
   if (scrollMax <= 8) return;
   const btn = grid.querySelectorAll('.btn-swatch')[idx];
   if (!btn) return;
-  const gridX = grid.getBoundingClientRect().left;
-  const r = btn.getBoundingClientRect();
-  const bCenter = (r.left + r.right) / 2 - gridX + grid.scrollLeft;
+  // Use layout offsets, not getBoundingClientRect(): in fullscreen the whole
+  // component is rotate(90deg), so rect coords are in rotated screen space while
+  // scrollLeft is in the element's own axis. Mixing them made this compute 0
+  // instead of the real target, so auto-scroll silently did nothing in fullscreen.
+  // offsetLeft is layout-space and transform-independent.
+  const bCenter = (btn.offsetLeft - grid.offsetLeft) + btn.offsetWidth / 2;
   const target = Math.max(0, Math.min(scrollMax, bCenter - grid.clientWidth / 2));
   grid.scrollTo({ left: target, behavior: 'smooth' });
 }
