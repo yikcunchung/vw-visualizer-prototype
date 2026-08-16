@@ -85,8 +85,14 @@ html {
 #topbar svg path     { transition: fill 0.4s ease; }
 .topbar-hidden #topbar { transform: translateY(-100%); }
 .topbar-hidden #subnav { transform: translateY(-64px); }
-.stage-visible #subnav { opacity: 0; pointer-events: none; }
-.stage-visible #subnav-sm { opacity: 0; pointer-events: none; }
+/* SC 2.4.7 Focus Visible: opacity:0 + pointer-events:none removes these bars from
+   sight and from the mouse, but leaves every child in the tab order. From the top of
+   the page, Tab twice landed on an invisible .subnav-tab (measured effective opacity
+   0) — 12 such stops at 1440px, 7 here and 5 in #nbabar. axe reports none of them.
+   visibility:hidden takes them out of the tab order and the accessibility tree; the
+   delay on the visibility slot lets the 0.3s opacity fade finish first. */
+.stage-visible #subnav { opacity: 0; pointer-events: none; visibility: hidden; transition-delay: 0s, 0s, 0.3s; }
+.stage-visible #subnav-sm { opacity: 0; pointer-events: none; visibility: hidden; }
 .topbar-container {
   display: flex; align-items: center; justify-content: space-between;
   width: 100%; padding: 0 calc(100vw / 24); box-sizing: border-box;
@@ -879,7 +885,8 @@ body.in-fullscreen #img-car { will-change: transform; }
   display: flex; align-items: center; justify-content: flex-start;
   padding: 0 calc(100vw / 24);
   position: fixed; top: 64px; left: 0; right: 0; z-index: 9;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  /* visibility is transitioned so .stage-visible can delay it past the fade — see SC 2.4.7 note above */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0s;
 }
 .subnav-top {
   font-family: 'VW Text', 'Inter', sans-serif;
@@ -915,9 +922,10 @@ body.in-fullscreen #img-car { will-change: transform; }
   display: flex; align-items: center;
   border-top: 1px solid rgba(41,48,67,0.12);
   z-index: 8;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s;
 }
-.stage-visible #nbabar { opacity: 0; transform: translateY(100%); pointer-events: none; }
+/* same SC 2.4.7 fix: 5 focusable links/CTA in here were tabbable while invisible */
+.stage-visible #nbabar { opacity: 0; transform: translateY(100%); pointer-events: none; visibility: hidden; transition-delay: 0s, 0s, 0.3s; }
 .nbabar-inner {
   display: flex; align-items: center; justify-content: flex-end;
   width: 100%; padding: 0 calc(100vw / 24); gap: 32px;
