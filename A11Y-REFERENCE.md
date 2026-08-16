@@ -71,6 +71,7 @@ These port cleanly to JSX.
 | A5 | German product strings inside the English UI carry `lang="de"`. | 3.1.2 | Applies to the wheel names (`Leichtmetallräder …`) on the label **and** the swatch grid. Drive from content locale, not hardcoded. |
 | A6 | Icon-only buttons have an `aria-label` and **no** duplicate `title` with the same text. | — | Redundant `title` is a WAVE alert. Losing `title` also loses the hover tooltip — accepted trade. |
 | A7 | A visually hidden `aria-live="polite"` region exists for status announcements. | 4.1.3 | `.sr-only` = `position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap`. Do **not** use `display:none`. |
+| A8 | The viewer carries `aria-describedby` pointing at a visually hidden element that **states how to operate it by keyboard**. | 1.3.1 | The viewer's keyboard alternative (B10) existed for a long time and was announced *nowhere*. The only on-screen hint says "Drag to rotate", carries `aria-hidden`, and fades after ~3s — its whole subtree exposed one node, `role=generic name=""`. So the alternative built for 2.1.1 / 2.5.7 was invisible to exactly the users it was built for; `#media` announced "Vehicle viewer, 3D viewer" and stopped. **Not a live region** — it must be read on focus and must not interrupt the A7 status region. See B12 for keeping it truthful. |
 
 ---
 
@@ -87,11 +88,13 @@ These port cleanly to JSX.
 | B4 | Auto-rotation (interior panorama) must be stoppable **by keyboard**, not only by mouse. | **2.2.2** | `stopAutoRotate()` was bound only to `mousedown`, so a keyboard user could never stop indefinite motion. Now also called from arrow keys and every rotate/tilt control. In React: cancel the rAF in the effect **and** on any interaction; clean up on unmount or it leaks. |
 | B5 | Zoom state must announce, and must keep dependent controls in sync, on **every** path (pointer tap, buttons, Enter/Space). | 4.1.3 | Keyboard zoom updated state but never re-synced the zoom-in/out `disabled` flags — a functional bug as well as an a11y one. Derive `disabled` from state. |
 | B6 | Opening the spec panel moves focus into it; closing returns focus to the trigger. | 2.4.3 | **React trap:** if the panel is conditionally rendered (`{open && <Panel/>}`), unmounting while focus is inside drops focus to `<body>`. Prefer keeping it mounted and hidden, or explicitly restore focus. Effect dependency mistakes break this **silently**. |
-| B7 | Arrow keys only drive the viewer when the viewer (or body) has focus. | 2.1.1 | Otherwise arrow keys hijack `<select>`, scroll containers and other widgets. Guard on `document.activeElement`. |
+| B7 | Arrow keys drive the viewer **only when the viewer element itself has focus** — `active === media`, nothing looser. | 2.1.1 | Otherwise arrow keys hijack `<select>`, scroll containers and other widgets. **Corrected after this doc's first draft:** the guard originally also accepted `document.body` and `null`, i.e. "nobody has focused anything". In interior mode that swallowed the browser's own arrow-key page scrolling — `ArrowDown` was `preventDefault()`ed and panned the panorama while the page stayed put (measured `scrollY 400 → 400`) for a user who had focused nothing at all. Treat "no focus" as **not** the viewer. |
 | B8 | A hidden/non-functional control must be **removed from the tab order** (`disabled`), not just visually hidden. | **2.4.7** | Scroll-arrows kept `tabindex=0` while at `opacity:0; pointer-events:none` — keyboard users landed on an invisible, dead button with no visible focus. Matches BITV finding #8. |
 | B9 | Non-active control groups are hidden from AT with `inert`, not just CSS. | 4.1.2 | React support is version-dependent; set via ref if the pinned React version lacks the prop. |
 | B10 | Drag interactions must have a single-pointer, non-drag alternative. | **2.5.7** | Drag-to-rotate is covered by the rotate/tilt buttons + arrow keys. *W3C exempts only path-dependent underlying functions (e.g. freehand drawing) — reaching a view angle is endpoint-based, so no exemption applies.* |
 | B11 | List `key`s must be stable across filtering. | 2.4.3 | **React trap:** wheel availability is filtered per colour. Index-based keys remount swatches and throw focus to `<body>` mid-keyboard-navigation. |
+| B12 | The A8 keyboard description must be **rewritten whenever the key bindings change**, not written once. | 1.3.1 | The arrow keys genuinely differ by mode: exterior steps left/right only, interior pans on all four axes. A single static sentence is therefore false in one of the two states. The reference swaps the text inside the mode-toggle callback, next to where the mode flag flips — putting it after the call is wrong, because the toggle defers through a width animation and the flag is not yet set. In React derive the string from mode rather than assigning it. |
+| B13 | Closing the spec panel returns focus to **whoever opened it**, and only when focus was inside the panel. | 2.4.3 | Refines B6. The panel can be opened two ways — auto-opened on load, or by the info button — and the correct destination differs: the trigger if a user opened it, the viewer if it auto-opened. Blindly focusing the trigger sends the user somewhere they never were. Guard on `panel.contains(document.activeElement)` before moving focus at all, or `Escape` pressed from elsewhere on the page will yank focus across the document. |
 
 ---
 
@@ -104,6 +107,8 @@ These port cleanly to JSX.
 | C3 | Selected-state indicators ≥ **3:1**. | 1.4.11 | Selected swatch border `#997F67` = 3.76:1. |
 | C4 | Every target ≥ **24×24** CSS px. | 2.5.8 | Smallest in the reference is the close button at exactly 24×24. Scroll-arrows 28, touch controls 32, swatches 48. |
 | C5 | No horizontal scrolling / content loss at **320×256** CSS px. | 1.4.10 | Verified at 1× emulation. Sufficient techniques: **C31** (flexbox), **C32** (media queries + grid), **C34** (un-fix sticky elements). |
+| C6 | A focused viewer control must not end up **behind the page's fixed bars**. Reserve clearance with `scroll-padding-top` / `scroll-padding-bottom` on the scroll container. | **2.4.11** | The browser scrolls a focused control into the *layout* viewport and considers that done — it has no idea a `position:fixed` header or action bar is painted on top. `#btn-toggle-view` landed **entirely** behind the bottom bar, 0 of 5 test points visible. The clearance values must track the real bar heights per breakpoint. This is a page-chrome interaction, but the control that disappears is the viewer's, so it is the viewer's problem to verify. |
+| C7 | A control that scrolls (the spec panel's text block) needs `tabindex="0"`. | 2.1.1 | Making it scrollable to satisfy C5 **created** a violation: a scrollable region must be keyboard-scrollable (ACT rule `0ssw9k`). Fixing one criterion opened another — re-run the full check after any overflow change, not just the criterion you were working on. |
 
 ---
 
@@ -132,6 +137,21 @@ The original file passed **axe DevTools, WAVE and Lighthouse** while failing WCA
 | Focus lost on close (B6) | Requires a real keypress and an `activeElement` assertion |
 | Tabbable invisible control (B8) | Static snapshot shows a styled button |
 | Ring contrast in hover+focus (C1) | No tool composes two simultaneous pseudo-states |
+| Keyboard alternative that is never announced (A8) | Every attribute is valid; the *absence* of an instruction is not a rule violation |
+| Arrow keys eating page scroll (B7) | Requires pressing a key with nothing focused and asserting `scrollY` afterwards |
+
+Two blind spots worth knowing because they also defeat **your own** test scripts:
+
+1. **`pointer-events: none` defeats hit-test-based obscuring checks.** The rotate-hint overlay covers
+   the whole viewer at 64–80% black, visually obscuring `#btn-a11y` and `#btn-toggle-view` — but
+   because it takes no pointer events, `document.elementFromPoint()` passes straight through and
+   reports the control as visible. Any 2.4.11 check built on `elementFromPoint` scores this as a pass.
+   Visual obstruction and hit-testing are different questions.
+2. **Declared-colour contrast tools misread text over a sibling scrim.** The topbar text is white, all
+   of its *ancestors* are transparent, and the dark layer is a `linear-gradient` **sibling**. Walking
+   the ancestor chain therefore lands on the white page background and computes white-on-white —
+   `1.09:1`. Real composited pixels measure **21:1**. Expect WAVE to flag this; it is a false positive.
+   Settle contrast disputes with a screenshot, not with `getComputedStyle`.
 
 Additionally, **24 of the 56 A/AA criteria have no ACT Rules at all** — either too new
 (2.4.11, 2.5.7, 2.5.8, 3.2.6, 3.3.7, 3.3.8) or not machine-decidable (3.2.3, 3.3.3, 2.4.5). Those
