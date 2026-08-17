@@ -2011,9 +2011,11 @@ function preloadWheelCombo(wheelIdx) {
   }
 }
 
-// Kick off frame downloads immediately on page load so they're warm before the user reaches the visualizer
+// Warm only the combo the user is actually looking at (36 frames). The other 77 combos
+// are fetched on demand: preloadColorCombo() runs on swatch pointerenter, so a hover
+// warms a colour before the click. Eagerly preloading every combo cost 2,808 requests
+// and ~925 MB, which is 98.6% of a payload the user never sees.
 preloadActiveFrames();
-setTimeout(preloadAllFrames, 200);
 
 function updateCarImage() {
   const frames = activeFrames();
@@ -2548,8 +2550,9 @@ function initVisualizer() {
 
   // Stage 2: active combo frames — needed as soon as the visualizer is visible
   preloadActiveFrames();
-  // Stage 3: all other combos — in background after swatches and active combo are loading
-  preloadAllFrames();
+  // Stage 3 (all other combos) deliberately removed: 2,808 requests / ~925 MB for
+  // content the user never sees. preloadColorCombo() on swatch hover covers the
+  // realistic case. preloadAllFrames() is kept below for opt-in use.
 
   if (selectedModel === 'id7') media.classList.add('id7-mode');
   buildColorGrid(0.5);
