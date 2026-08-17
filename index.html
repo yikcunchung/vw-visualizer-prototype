@@ -2820,22 +2820,33 @@ document.addEventListener('keydown', e => {
   const active = document.activeElement;
   const tag = active?.tagName;
   if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-  // Only intercept arrow keys when #media itself has focus — let widgets handle their own keys.
-  // Treating body/null as "media focused" hijacked the browser's own arrow-key page scrolling:
-  // in interior mode ArrowDown was preventDefault()ed and panned the panorama while the page
-  // stayed put (measured: scrollY 400 -> 400), for a user who had focused nothing at all.
-  // The viewer now behaves like any focusable widget, which is also what #media-help promises:
-  // the instruction is announced when you focus it, and that is when the keys act.
-  const mediaFocused = active === media;
+  // Two scopes, split by which keys the browser itself needs.
+  //
+  // Left/Right rotate whenever the viewer OR nothing at all has focus. Requiring
+  // #media focus made rotation unreachable for pointer users: clicking the car does
+  // not focus it (the drag handler suppresses the default focus), so activeElement
+  // stayed <body> and the arrows did nothing.
+  //
+  // Up/Down stay strictly #media-only. They are the browser's page-scroll keys, and
+  // an earlier version that accepted body/null for all four swallowed page scrolling
+  // in interior mode — ArrowDown was preventDefault()ed and panned the panorama while
+  // the page stayed put (measured: scrollY 400 -> 400) for a user focused on nothing.
+  //
+  // Anything else focused (a button, a swatch) yields to that widget's own keys.
+  const mediaFocused   = active === media;
+  const nothingFocused = active === document.body || active == null;
+  const canRotate      = mediaFocused || nothingFocused;
   if (interiorMode) {
-    if (mediaFocused) {
+    if (canRotate) {
       if (e.key === 'ArrowLeft')  { e.preventDefault(); stopAutoRotate(); pano.pan(-PANO_STEP, 0); }
       if (e.key === 'ArrowRight') { e.preventDefault(); stopAutoRotate(); pano.pan( PANO_STEP, 0); }
+    }
+    if (mediaFocused) {
       if (e.key === 'ArrowUp')    { e.preventDefault(); stopAutoRotate(); pano.pan(0,  PANO_STEP); }
       if (e.key === 'ArrowDown')  { e.preventDefault(); stopAutoRotate(); pano.pan(0, -PANO_STEP); }
     }
   } else {
-    if (mediaFocused) {
+    if (canRotate) {
       if (e.key === 'ArrowLeft')  stepLeft();
       if (e.key === 'ArrowRight') stepRight();
     }
