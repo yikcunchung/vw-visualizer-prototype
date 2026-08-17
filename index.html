@@ -2933,6 +2933,14 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     const next = force !== undefined ? force : !lbl.classList.contains('expanded');
     lbl.classList.toggle('expanded', next);
     lbl.setAttribute('aria-expanded', String(next));
+    // Expanding adds up to two lines, and a class change scrolls nothing. On the
+    // pointer path (no preceding focus, so no scroll) the new lines landed 26px
+    // below the viewport at 1440x900, and even collapsed the label can sit 68px
+    // behind the fixed #nbabar — 0 of 5 sample points on the last line were
+    // reachable. block:'nearest' is a no-op when it already fits and honours the
+    // html scroll-padding that keeps content clear of the fixed bars (C6 / 2.4.11).
+    // The keyboard path was already fine: focusing the label triggers that scroll.
+    if (next) lbl.scrollIntoView({ block: 'nearest' });
   }
 
   lbl.addEventListener('click', () => toggle());
