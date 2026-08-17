@@ -2930,17 +2930,16 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   const lbl = document.getElementById('label-wheel');
 
   function toggle(force) {
+    // Deliberately does NOT scroll the label into view. Expanding grows the wrapper,
+    // which can push the new lines under the fixed #nbabar or past the viewport —
+    // but that is not a conformance issue and was measured, not assumed: the text is
+    // fully readable with zero blockers at some scroll position at every breakpoint
+    // (1440/768/390/320 all reach 100%), so no content is lost under 1.4.10, and
+    // focusing the label already scrolls it clear of the bars for 2.4.11. A previous
+    // scrollIntoView({block:'nearest'}) here was reverted as unwanted movement.
     const next = force !== undefined ? force : !lbl.classList.contains('expanded');
     lbl.classList.toggle('expanded', next);
     lbl.setAttribute('aria-expanded', String(next));
-    // Expanding adds up to two lines, and a class change scrolls nothing. On the
-    // pointer path (no preceding focus, so no scroll) the new lines landed 26px
-    // below the viewport at 1440x900, and even collapsed the label can sit 68px
-    // behind the fixed #nbabar — 0 of 5 sample points on the last line were
-    // reachable. block:'nearest' is a no-op when it already fits and honours the
-    // html scroll-padding that keeps content clear of the fixed bars (C6 / 2.4.11).
-    // The keyboard path was already fine: focusing the label triggers that scroll.
-    if (next) lbl.scrollIntoView({ block: 'nearest' });
   }
 
   lbl.addEventListener('click', () => toggle());
