@@ -481,6 +481,11 @@ html {
 #media.interior-mode:hover #img-car  { transform: none; }
 #media { -webkit-tap-highlight-color: transparent; cursor: zoom-in; touch-action: manipulation; }
 #media:focus-visible { outline: 3px solid #C86C03; border-radius: 20px; }
+/* Focus moved by a pointer, not the keyboard: keep the viewer focusable (so Enter/Space
+   and the arrows reach it) without painting a ring the mouse user did not ask for.
+   Deterministic on purpose — :focus-visible's own heuristic reports this focus as
+   keyboard-originated under synthetic events, so relying on it is not verifiable. */
+#media.ptr-focus:focus-visible { outline: none; }
 #media.zoomed { cursor: zoom-out; }
 #media.is-rotating { cursor: grabbing !important; }
 #media.zoomed #img-car { transform: scale(1.4); }
@@ -2068,7 +2073,22 @@ media.addEventListener('pointerdown', e => {
   ptrDownX = e.clientX;
   ptrDownY = e.clientY;
   media.setPointerCapture(e.pointerId);
+  // Make the viewer the focused widget on pointer interaction. The mousedown handler
+  // preventDefault()s to stop text/image drag, which also suppresses the default focus,
+  // so activeElement stayed <body> and every `active === media` guard failed for pointer
+  // users — Enter/Space could not un-zoom after a tap had zoomed in.
+  // The .ptr-focus marker suppresses the focus ring for this pointer-originated focus.
+  // :focus-visible alone is NOT enough: measured under synthetic events it still matched
+  // and painted the full orange ring (4337 orange px, identical to the keyboard case), so
+  // the suppression is made explicit rather than left to the UA heuristic.
+  // preventScroll: the element is already under the pointer; scrolling it again jumps.
+  media.classList.add('ptr-focus');
+  media.focus({ preventScroll: true });
 });
+// The pointer marker is dropped as soon as the user switches to the keyboard, or when
+// focus leaves — so a click followed by Tab/Enter shows the ring exactly as it should.
+media.addEventListener('keydown', () => media.classList.remove('ptr-focus'));
+media.addEventListener('blur',    () => media.classList.remove('ptr-focus'));
 media.addEventListener('pointerup', e => {
   if (e.target.closest('button')) return;
   if (Math.hypot(e.clientX - ptrDownX, e.clientY - ptrDownY) > 10) return;
@@ -2851,7 +2871,12 @@ document.addEventListener('keydown', e => {
       if (e.key === 'ArrowRight') stepRight();
     }
   }
-  if ((e.key === 'Enter' || e.key === ' ') && active === media) {
+  // Enter follows Left/Right: it has no default page action, so accepting it when
+  // nothing is focused costs nothing. Space does NOT follow — it is the browser's
+  // page-scroll key, and hijacking it with nothing focused is the same defect as the
+  // ArrowDown case above (page frozen while the widget acts). Pointer users still get
+  // both keys, because pointerdown now focuses the viewer.
+  if ((e.key === 'Enter' && canRotate) || (e.key === ' ' && mediaFocused)) {
     e.preventDefault();
     isZoomed = !isZoomed;
     media.classList.toggle('zoomed', isZoomed);
