@@ -16,7 +16,13 @@ A/AA in the reference file so that an axe/WAVE/Lighthouse run on it is meaningfu
 misleading — see *Page-level fixes* below.
 
 **Standard:** WCAG 2.2 Level A + AA — the levels EN 301 549 clause 9 requires
-**Date:** 2026-08-14
+**Date:** 2026-08-14 · **Last verified against the code:** 2026-08-20 (`5dc4a90`)
+
+> **Drift warning.** This document is a snapshot, not live truth. It was written against
+> `index-visl.html`, which is now in `archive/` — the only live file is `index.html`. Between the
+> 2026-08-16 revision and 2026-08-20, five commits changed `index.html` and one of them
+> (`5dc4a90`) invalidated invariant **B7** as previously written. Diff the doc against the code
+> before quoting it, and update the invariant in the same PR that changes the behaviour.
 
 ---
 
@@ -38,7 +44,17 @@ whatever the framework. Verify invariants, not code shape.
 
 Run this against the ported component before sign-off.
 
+> **Step 0 is not optional.** The component builds itself lazily and a run that skips this
+> measures an empty page while reporting success — see *The lazy-init false pass* below.
+
 ```bash
+# 0. FORCE THE COMPONENT TO EXIST, then assert that it does.
+#    initVisualizer() is behind an IntersectionObserver on .intro-vis.
+#      document.querySelector('.intro-vis').scrollIntoView({block:'center'})
+#    then POLL until this is > 0 — do not use a fixed sleep:
+#      document.querySelectorAll('#grid-colour [role=radio]').length
+#    Abort the run if it never becomes > 0.
+
 # 1. Serve the app, then drive a real browser
 chrome --headless --remote-debugging-port=9333 http://localhost:<port>/<route>
 
@@ -55,6 +71,24 @@ chrome --headless --remote-debugging-port=9333 http://localhost:<port>/<route>
 
 In CI: `jest-axe` on components covers the structural half; Playwright with real key presses and
 `expect(page.locator(':focus'))` assertions covers the behavioural half. Both are needed.
+
+### The lazy-init false pass
+
+`initVisualizer()` is deferred behind an `IntersectionObserver` on `.intro-vis`, so at the top of the
+page **the component does not exist yet**. Audit it there and the numbers look plausible enough not to
+question — which is exactly what makes this dangerous:
+
+| | not scrolled (component absent) | scrolled + initialised |
+|---|---|---|
+| `[role=radio]` swatches | **0** | 18 |
+| interactive controls in AX tree | 18 | 46 |
+| `#grid-colour` / `#grid-wheel` | present, **empty** | 13 / 5 children |
+| **axe result** | **0 violations** | 0 violations |
+
+The radiogroups are in the DOM the whole time and render at full width — they are simply empty — so
+nothing in a static snapshot looks wrong. **Any tool that reports "0 violations" on the unscrolled page
+has audited a component that was never built.** A production port that mounts on scroll, on route
+change, or behind a tab has the same hazard; assert a known child count before believing any result.
 
 ---
 
@@ -88,7 +122,7 @@ These port cleanly to JSX.
 | B4 | Auto-rotation (interior panorama) must be stoppable **by keyboard**, not only by mouse. | **2.2.2** | `stopAutoRotate()` was bound only to `mousedown`, so a keyboard user could never stop indefinite motion. Now also called from arrow keys and every rotate/tilt control. In React: cancel the rAF in the effect **and** on any interaction; clean up on unmount or it leaks. |
 | B5 | Zoom state must announce, and must keep dependent controls in sync, on **every** path (pointer tap, buttons, Enter/Space). | 4.1.3 | Keyboard zoom updated state but never re-synced the zoom-in/out `disabled` flags — a functional bug as well as an a11y one. Derive `disabled` from state. |
 | B6 | Opening the spec panel moves focus into it; closing returns focus to the trigger. | 2.4.3 | **React trap:** if the panel is conditionally rendered (`{open && <Panel/>}`), unmounting while focus is inside drops focus to `<body>`. Prefer keeping it mounted and hidden, or explicitly restore focus. Effect dependency mistakes break this **silently**. |
-| B7 | Arrow keys drive the viewer **only when the viewer element itself has focus** — `active === media`, nothing looser. | 2.1.1 | Otherwise arrow keys hijack `<select>`, scroll containers and other widgets. **Corrected after this doc's first draft:** the guard originally also accepted `document.body` and `null`, i.e. "nobody has focused anything". In interior mode that swallowed the browser's own arrow-key page scrolling — `ArrowDown` was `preventDefault()`ed and panned the panorama while the page stayed put (measured `scrollY 400 → 400`) for a user who had focused nothing at all. Treat "no focus" as **not** the viewer. |
+| B7 | Arrow keys drive the viewer on **two different scopes, split by which keys the browser itself needs**. Left/Right act when the viewer has focus **or when nothing does** (`active === media \|\| active === document.body \|\| active == null`). Up/Down act **only** when the viewer itself has focus. Anything else focused — a button, a swatch — yields to that widget's keys. | 2.1.1 | **Revised 2026-08-20 (`5dc4a90`); the previous "`active === media`, nothing looser" wording is superseded — do not implement it.** Requiring viewer focus made rotation unreachable for *pointer* users: clicking the car does not focus it, because the drag handler `preventDefault()`s the mousedown, so `activeElement` stays `<body>` and the arrows did nothing (measured: click centre of `#media`, `activeElement` BODY, ArrowRight frame-00 → frame-00). Up/Down must stay viewer-only because they are the browser's page-scroll keys — an earlier build that accepted body/null for all four `preventDefault()`ed ArrowDown and panned the panorama while the page stayed put (`scrollY 400 → 400`) for a user who had focused nothing. Porting note: implement the two axes as two separate guards, or you will reintroduce one bug while fixing the other. |
 | B8 | A hidden/non-functional control must be **removed from the tab order** (`disabled`), not just visually hidden. | **2.4.7** | Scroll-arrows kept `tabindex=0` while at `opacity:0; pointer-events:none` — keyboard users landed on an invisible, dead button with no visible focus. Matches BITV finding #8. |
 | B9 | Non-active control groups are hidden from AT with `inert`, not just CSS. | 4.1.2 | React support is version-dependent; set via ref if the pinned React version lacks the prop. |
 | B10 | Drag interactions must have a single-pointer, non-drag alternative. | **2.5.7** | Drag-to-rotate is covered by the rotate/tilt buttons + arrow keys. *W3C exempts only path-dependent underlying functions (e.g. freehand drawing) — reaching a view angle is endpoint-based, so no exemption applies.* |
@@ -140,7 +174,7 @@ The original file passed **axe DevTools, WAVE and Lighthouse** while failing WCA
 | Keyboard alternative that is never announced (A8) | Every attribute is valid; the *absence* of an instruction is not a rule violation |
 | Arrow keys eating page scroll (B7) | Requires pressing a key with nothing focused and asserting `scrollY` afterwards |
 
-Two blind spots worth knowing because they also defeat **your own** test scripts:
+Four blind spots worth knowing because they also defeat **your own** test scripts:
 
 1. **`pointer-events: none` defeats hit-test-based obscuring checks.** The rotate-hint overlay covers
    the whole viewer at 64–80% black, visually obscuring `#btn-a11y` and `#btn-toggle-view` — but
@@ -152,6 +186,24 @@ Two blind spots worth knowing because they also defeat **your own** test scripts
    the ancestor chain therefore lands on the white page background and computes white-on-white —
    `1.09:1`. Real composited pixels measure **21:1**. Expect WAVE to flag this; it is a false positive.
    Settle contrast disputes with a screenshot, not with `getComputedStyle`.
+3. **`Page.captureScreenshot`'s `clip` is document-absolute; `getBoundingClientRect()` is
+   viewport-relative.** Feed the rect straight in after scrolling and you photograph a blank strip of
+   page, so every element scores exactly **`1.00:1`** and the run reports a wall of contrast failures
+   that do not exist. Add `window.scrollX/scrollY` to the rect. **Tell-tale:** a ratio of precisely
+   `1.00:1` with **one** unique colour in the crop means the clip missed, not that the text failed.
+   Six of this component's nine flagged nodes "failed" this way before the coordinates were fixed;
+   corrected, they measure **8.52:1 – 19.55:1**.
+4. **A static "invisible but tabbable" check must walk ancestors for `display:none`.** At 390px, 12
+   controls (`.subnav-tab`, `.nbabar-link`, `.nbabar-cta`) measure `0x0` while reporting `opacity:1`
+   and `pointer-events:auto`, which looks exactly like the B8 defect. They are not: they sit inside
+   `#subnav` / `#nbabar`, which are `display:none` at mobile, so they are not in the tab order at all.
+   `getComputedStyle(el).display` on a child of a hidden parent still returns the child's own value.
+   Settle it with a real Tab sweep — 34 stops at both 390 and 320, **0 invisible** — not with a
+   geometry filter.
+
+**Two elements cannot be pixel-measured and must not be scored as failures.** `.usp-4` is `opacity:0`
+mid scroll-entrance-animation, and `.label-rotate` ("Drag to rotate") collapses to `0x0` once
+dismissed. Not rendered is not the same as failing; note them as not-applicable and move on.
 
 Additionally, **24 of the 56 A/AA criteria have no ACT Rules at all** — either too new
 (2.4.11, 2.5.7, 2.5.8, 3.2.6, 3.3.7, 3.3.8) or not machine-decidable (3.2.3, 3.3.3, 2.4.5). Those
@@ -210,6 +262,41 @@ is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. The defen
 > documented discretionary decisions, pending screen-reader verification."*
 
 That is stronger than a tool-clean claim, and unlike a tool-clean claim it is true.
+
+---
+
+## Verification record — 2026-08-20 (`5dc4a90`, `index.html`)
+
+Re-run against the live file, component initialised first (see *Step 0*). Headless Chrome 151,
+axe-core 4.13.0, bare `axe.run(document)` — no tag filter, both `violations` and `incomplete` read.
+
+**Confirmed holding**
+
+| Check | Result |
+|---|---|
+| axe, 90 rules | **0 violations** |
+| Accessible names | 46 interactive nodes, **0 unnamed**, **0 duplicate role+name** |
+| Graphics | 26 exposed, **0 unnamed** |
+| **B1** (the Level A bug) | 18 radios / **18 unique names**; wheel names keep their embedded `"` — `Leichtmetallräder "Mataró" …` reads in full |
+| **B12** | `#media-help` is rewritten inside the mode-toggle callback; exterior and interior strings both accurate |
+| **C4** target size | 0 targets < 24x24 at 1440 / 390 / 320 |
+| **C5** reflow | no horizontal scroll at 1440 / 390 / 320 |
+| **B8 / 2.4.7** | real Tab sweep: 34 stops at 390 **and** 320, **0 invisible stops** |
+| **C2 / 1.4.3** | all 9 axe `color-contrast` *needs-review* nodes resolved on composited pixels: 7 measure **8.52:1 – 19.55:1**; 2 not rendered (see Part E) |
+
+**Not verified in this pass** — behavioural invariants **B3, B4, B5, B6, B13, C1, C6**. These were
+verified when the doc was written; five commits have landed since. They need real pointer/key events,
+not a snapshot. Re-run before any sign-off that depends on them.
+
+**Still never tested: real screen-reader output.** The accessibility tree confirms what is *exposed*;
+NVDA, JAWS and VoiceOver differ in what they *announce*. This is the one gap no automated pass closes,
+and several Part G decisions (`aria-roledescription`, the non-modal dialog, the static `role="img"`
+label on a panorama that changes as you pan) can only really be settled by listening to them.
+
+The claim this document supports is therefore unchanged:
+
+> *"This component meets WCAG 2.2 A/AA on every automated and runtime check available, with six
+> documented discretionary decisions, pending screen-reader verification."*
 
 ---
 
