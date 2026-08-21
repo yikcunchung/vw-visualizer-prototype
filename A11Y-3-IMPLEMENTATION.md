@@ -5,6 +5,10 @@ styled-components.
 **Companions:** `A11Y-1-CRITERIA.md` (every criterion, pass/fail) ·
 `A11Y-2-AUTOMATED-TESTING.md` (what the tools can and cannot prove).
 
+**Scope:** everything below applies to `#visualizer` (`#media` + `#bottombar`). All 16 elements
+named by these rules were verified to sit inside that subtree. Page chrome — the nav, hero, tiles
+and footer bar — is **out of scope** and belongs to the page-template owner.
+
 > **Do not copy the reference build.** It is vanilla HTML/JS and it is a *behavioural
 > specification*, not source to port. Roughly half the required behaviour lives in
 > JavaScript — a port that copies the DOM and rewrites the logic will silently drop it.

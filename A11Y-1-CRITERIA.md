@@ -2,6 +2,9 @@
 
 **Component:** VW Visualizer — media viewer + selector bar (colour / rim / interior / trim / zoom).
 **Audited:** 2026-08-21 against the deployed reference build.
+**Scope:** `#visualizer` — `#media` + `#bottombar`. Evidence was gathered page-wide and then
+attributed; where a criterion is satisfied by page chrome rather than the component, the row says so.
+See §0 of `A11Y-2-AUTOMATED-TESTING.md` for the component-vs-page figures.
 **Companion documents:** `A11Y-2-AUTOMATED-TESTING.md` (what the tools can and cannot prove) ·
 `A11Y-3-IMPLEMENTATION.md` (what to build).
 
@@ -62,7 +65,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **1.4.1** | Use of Color | A | Yes | ✅ Pass* | Selection shown by a checkmark badge and `aria-checked`, not colour alone. |
 | **1.4.2** | Audio Control | A | No | ⚪ N/A | No audio. |
-| **1.4.3** | Contrast (Minimum) | AA | Yes | ✅ Pass | All 23 axe *needs-review* nodes resolved on composited pixels: 8.59:1 – 21:1. |
+| **1.4.3** | Contrast (Minimum) | AA | Yes | ✅ Pass | All 23 axe *needs-review* nodes resolved on composited pixels: 8.59:1 – 21:1. Four of the eight distinct nodes are page chrome, not the component. |
 | **1.4.4** | Resize Text | AA | Yes | ✅ Pass | 400% zoom (320×256 @ dsf 4): 0 violations, no horizontal scroll, nothing clipped. |
 | **1.4.5** | Images of Text | AA | Yes | ✅ Pass* | All text is real text; imagery is photographic. |
 | **1.4.10** | Reflow | AA | Yes | ✅ Pass | No horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom. |
@@ -101,7 +104,7 @@ criteria are not required and are not listed.
 | **2.4.1** | Bypass Blocks | A | Yes | ✅ Pass* | Skip link present; `role="main"` on the content region. |
 | **2.4.2** | Page Titled | A | Yes | ✅ Pass | axe `document-title` clean. |
 | **2.4.3** | Focus Order | A | Yes | ✅ Pass | Open moves focus in; close returns to whoever opened it; Escape from outside moves nothing. |
-| **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | 0 unnamed links, 0 duplicate role+name across 394 AX nodes. |
+| **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | 0 unnamed links, 0 duplicate role+name — 157 nodes in the component subtree, 394 page-wide. |
 | **2.4.5** | Multiple Ways | AA | Yes | ⚠️ Open | *Page-level.* **Do:** assign to the page-template owner — cannot be judged from one component. |
 | **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | One `h1`, two `h2`, `heading-order` clean, every control named. |
 | **2.4.7** | Focus Visible | AA | Yes | ✅ Pass | 34 Tab stops, 0 invisible; ring verified in default, hover and active. |
@@ -157,7 +160,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **4.1.1** | Parsing (obsolete — removed from WCAG 2.2) | A | Yes | ✅ Pass | **Obsolete in WCAG 2.2 — but still required if EN 301 549 is ever the formal target.** EN 301 549 V3.2.1 (2021-03) references **WCAG 2.1**, where 4.1.1 is normative, and lists it as clause 9.4.1.1. Already fixed in the reference (commit `d2245d8`, two validity errors); keep the Nu validator clean and it stays closed. |
-| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | 394 AX nodes, 0 unnamed interactive, 0 duplicate role+name; 18 radios / 18 unique names. |
+| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: 157 AX nodes, 33 named, **0 unnamed, 0 duplicate role+name**; 18 radios / 18 unique names. (Whole page also 0/0.) |
 | **4.1.3** | Status Messages | AA | Yes | ✅ Pass | `#media-status` announces on all 8 zoom paths; `disabled` derived from state. |
 
 ---
