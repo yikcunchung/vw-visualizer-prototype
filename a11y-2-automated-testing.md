@@ -207,6 +207,40 @@ Seven invariants that no scanner reaches, each driven with `Input.dispatchMouseE
 | Focus ring ≥3:1 in default, hover **and** active | Pass — 8.61:1 on the tan fill |
 | Focused control never behind a fixed bar | Pass — 20/20 controls, 0 occluders |
 
+## Orientation and text spacing — the last two open criteria, tested 2026-08-21
+
+**SC 1.3.4 Orientation — pass.** Tested portrait *and* landscape at 390×844 / 844×390 / 320×640 /
+640×320, in normal and fullscreen mode. There is **no `@media (orientation:)` rule anywhere** in the
+stylesheet. In all eight combinations: viewer and bottombar visible, 18 radios and 18 swatches
+present, no horizontal scroll, and the fullscreen exit control visible **and inside the viewport**.
+The `rotate(90deg)` is a user-invoked, reversible fullscreen mode — not an orientation lock.
+
+**SC 1.4.12 Text Spacing — pass.** All four overrides applied together:
+
+```css
+*, *::before, *::after {
+  line-height: 1.5 !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+p { margin-bottom: 2em !important; }
+```
+
+At 1440 / 390 / 320: **no newly clipped element, no control lost** (26→26, 28→28), **no horizontal
+scroll**. The clipped set was *identical* before and after — compared by element identity, not by
+string, because the dimensions in a label change even when the set does not:
+
+| Element | Clipped? | Why it is not a loss |
+|---|---|---|
+| `#media-help` | before **and** after | The intentional 1×1 `.sr-only` clip. Nothing is rendered to lose. |
+| `#label-wheel` | before **and** after | Truncates by design. Under the overrides it still **expands to fully visible** — all 86 characters, at every width. |
+
+**Detector validated.** A deliberately clipped canary (`60px` box, `overflow:hidden`, a sentence far
+too long) was injected and *was* detected. Without that, "no new clipping" would be an untested
+claim — which is the same discipline as §3.
+
+---
+
 ## Target size and reflow
 
 Only one target under 24×24: `#label-wheel` at 17px tall, passing on the **spacing exception**

@@ -475,7 +475,10 @@ Drag interactions must have a single-pointer, non-drag alternative.
 
 Every target ≥ **24×24** CSS px.
 
-> **Notes** — Smallest in the reference is the close button at exactly 24×24. Scroll-arrows 28, touch controls 32, swatches 48.
+> **Notes** — Smallest **`<button>`** is the close button at exactly 24×24; scroll-arrows 28, touch
+> controls 32, swatches 48. But the smallest **target** is `#label-wheel`, a `<span role="button">`
+> at **17px tall** — it is not a `<button>`, so a survey of button sizes misses it entirely. That is
+> the one target relying on the spacing exception below.
 
 
 **The exception, and where the reference depends on it.** 24×24 is the rule, but 2.5.8 permits
