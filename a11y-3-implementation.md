@@ -278,7 +278,7 @@ Icon-only buttons have an `aria-label` and **no** duplicate `title` with the sam
 
 Arrow keys drive the viewer on **two different scopes, split by which keys the browser itself needs**. Left/Right act when the viewer has focus **or when nothing does** (`active === media || active === document.body || active == null`). Up/Down act **only** when the viewer itself has focus. Anything else focused — a button, a swatch — yields to that widget's keys.
 
-> **Why it exists** — **Revised 2026-08-20 (`5dc4a90`); the previous "`active === media`, nothing looser" wording is superseded — do not implement it.** Requiring viewer focus made rotation unreachable for *pointer* users: clicking the car does not focus it, because the drag handler `preventDefault()`s the mousedown, so `activeElement` stays `<body>` and the arrows did nothing (measured: click centre of `#media`, `activeElement` BODY, ArrowRight frame-00 → frame-00). Up/Down must stay viewer-only because they are the browser's page-scroll keys — an earlier build that accepted body/null for all four `preventDefault()`ed ArrowDown and panned the panorama while the page stayed put (`scrollY 400 → 400`) for a user who had focused nothing. Porting note: implement the two axes as two separate guards, or you will reintroduce one bug while fixing the other.
+> **Why it exists** — Requiring viewer focus for all four arrows makes rotation unreachable for *pointer* users: clicking the car does not focus it, because the drag handler `preventDefault()`s the mousedown, so `activeElement` stays `<body>` and the arrows did nothing (measured: click centre of `#media`, `activeElement` BODY, ArrowRight frame-00 → frame-00). Up/Down must stay viewer-only because they are the browser's page-scroll keys — an earlier build that accepted body/null for all four `preventDefault()`ed ArrowDown and panned the panorama while the page stayed put (`scrollY 400 → 400`) for a user who had focused nothing. Porting note: implement the two axes as two separate guards, or you will reintroduce one bug while fixing the other.
 
 
 **In React**
@@ -390,50 +390,22 @@ onKeyDown={e => { if (isArrow(e.key)) { stopAutoRotate(); pan(e.key); } }}
 
 ### B14 — The expand control exists only when there is something to expand
 
-`SC 4.1.2` · **Level A in production**
+`SC 4.1.2` · **Level A**
 
-**Rule:** the wheel label becomes a button **only when its text is actually truncated**. Derive
-`role`, `tabindex` and `aria-expanded` from the overflow state — never hardcode them.
+**Rule:** the wheel label is a button **only while its text is actually truncated**. Derive `role`,
+`tabindex` and `aria-expanded` from the measured overflow — never hardcode them in the markup.
 
-The design intent is that the label turns into a button when the width cannot show the full name.
-**The reference does not implement that.** `role="button" tabindex="0" aria-expanded="false"` are
-hardcoded in the markup, and the only attribute JavaScript ever touches is `aria-expanded`.
-
-Measured at 1440 with the label's own text swapped for a realistic production name:
-
-| | long fixture name (86 chars) | short production name (16 chars) |
-|---|---|---|
-| truncated | **yes** — 498 > 214 | **no** — 214 = 214 |
-| `role` | `button` | **`button`** |
-| `tabindex` | `0` | **`0`** |
-| `aria-expanded` | `false` | **`false`** |
-
-**This already happens in the reference, at 768px.** The wheel label is 666px wide there and the
-text fits exactly — `scrollWidth 666 = clientWidth 666`, nothing truncated — yet:
-
-```
-role="button"  tabindex="0"  aria-expanded="false"     <- all still present
-screen reader: "button, Alloy wheels \"Mataró\" 8.5 J…, collapsed"
-activate:      height 24px -> 24px   (nothing changes)
-               aria-expanded "false" -> "true"
-```
-
-A screen-reader user is told the control is **collapsed**, activates it, is told it is now
-**expanded**, and nothing happened. The state is announced but corresponds to nothing. That is the
-4.1.2 problem, and it is live at tablet width today — not a future production risk.
-
-It gets worse with production data: short real names fit at *every* width, so the control is inert
-everywhere. The result is a control that:
-
-- announces as a **collapsed expandable button** with nothing to expand,
-- occupies a **tab stop** that does nothing when activated,
-- and is a **17px target**, dragging in the whole 2.5.8 spacing dependency (see C4) for no reason.
+Hardcoding them makes the label announce as a collapsed expandable even when the full name already
+fits. At 768px the name fits exactly (`scrollWidth === clientWidth`), so a screen reader is told
+*"button, collapsed"*, the user activates it, is told *"expanded"* — and nothing happens. Announced
+state with nothing behind it. Short production names fit at every width, so the control would be
+inert everywhere.
 
 ```jsx
 // ✗ hardcoded — a fake control whenever the text fits
 <span role="button" tabIndex={0} aria-expanded={open}>{name}</span>
 
-// ✓ derive it from the measured overflow, and re-measure on resize and on name change
+// ✓ derive it, and re-measure on resize and on name change
 const ref = useRef(null);
 const [truncated, setTruncated] = useState(false);
 useLayoutEffect(() => {
@@ -450,8 +422,17 @@ useLayoutEffect(() => {
       aria-expanded={truncated ? open : undefined}>{name}</span>
 ```
 
-**Check:** set a short name, confirm the label is **not** in the tab order and exposes **no** role.
-Set a long one, confirm it is a button and expands.
+Three details the reference implementation had to get right:
+
+- **Measure the collapsed state.** Expanding sets `white-space: normal`, which makes
+  `scrollWidth === clientWidth` — measure while expanded and it always reports "it fits".
+- **Make the toggle inert without the role**, so a stray click cannot expand a label that has
+  nothing to reveal.
+- **Scope `cursor: pointer` to `[role="button"]`**, so it does not look clickable when it is not.
+
+**Check:** at a width where the text fits, the label must expose **no role**, be **out of the tab
+order**, and do nothing when clicked. At a width where it truncates, it must be a button that
+expands to the full name. Resizing across the boundary must flip it both ways.
 
 ---
 
@@ -543,90 +524,39 @@ Drag interactions must have a single-pointer, non-drag alternative.
 
 `SC 2.5.8`
 
-Every target ≥ **24×24** CSS px.
+**Rule:** every target is at least 24×24 CSS px. If you cannot make one that big, you must justify
+it against an exception — and record the measurement.
 
-> **Notes** — Smallest **`<button>`** is the close button at exactly 24×24; scroll-arrows 28, touch
-> controls 32, swatches 48. But the smallest **target** is `#label-wheel`, a `<span role="button">`
-> at **17px tall** — it is not a `<button>`, so a survey of button sizes misses it entirely. That is
-> the one target relying on the spacing exception below.
+In this component **no target is under 24×24**. The smallest `<button>` is the close button at
+exactly 24×24; scroll-arrows are 28, touch controls 32, swatches 48. `#label-wheel` is a
+`<span>` rather than a `<button>`, so a survey of button sizes misses it — it is 26.4px tall via:
 
+```css
+#label-wheel { line-height: 1.6; padding-block: 2px; }   /* 26.4px */
+```
 
-**The exception, and where the reference depends on it.** 24×24 is the rule, but 2.5.8 permits
-exceptions — spacing, equivalent control, inline, user-agent-controlled, essential.
+**Padding, not a bigger `line-height`, on purpose.** SC 1.4.12 invites users to override
+`line-height` to 1.5, so a target size built on `line-height` is built on the one property another
+criterion tells users they may change. Padding is unaffected. For reference at a 14px font:
+`line-height: 1.6` alone is 22.4px, `1.7` is 23.8px, and `1.72` is 24.1px — the instinctive values
+all land short or clear by a rounding error.
 
-The spacing test is easy to get wrong. It is **not** "centres ≥24px apart" — that variant applies
-only when *both* neighbours are undersized. Against a **full-size** neighbour the test is: a
-24px-diameter circle centred on the undersized target must not intersect that neighbour's **box**,
-i.e. **≥12px clearance from centre to box edge**.
+#### If you ever do introduce an undersized target
 
-`#label-wheel` (a `<span role="button">`, **17px tall**) passes on this exception alone:
+The spacing exception is easy to test wrongly. It is **not** "centres ≥24px apart" — that variant
+applies only when *both* neighbours are undersized. Against a **full-size** neighbour the test is:
 
-The nearest full-size neighbour is `.btn-swatch`, directly **above**. Because the label is 17px tall,
-its edge sits ~8.4px from its own centre, so the **minimum edge-to-edge gap is 12 − 8.4 = 3.6px**.
+> a 24px-diameter circle centred on the undersized target must not intersect that neighbour's
+> **box** — i.e. **≥12px clearance from centre to box edge**.
 
-Measured at 1440 / 390 / 320 / 320@400% — **identical at all four**:
+For a 17px-tall target the element's own edge already sits 8.4px from its centre, so the required
+**edge-to-edge gap is only 3.6px** — and a 3px gap fails while 4px passes by 0.4px. That is the
+kind of margin that disappears with one font-metric change, which is why the component now meets
+the size outright instead.
 
-| Current gap | Centre → swatch box | Required | Slack |
-|---|---|---|---|
-| **12px** | 20.4px | ≥12px | **8.4px — passes** |
-
-**Gap budget, measured by forcing each value:**
-
-| Total gap | Centre → box | Slack | Verdict |
-|---|---|---|---|
-| 12px (current) | 20.4px | +8.4px | ✅ pass |
-| **4px** | 12.4px | **+0.4px** | ⚠️ passes, but that is a rounding error, not a margin |
-| 3px | 11.4px | −0.6px | ❌ **fail** |
-| 2px | 10.4px | −1.6px | ❌ **fail** |
-
-**The cliff is between 3px and 4px.** 4px technically conforms with 0.4 of a pixel to spare — one
-font-metric change, one sub-pixel rounding difference, and it flips. Do not tune the gap to 4px;
-there is no reason to trade 8px of safety for 8px of density.
-
-> **Measurement trap.** `revealSwatches()` animates the swatches in from `translateY(12px)` over
-> ~0.45s with staggered delays. Measure before that settles and the swatches read ~9px lower,
-> giving 11.4px and a **false FAIL** at 390. Poll until the label→swatch distance stops changing
-> before trusting any number here. This produced a phantom mobile failure during the audit.
-
-**Only `#label-wheel` is affected.** `#label-colour` and `#label-material` are the same visual size
-and the same `.bb-sec-value` class, but carry **no `role` and no `tabindex`** — they are plain
-live-region text, not targets, so 2.5.8 does not apply and they need no gap. Give either one a
-`role="button"` or a `tabindex` and it inherits the whole problem.
-
-#### Better: make the target 24px tall and the exception stops applying
-
-Widening the *gap* is the wrong lever — it buys slack on an exception you should not need. Growing
-the *target* removes the exception entirely. Measured at 1440 / 390 / 320, label height and verdict:
-
-| Change | Height | Meets 24×24 | Verdict |
-|---|---|---|---|
-| none — `line-height: 1.2` | 16.8px | ✗ | passes **via exception**, 8.4px slack |
-| `line-height: 1.5` | 21.0px | ✗ | **still** via exception — *not enough* |
-| `line-height: 1.72` | 24.1px | ✓ | **passes outright** — but only 0.1px over |
-| `line-height: 1.8` | 25.2px | ✓ | passes outright |
-| `min-height: 24px` | 24.0px | ✓ | passes outright |
-| **`padding-block: 4px`** | **24.8px** | ✓ | **passes outright** |
-
-Two things worth knowing:
-
-- **`line-height: 1.5` does not get you there.** At a 14px font it yields 21px — the instinctive
-  "bump the line-height" value leaves you still relying on the exception.
-- **Prefer `padding-block` or `min-height` over `line-height`.** SC 1.4.12 lets users override
-  `line-height` to 1.5; padding and `min-height` are orthogonal to every property 1.4.12 touches, so
-  they hold regardless. Measured under a 1.4.12 override: `padding-block: 4px` → 29px,
-  `min-height: 24px` → 24px, both still passing outright.
-
-Growing the label also shrinks the gap to the swatches (12px → 8px), which no longer matters — once
-the target meets 24×24 the spacing exception is irrelevant.
-
-**Implemented** as `line-height: 1.6; padding-block: 2px` → **26.4px**, verified at 1440 / 768 / 390 /
-320 / 320@400%. The target meets 24×24 outright, the spacing exception no longer applies, and
-**the component now has no undersized target at all** — the under-24 list is empty at every width.
-
-`line-height: 1.6` alone gives 22.4px and would not have been enough; 1px of padding gives 24.4px,
-clearing the minimum by four tenths of a pixel. 2px gives 2.4px of real margin.
-
-**Do not inherit the dependency:** ship a native `<button>` sized ≥24×24.
+> **Measurement trap.** `revealSwatches()` animates swatches in from `translateY(12px)` over ~0.45s
+> with staggered delays. Measure before it settles and neighbours read ~9px closer, which will
+> manufacture a failure that does not exist. Poll until the geometry stops changing.
 
 ---
 
@@ -826,8 +756,7 @@ From `a11y-1-criteria.md`, four of the six unanswered criteria are page-level. T
 | **1.4.12** Text Spacing | Apply the four spacing overrides (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em); confirm no clipping. |
 
 And two decisions to record, both currently passing: **2.5.3** (`#select-model-lg` naming) and
-**2.5.8** (`#label-wheel` relies on the spacing exception with 8.4px of headroom — ship a native
-`<button>` ≥24×24 and the dependency disappears).
+**2.5.8** is settled — no target in the component is under 24×24.
 
 ---
 

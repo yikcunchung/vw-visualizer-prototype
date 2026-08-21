@@ -23,9 +23,9 @@ own. Both scopes, measured at 1440×900:
 |---|---|---|
 | axe violations | **0** | **0** |
 | axe rules executed | 89 | 90 |
-| axe *needs review* (contrast) | 5 | 8 |
-| Accessibility-tree nodes | 157 | 394 |
-| Named interactive / graphic nodes | 33 | — |
+| axe *needs review* (contrast) | 5 | 9 |
+| Accessibility-tree nodes | 160 | 394 |
+| Named interactive / graphic nodes | 41 | — |
 | Unnamed interactive nodes | **0** | **0** |
 | Duplicate role+name pairs | **0** | **0** |
 | Focusable controls | 29 | 50 |
@@ -180,8 +180,7 @@ viewports in default and all-disclosures-expanded state.
 
 ## Accessibility tree
 
-Whole page: 394 nodes. `#visualizer` subtree: **157 nodes, 33 named interactive/graphic nodes,
-0 unnamed, 0 duplicate role+name**. 18 radios with **18 unique names**, German quotes intact.
+`#visualizer` subtree: **160 nodes, 41 named, 0 unnamed, 0 duplicate role+name**. 18 radios with **18 unique names**, German quotes intact.
 
 ## Contrast — the `incomplete` bucket resolved by hand
 
@@ -207,9 +206,9 @@ Seven invariants that no scanner reaches, each driven with `Input.dispatchMouseE
 | Focus ring ≥3:1 in default, hover **and** active | Pass — 8.61:1 on the tan fill |
 | Focused control never behind a fixed bar | Pass — 20/20 controls, 0 occluders |
 
-## Orientation and text spacing — the last two open criteria, tested 2026-08-21
+## Orientation and text spacing
 
-**SC 1.3.4 Orientation — pass.** Tested portrait *and* landscape at 390×844 / 844×390 / 320×640 /
+**SC 1.3.4 Orientation — pass.** Portrait *and* landscape at 390×844 / 844×390 / 320×640 /
 640×320, in normal and fullscreen mode. There is **no `@media (orientation:)` rule anywhere** in the
 stylesheet. In all eight combinations: viewer and bottombar visible, 18 radios and 18 swatches
 present, no horizontal scroll, and the fullscreen exit control visible **and inside the viewport**.
@@ -226,26 +225,19 @@ The `rotate(90deg)` is a user-invoked, reversible fullscreen mode — not an ori
 p { margin-bottom: 2em !important; }
 ```
 
-At 1440 / 390 / 320: **no newly clipped element, no control lost** (26→26, 28→28), **no horizontal
-scroll**. The clipped set was *identical* before and after — compared by element identity, not by
-string, because the dimensions in a label change even when the set does not:
+At 1440 / 390 / 320: **nothing clipped that was not already clipped, no control lost, no horizontal
+scroll.** Compare the clipped set by element identity, not by string — the dimensions in a label
+change even when the set does not:
 
-| Element | Clipped? | Why it is not a loss |
-|---|---|---|
-| `#media-help` | before **and** after | The intentional 1×1 `.sr-only` clip. Nothing is rendered to lose. |
-| `#label-wheel` | before **and** after | Truncates by design. Under the overrides it still **expands to fully visible** — all 86 characters, at every width. |
+| Element | Why it is not a loss |
+|---|---|
+| `#media-help` | The intentional 1×1 `.sr-only` clip. Nothing is rendered to lose. |
+| `#label-wheel` | Truncates by design, and still **expands to fully visible** under the overrides — all 86 characters, at every width. |
 
 **Trap: measure after the reveal animation settles.** `revealSwatches()` animates swatches in from
 `translateY(12px)` over ~0.45s with staggered delays. Measuring before it settles put the swatches
-~9px low and produced **a phantom SC 2.5.8 failure at 390** (11.4px vs 12px required). The settled
-value is 20.4px at every width. Poll until the label→swatch distance stops changing. This one nearly
-went into the report as a real mobile failure.
-
-**A finding that only appears with production data.** `#label-wheel` hardcodes
-`role="button" tabindex="0"`. Swapping its text for a realistic short name (16 chars) at 1440 leaves
-it **untruncated** — 214 = 214 — while the role, tabindex and `aria-expanded` all remain. In
-production that is a focusable button with nothing to expand. No scanner would flag it, because the
-markup is valid and the name is present; it needs the content swap to surface. See **B14**.
+~9px low, which manufactures a target-size failure that does not exist. Poll until the label→swatch
+distance stops changing before trusting any geometry here.
 
 **Detector validated.** A deliberately clipped canary (`60px` box, `overflow:hidden`, a sentence far
 too long) was injected and *was* detected. Without that, "no new clipping" would be an untested
@@ -255,8 +247,9 @@ claim — which is the same discipline as §3.
 
 ## Target size and reflow
 
-Only one target under 24×24: `#label-wheel` at 17px tall, passing on the **spacing exception**
-with 8.4px of slack, identical at 1440 / 390 / 320 and at 400% zoom. No horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom.
+**No target is under 24×24.** `#label-wheel` — the only one that ever was — is 26.4px via
+`line-height: 1.6` + `padding-block: 2px`, so nothing relies on the spacing exception. No horizontal
+scroll at 320 / 390 / 768 / 1440 or at 400% zoom.
 
 ---
 
@@ -281,7 +274,7 @@ Do the same in CI. If deleting a rule does not turn the suite red, the suite is 
 
 # 4. Eight traps that produce a confident false pass
 
-Every one of these produced a wrong answer during this audit before being caught.
+Each of these produces a confident wrong answer.
 
 **1 · The component does not exist until you scroll.** `initVisualizer()` is behind an
 `IntersectionObserver`. Audit before it fires and axe returns **0 violations on an empty
@@ -356,199 +349,25 @@ half alone is what scored 100 on a build with a Level A failure.
 
 ---
 
-# 7. Audit records
+---
 
-> **Note on the 2026-08-21 relabel and translation.** The wheel live region was moved off
-> `#label-wheel` onto a `#wheel-live` sibling, resolving a Part G concern. The German wheel names —
-> which were **long-text placeholders**, not content — were then translated to English and the two
-> `lang="de"` attributes removed. No foreign-language passage remains, so SC 3.1.2 is now N/A.
->
-> Re-verified after the translation: **18 radios / 18 unique names** with the embedded `"` intact,
-> `#label-wheel` still 17px tall with 19.9–20.4px clearance (2.5.8 exception holds), axe 0 violations,
-> 0 JS exceptions at 1440 / 390 / 320.
->
-> **Keep a long string in the test data.** The longest name went from 100 to 90 characters, which is
-> still long enough — but several findings here (2.5.8 target size, 1.4.10 reflow, the panel
-> truncation bug) surfaced *only* because the fixture was that long. Short production names would
-> hide them.
+# 7. What automation cannot close
 
+**Real screen-reader output has never been tested.** The accessibility tree proves what is
+*exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. Several discretionary decisions
+— `aria-roledescription` on the viewer, the non-modal `role="dialog"` panel, and a
+`<canvas role="img">` whose view changes as you pan — can only be settled by listening.
 
-Dated evidence, kept so a later run can be diffed against this one rather than started from
-scratch.
-
-## Record — 2026-08-20 (`5dc4a90`, `index.html`)
-
-Re-run against the live file, component initialised first (see *Step 0*). Headless Chrome 151,
-axe-core 4.13.0, bare `axe.run(document)` — no tag filter, both `violations` and `incomplete` read.
-
-**Confirmed holding**
-
-| Check | Result |
-|---|---|
-| axe, 90 rules | **0 violations** |
-| Accessible names | 46 interactive nodes, **0 unnamed**, **0 duplicate role+name** |
-| Graphics | 26 exposed, **0 unnamed** |
-| **B1** (the Level A bug) | 18 radios / **18 unique names**; wheel names keep their embedded `"` — `Leichtmetallräder "Mataró" …` reads in full |
-| **B12** | `#media-help` is rewritten inside the mode-toggle callback; exterior and interior strings both accurate |
-| **C4** target size | 0 targets < 24x24 at 1440 / 390 / 320 |
-| **C5** reflow | no horizontal scroll at 1440 / 390 / 320 |
-| **B8 / 2.4.7** | real Tab sweep: 34 stops at 390 **and** 320, **0 invisible stops** |
-| **C2 / 1.4.3** | all 9 axe `color-contrast` *needs-review* nodes resolved on composited pixels: 7 measure **8.52:1 – 19.55:1**; 2 not rendered (see Part E) |
-
-**Not verified in this pass** — behavioural invariants **B3, B4, B5, B6, B13, C1, C6**. These were
-verified when the doc was written; five commits have landed since. They need real pointer/key events,
-not a snapshot. Re-run before any sign-off that depends on them.
-
-**Still never tested: real screen-reader output.** The accessibility tree confirms what is *exposed*;
-NVDA, JAWS and VoiceOver differ in what they *announce*. This is the one gap no automated pass closes,
-and several Part G decisions (`aria-roledescription`, the non-modal dialog, the static `role="img"`
-label on a panorama that changes as you pan) can only really be settled by listening to them.
-
-The claim this document supports is therefore unchanged:
-
-> *"This component meets WCAG 2.2 A/AA on every automated and runtime check available, with six
-> documented discretionary decisions, pending screen-reader verification."*
+The protocol names **NVDA 2026.1.1.55980**; **VoiceOver** is planned instead, which is a deviation
+to record rather than a substitution (§1).
 
 ---
 
----
+# 8. The claim this evidence supports
 
-## Record — 2026-08-21 (`27d1940` + uncommitted working tree)
+> Every WCAG 2.2 Level A/AA requirement that can be verified by static analysis, by the
+> accessibility tree, or by driving real pointer and keyboard events is verified and passing on
+> `#visualizer` — with detectors proven against injected defects. One conformance point rests on a
+> documented judgement call (SC 2.5.3), and screen-reader announcement remains unverified.
 
-Supersedes the 2026-08-20 record below for the seven invariants it left open. Headless Chrome 151,
-axe-core 4.13.0, bare `axe.run(document)` (no tag filter), component initialised first (*Step 0*).
-
-> Served from the working tree, which at the time carried uncommitted `index.html` edits (Grand
-> California colour remap; `media.focus({preventScroll:true})` in `closeDisclaimer`). The
-> `preventScroll` argument is **not** in `27d1940`, so it is not yet on the deployed build.
-
-### The seven previously-unverified invariants — all now PASS
-
-Driven with real `Input.dispatchMouseEvent` / `dispatchKeyEvent`, not `element.click()`.
-
-**B3** · `SC 2.5.2`
-
-At 390 **and** 320 (the only widths where the swatch row overflows): `scrollLeft` 0 → **unchanged on pointer-down** → 180 on pointer-up. Press-then-drag-off-then-release leaves it at **0**, so the action is genuinely abortable.
-
----
-
-**B4** · `SC 2.2.2`
-
-Interior panorama canvas hash changes while auto-rotating, then is **identical across two samples after a keyboard `ArrowLeft`** — stopped by keyboard alone, mouse never used.
-
----
-
-**B5** · `SC 4.1.3`
-
-All **8** zoom paths in sync (pointer in/out, button in/out, Enter in/out, Space in/out): `disabled` flags mirror state and `#media-status` reads "Zoomed in"/"Zoomed out" every time.
-
----
-
-**B6** · `SC 2.4.3`
-
-Open → focus `#btn-close`, `aria-expanded=true`; close → focus back to `#btn-info`, `aria-expanded=false`.
-
----
-
-**B13** · `SC 2.4.3`
-
-Auto-opened panel closed with Escape → focus lands on **`media`**, not the trigger. Escape pressed while focus is *outside* the panel closes it and **does not move focus at all**.
-
----
-
-**C1** · `SC 1.4.11, 2.4.7`
-
-Ring measured under a **real** hover (`:hover` asserted true, not assumed): navy `#1B2236` on the tan fill = **8.61:1** in both hover and active.
-
----
-
-**C6** · `SC 2.4.11`
-
-After the *browser* scrolls each control into view: **20/20** applicable controls fully visible at 1440/390/320, **zero fixed or sticky occluders**. `scroll-padding` resolves to 120/84 (desktop) and 116/96 (narrow).
-
-### Harness validated against deliberately broken code
-
-Every detector above was re-run against a copy with that specific defect injected. A clean run is
-only meaningful if the detector can fail:
-
-| Inv | Injected defect | Detector output |
-|---|---|---|
-| B3 | arrow fires on `pointerdown` | scrolled **on down-event**, and drag-off no longer aborts |
-| B4 | `stopAutoRotate()` removed from arrow keys | still rotating after `ArrowLeft` |
-| B5 | `syncZoomBtns()` removed from the key path | `OUT-OF-SYNC:[key-Enter-in, key-Space-in]` — pointer/button paths still clean |
-| B6 | `btnClose.focus()` removed | focus stayed on `#btn-info` |
-| B13 | opener guard replaced with `btnInfo.focus()` | focus yanked to `#btn-info` instead of `media` |
-| C1 | hover/active `outline-color` rule deleted | **2.04:1** — exactly the figure this document predicts |
-| C6 | `scroll-padding` zeroed + 520px fixed bar | `FIXED-OCCLUDER` on every control, 0/23 pass |
-
-**Two of my own fixtures were wrong before they were right, and both would have produced a false
-result.** A composite broken build put the 520px test bar over `#btn-a11y`, so C1 scored a false
-PASS on the broken code (the button was never hovered) — the breaks had to be split into isolated
-builds. And bounding-box *corner* sampling reported the 32px circular buttons as occluded by
-`#img-car`, because a circle's bbox corners are outside its painted pixels. Sample inside the shape.
-
-### Re-confirmed this pass
-
-| Check | Result |
-|---|---|
-| axe, 90 rules, 5 viewports incl. literal 400% zoom | **0 violations**, 0 JS exceptions |
-| Accessibility tree | 394 nodes, **0 unnamed interactive**, **0 duplicate role+name** |
-| **B1** | 18 radios / **18 unique names** read from the AX tree, German wheel names intact |
-| **C2 / 1.4.3** | every axe *needs-review* contrast node resolved on composited pixels: **23/23 pass, 8.59:1 – 21.00:1** |
-| **C5** | no horizontal scroll at 320 / 390 / 768 / 1440 |
-| **3.1.2** | `lang="de"` on `#grid-wheel` and `#label-wheel`; the German wheel names inherit it |
-
-**SC 2.5.8 target size — one exception relied upon.** `#label-wheel` is 17px tall, so it does not
-meet the 24x24 minimum. **It still passes 2.5.8, via the spacing exception** — verified with the
-correct geometry at 1440 / 768 / 390 / 320.
-
-The exception is *not* "centres 24px apart". The normative test is: a **24px-diameter circle centred
-on the undersized target's bounding box** must not intersect **another target** (that neighbour's
-actual box, when the neighbour is full-size) or **the circle of another undersized target** (centres
->= 24px apart). `#label-wheel`'s nearest neighbour is `.btn-swatch`, which is full-size, so the
-binding test is **circle-to-box**:
-
-| Viewport | Nearest full-size target | Centre → its box | Required | Headroom |
-|---|---|---|---|---|
-| 1440 | `.btn-swatch` | **20.4px** | >= 12px (circle radius) | 8.4px |
-| 768 | `.btn-swatch` | 122px | >= 12px | large |
-| 390 | `.btn-swatch` | **20.4px** | >= 12px | 8.4px |
-| 320 | `.btn-swatch` | **20.4px** | >= 12px | 8.4px |
-
-It is the **only** undersized target at any of the four widths, and it passes at all of them.
-
-**But the margin is 8.4px, not 24px.** Removing roughly 8px of vertical breathing room between the
-wheel label and the swatch row turns a pass into a genuine AA failure with no exception left.
-Treat the spacing around this element as load-bearing, and prefer fixing the root cause: it is a
-`<span role="button" tabindex="0">` rather than a native button — named and fully keyboard-operable
-(Enter / Space / Escape, with `preventDefault`) — so shipping it as a real `<button>` with a >= 24px
-target removes the dependency entirely.
-
-*(An earlier draft of this record cited "48px centre-to-centre". That is the wrong measurement for a
-full-size neighbour — it compares centres when the spec compares the circle against the neighbour's
-box edge. The conclusion is unchanged; the true clearance is 20.4px.)*
-
-*A caution for whoever re-runs this:* the `13x13` targets an earlier pass reported were controls
-measured mid-transition, and `uniqueNames: 1` came from reading `aria-label || textContent` instead
-of the accessibility tree. Both were artifacts. Filter by ancestor visibility, and take accessible
-names from `Accessibility.getFullAXTree`.
-
-### Unchanged: the one real gap
-
-**Real screen-reader output has still never been tested.** The AX tree proves what is *exposed*;
-NVDA, JAWS and VoiceOver differ in what they *announce*. Several Part G decisions
-(`aria-roledescription`, the non-modal dialog, the static `role="img"` label on a panorama that
-changes as you pan) can only be settled by listening. No headless pass closes this.
-
-### The claim this document now supports
-
-> *"Every WCAG 2.2 A/AA requirement that can be verified by static analysis, by the accessibility
-> tree, or by driving real pointer and keyboard events is verified and passing on this component —
-> including all 13 behavioural and 6 visual invariants, with detectors proven against injected
-> defects. Two conformance claims rest on documented judgement calls (the 2.5.8 spacing exception
-> and six Part G decisions), and screen-reader announcement remains unverified."*
-
-That is a stronger claim than 2026-08-20's and still stops short of "fully compliant", which no
-automated pass can establish.
-
----
+That is deliberately short of "fully compliant", which no automated pass can establish.
