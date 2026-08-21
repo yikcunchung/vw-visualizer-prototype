@@ -235,6 +235,12 @@ string, because the dimensions in a label change even when the set does not:
 | `#media-help` | before **and** after | The intentional 1×1 `.sr-only` clip. Nothing is rendered to lose. |
 | `#label-wheel` | before **and** after | Truncates by design. Under the overrides it still **expands to fully visible** — all 86 characters, at every width. |
 
+**Trap: measure after the reveal animation settles.** `revealSwatches()` animates swatches in from
+`translateY(12px)` over ~0.45s with staggered delays. Measuring before it settles put the swatches
+~9px low and produced **a phantom SC 2.5.8 failure at 390** (11.4px vs 12px required). The settled
+value is 20.4px at every width. Poll until the label→swatch distance stops changing. This one nearly
+went into the report as a real mobile failure.
+
 **A finding that only appears with production data.** `#label-wheel` hardcodes
 `role="button" tabindex="0"`. Swapping its text for a realistic short name (16 chars) at 1440 leaves
 it **untruncated** — 214 = 214 — while the role, tabindex and `aria-expanded` all remain. In
@@ -250,8 +256,7 @@ claim — which is the same discipline as §3.
 ## Target size and reflow
 
 Only one target under 24×24: `#label-wheel` at 17px tall, passing on the **spacing exception**
-with 8.4 / 6.3 / 7.0px of headroom at 1440 / 390 / 320 — tightest at mobile, not desktop. No
-horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom.
+with 8.4px of slack, identical at 1440 / 390 / 320 and at 400% zoom. No horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom.
 
 ---
 
@@ -507,8 +512,8 @@ binding test is **circle-to-box**:
 |---|---|---|---|---|
 | 1440 | `.btn-swatch` | **20.4px** | >= 12px (circle radius) | 8.4px |
 | 768 | `.btn-swatch` | 122px | >= 12px | large |
-| 390 | `.btn-swatch` | **18.3px** | >= 12px | **6.3px** — tightest |
-| 320 | `.btn-swatch` | **19.0px** | >= 12px | 7.0px |
+| 390 | `.btn-swatch` | **20.4px** | >= 12px | 8.4px |
+| 320 | `.btn-swatch` | **20.4px** | >= 12px | 8.4px |
 
 It is the **only** undersized target at any of the four widths, and it passes at all of them.
 

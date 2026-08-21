@@ -123,7 +123,7 @@ criteria are not required and are not listed.
 | **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
-| **2.5.8** | Target Size (Minimum) | AA | Yes | ⚖️ Decide | **Decide:** `#label-wheel` (`<span role="button">`, 17px tall) passes **only** on the spacing exception. Nearest full-size neighbour is `.btn-swatch` directly above; minimum edge gap is **3.6px**, actual is 12.0 / 9.9 / 10.6px at 1440 / 390 / 320 — **headroom 8.4 / 6.3 / 7.0px, tightest at mobile**. `#label-colour` and `#label-material` look identical but have no `role`/`tabindex`, so they are **not targets** and need no gap. **Do:** ship a native `<button>` ≥24×24 and the dependency disappears. |
+| **2.5.8** | Target Size (Minimum) | AA | Yes | ⚖️ Decide | **Decide:** `#label-wheel` (`<span role="button">`, 17px tall) passes **only** on the spacing exception. Nearest full-size neighbour is `.btn-swatch` above; centre-to-box is **20.4px against 12px required — 8.4px slack, identical at 1440 / 390 / 320 / 400% zoom**. Minimum viable gap is 3.6px: measured, a 4px gap leaves 0.4px slack and a 3px gap **fails**. `#label-colour` and `#label-material` look identical but have no `role`/`tabindex`, so they are **not targets**. **Do:** ship a native `<button>` ≥24×24 — see also **B14**, the role should not exist at all when the text fits. |
 
 # 3. Understandable
 
@@ -180,7 +180,7 @@ items and both were tested on 2026-08-21 — see their rows above.
 | SC | Decision |
 |---|---|
 | **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes — a value display is not a label — but a speech user saying "ID.7" would miss it. Safer: `aria-labelledby` on a real visible label. |
-| **2.5.8** Target Size | `#label-wheel` (17px tall) passes **only** on the spacing exception. Minimum edge gap 3.6px; actual headroom 8.4 / 6.3 / 7.0px at 1440 / 390 / 320 — tightest at mobile. Ship a native `<button>` ≥24×24 and the dependency disappears. |
+| **2.5.8** Target Size | `#label-wheel` (17px tall) passes **only** on the spacing exception, 8.4px slack at every width. The 12px gap cannot drop below 4px without failing. Ship a native `<button>` ≥24×24 and the dependency disappears. |
 
 **One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
 names NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the

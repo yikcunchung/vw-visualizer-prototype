@@ -551,19 +551,34 @@ i.e. **≥12px clearance from centre to box edge**.
 The nearest full-size neighbour is `.btn-swatch`, directly **above**. Because the label is 17px tall,
 its edge sits ~8.4px from its own centre, so the **minimum edge-to-edge gap is 12 − 8.4 = 3.6px**.
 
-| Viewport | Centre → swatch box | Actual edge gap | Minimum gap | Headroom |
-|---|---|---|---|---|
-| 1440 | 20.4px | 12.0px | 3.6px | **8.4px** |
-| 390 | 18.3px | 9.9px | 3.6px | **6.3px** |
-| 320 | 19.0px | 10.6px | 3.6px | **7.0px** |
+Measured at 1440 / 390 / 320 / 320@400% — **identical at all four**:
 
-**The tightest case is 390, not desktop.** That spacing is load-bearing: close the gap between the
-swatch row and the wheel label by ~6px at mobile width and 2.5.8 fails with no exception left.
+| Current gap | Centre → swatch box | Required | Slack |
+|---|---|---|---|
+| **12px** | 20.4px | ≥12px | **8.4px — passes** |
+
+**Gap budget, measured by forcing each value:**
+
+| Total gap | Centre → box | Slack | Verdict |
+|---|---|---|---|
+| 12px (current) | 20.4px | +8.4px | ✅ pass |
+| **4px** | 12.4px | **+0.4px** | ⚠️ passes, but that is a rounding error, not a margin |
+| 3px | 11.4px | −0.6px | ❌ **fail** |
+| 2px | 10.4px | −1.6px | ❌ **fail** |
+
+**The cliff is between 3px and 4px.** 4px technically conforms with 0.4 of a pixel to spare — one
+font-metric change, one sub-pixel rounding difference, and it flips. Do not tune the gap to 4px;
+there is no reason to trade 8px of safety for 8px of density.
+
+> **Measurement trap.** `revealSwatches()` animates the swatches in from `translateY(12px)` over
+> ~0.45s with staggered delays. Measure before that settles and the swatches read ~9px lower,
+> giving 11.4px and a **false FAIL** at 390. Poll until the label→swatch distance stops changing
+> before trusting any number here. This produced a phantom mobile failure during the audit.
 
 **Only `#label-wheel` is affected.** `#label-colour` and `#label-material` are the same visual size
-and the same `.bb-sec-value` class, but they carry **no `role` and no `tabindex`** — they are plain
-live-region text, not targets, so 2.5.8 does not apply to them and they need no gap. Give one of
-them a `role="button"` or a `tabindex` and it inherits the whole problem.
+and the same `.bb-sec-value` class, but carry **no `role` and no `tabindex`** — they are plain
+live-region text, not targets, so 2.5.8 does not apply and they need no gap. Give either one a
+`role="button"` or a `tabindex` and it inherits the whole problem.
 
 **Do not inherit the dependency:** ship a native `<button>` sized ≥24×24.
 
