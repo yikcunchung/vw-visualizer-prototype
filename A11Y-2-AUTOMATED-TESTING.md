@@ -221,16 +221,19 @@ half alone is what scored 100 on a build with a Level A failure.
 
 # 7. Audit records
 
-> **Note on the 2026-08-21 relabel.** The wheel live region was moved off `#label-wheel` onto a new
-> `#wheel-live` sibling, resolving a Part G concern. `#wheel-live` has no `lang` and inherits `en`,
-> while `#grid-wheel` and `#label-wheel` declare `lang="de"` for the same strings. **This is not a
-> defect:** the German wheel names are prototype **long-text fixtures**, chosen to stress truncation,
-> wrapping and target size. Production ships localised names, so no foreign-language passage is
-> expected. Add `lang` to `#wheel-live` only if a foreign string can reach it.
+> **Note on the 2026-08-21 relabel and translation.** The wheel live region was moved off
+> `#label-wheel` onto a `#wheel-live` sibling, resolving a Part G concern. The German wheel names —
+> which were **long-text placeholders**, not content — were then translated to English and the two
+> `lang="de"` attributes removed. No foreign-language passage remains, so SC 3.1.2 is now N/A.
 >
-> Worth keeping either way: **an equivalent long string should stay in the test data** after the real
-> names land. Several findings in this pack — 2.5.8 target size, 1.4.10 reflow, the truncation bug in
-> §7 — only appeared because the fixture was that long.
+> Re-verified after the translation: **18 radios / 18 unique names** with the embedded `"` intact,
+> `#label-wheel` still 17px tall with 19.9–20.4px clearance (2.5.8 exception holds), axe 0 violations,
+> 0 JS exceptions at 1440 / 390 / 320.
+>
+> **Keep a long string in the test data.** The longest name went from 100 to 90 characters, which is
+> still long enough — but several findings here (2.5.8 target size, 1.4.10 reflow, the panel
+> truncation bug) surfaced *only* because the fixture was that long. Short production names would
+> hide them.
 
 
 Dated evidence, kept so a later run can be diffed against this one rather than started from

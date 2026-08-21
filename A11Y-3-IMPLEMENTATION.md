@@ -114,14 +114,14 @@ The spec/disclaimer panel is `role="dialog"` with an accessible name.
 
 **Image alt text must never be interpolated into a markup string.** Set it as a property/prop.
 
-> **Why it exists** — **Level A failure found in the original.** Wheel names contain `"` (`Leichtmetallräder "Mataró"`, `16" Silver`), which terminated `alt="…"` early. All five wheel radios ended up with the identical name `"Leichtmetallräder "` — indistinguishable to a screen reader. JSX `alt={name}` is safe; `dangerouslySetInnerHTML` is **not**.
+> **Why it exists** — **Level A failure found in the original.** Wheel names contain `"` (`Alloy wheels "Mataró"`, `16" Silver`), which terminated `alt="…"` early. All five wheel radios ended up with the identical name `"Leichtmetallräder "` — indistinguishable to a screen reader. JSX `alt={name}` is safe; `dangerouslySetInnerHTML` is **not**.
 
 
 **In React**
 
 ```jsx
 // ✗ the quote closes the attribute early. All five wheel radios ended up named
-//   "Leichtmetallräder " — identical, indistinguishable to a screen reader.
+//   "Alloy wheels " — identical, indistinguishable to a screen reader.
 el.innerHTML = `<img alt="${name}">`;
 
 // ✓ JSX escapes automatically
@@ -207,15 +207,15 @@ Fixed in `22294d7` by pointing `aria-labelledby` at the visible label.
 Mark any passage whose language differs from the page language, so a screen reader switches
 pronunciation instead of reading it phonetically as the page language.
 
-**In the reference this is placeholder content.** The German wheel names
-(`Leichtmetallräder "Mataró" 8,5 J x 21 vorn …`) are **long-text fixtures**, chosen to stress
-truncation, wrapping and target size — production ships localised names, so the `lang="de"`
-attributes come off with them. The rule still applies to whatever *does* ship in a second
-language.
+**No foreign-language content remains in the reference.** The German wheel names were long-text
+placeholders; they were translated to English on 2026-08-21 and the `lang="de"` attributes removed
+with them. This rule is here for production: if a CMS field can hold a string in a language other
+than the page, the component rendering it must be able to emit `lang` alongside it.
 
-**Keep an equally long string in the test data** after the real names land. Several findings in
-this pack — 2.5.8 target size, 1.4.10 reflow, the panel truncation bug — surfaced only because
-the fixture was that long.
+**Keep an equally long string in the test data.** The longest wheel name is 90 characters and still
+contains an embedded `"`. Several findings in this pack — 2.5.8 target size, 1.4.10 reflow, the panel
+truncation bug, and the B1 quote-escaping failure — surfaced *only* because the fixture was that long
+and that awkward. Short, clean production names would hide all four.
 
 > **Notes for React/AEM** — Drive `lang` from the **content locale**, never hardcode it. If a CMS field can hold a string in a different language from the page, the component that renders it must be able to emit `lang` alongside it.
 
@@ -223,7 +223,7 @@ the fixture was that long.
 **In React**
 
 ```jsx
-<span lang="de">Leichtmetallräder "Mataró" …</span>
+<span lang={locale}>{name}</span>
 ```
 
 ---
