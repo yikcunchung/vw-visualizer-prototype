@@ -619,10 +619,12 @@ Two things worth knowing:
 Growing the label also shrinks the gap to the swatches (12px → 8px), which no longer matters — once
 the target meets 24×24 the spacing exception is irrelevant.
 
-**Implemented** as `line-height: 1.6; padding-block: 1px` → 24.4px, verified at 1440 / 768 / 390 /
-320 / 320@400%. The target now meets 24×24 outright and the spacing exception no longer applies.
-(`line-height: 1.6` alone gives 22.4px and would **not** have been enough — the padding is doing the
-last 2px.)
+**Implemented** as `line-height: 1.6; padding-block: 2px` → **26.4px**, verified at 1440 / 768 / 390 /
+320 / 320@400%. The target meets 24×24 outright, the spacing exception no longer applies, and
+**the component now has no undersized target at all** — the under-24 list is empty at every width.
+
+`line-height: 1.6` alone gives 22.4px and would not have been enough; 1px of padding gives 24.4px,
+clearing the minimum by four tenths of a pixel. 2px gives 2.4px of real margin.
 
 **Do not inherit the dependency:** ship a native `<button>` sized ≥24×24.
 
