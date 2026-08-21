@@ -2,7 +2,9 @@
 
 **Component:** VW Visualizer — media viewer + selector bar (colour / rim / interior / trim / zoom).
 **Audited:** 2026-08-21 against the deployed reference build.
-**Scope:** `#visualizer` — `#media` + `#bottombar`. Evidence was gathered page-wide and then
+**Scope:** `#visualizer` — `#media` + `#bottombar`. **Out of scope:** page chrome, video, and
+PDFs (brochures, price lists, spec sheets) — PDFs are a separate conformance surface, EN 301 549
+clause 10, checked with PAC rather than anything in this pack. Evidence was gathered page-wide and then
 attributed; where a criterion is satisfied by page chrome rather than the component, the row says so.
 See §0 of `a11y-2-automated-testing.md` for the component-vs-page figures.
 **Companion documents:** `a11y-2-automated-testing.md` (what the tools can and cannot prove) ·
@@ -182,7 +184,7 @@ template, not the Visualizer team.
 Two decisions to record (both pass): **2.5.3** and **2.5.8** — see rows above.
 
 One thing no automated pass can close: **real screen-reader testing** (NVDA / VoiceOver). The
-accessibility tree proves what is *exposed*, not what is *announced*. See `a11y-2-automated-testing.md`.
+accessibility tree proves what is *exposed*, not what is *announced*. See `a11y-2-automated-testing.md`. A **VoiceOver** pass is planned; the protocol names **NVDA 2026.1.1.55980**, so record that as a deviation.
 
 **One optional extra, outside the AA target.** `prefers-reduced-motion` is honoured nowhere in a
 component with 23 CSS transitions, 7 keyframe sets, 5 WAAPI animations and an indefinite
