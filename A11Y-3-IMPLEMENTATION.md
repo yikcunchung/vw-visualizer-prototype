@@ -54,7 +54,7 @@ scored clean. Check names against the thing they describe.
 
 `SC 4.1.2`
 
-The viewer container is **not** an interactive role. It is `role="region"` + `aria-label` + `aria-roledescription="3D viewer"`, and is focusable (`tabIndex={0}`) for arrow-key/zoom handling.
+The viewer container is **not** an interactive role. It is `role="region"` + `aria-label` + `aria-roledescription="car 360° viewer"`, and is focusable (`tabIndex={0}`) for arrow-key/zoom handling.
 
 > **Notes for React/AEM** — **Originally `role="button"` wrapping 10 `<button>`s** — nested interactive controls. In React this recurs as `<ClickableCard><Button/></ClickableCard>`: the violation exists in *neither* component's source.
 
@@ -67,7 +67,7 @@ The viewer container is **not** an interactive role. It is `role="region"` + `ar
 <div role="button" tabIndex={0} aria-label="Zoom car image"> <Button/> …×10 </div>
 
 // ✓
-<div role="region" aria-label="Vehicle viewer" aria-roledescription="3D viewer" tabIndex={0}>
+<div role="region" aria-label="Car viewer" aria-roledescription="car 360° viewer" tabIndex={0}>
 ```
 
 ---
@@ -188,7 +188,7 @@ Fixed in `22294d7` by pointing `aria-labelledby` at the visible label.
 
 **Borderline case in the reference — decide deliberately.**
 
-`#select-model-lg` carries `aria-label="Select model"` while the adjacent
+`#select-model-lg` carries `aria-label="Select car model"` while the adjacent
 `<span class="select-label">` displays the *value* ("ID.7").
 
 - **It passes.** W3C: *"where a visible text label does not exist for a component, this success
@@ -405,7 +405,7 @@ The A8 keyboard description must be **rewritten whenever the key bindings change
 
 The viewer carries `aria-describedby` pointing at a visually hidden element that **states how to operate it by keyboard**.
 
-> **Notes for React/AEM** — The viewer's keyboard alternative (B10) existed for a long time and was announced *nowhere*. The only on-screen hint says "Drag to rotate", carries `aria-hidden`, and fades after ~3s — its whole subtree exposed one node, `role=generic name=""`. So the alternative built for 2.1.1 / 2.5.7 was invisible to exactly the users it was built for; `#media` announced "Vehicle viewer, 3D viewer" and stopped. **Not a live region** — it must be read on focus and must not interrupt the A7 status region. See B12 for keeping it truthful.
+> **Notes for React/AEM** — The viewer's keyboard alternative (B10) existed for a long time and was announced *nowhere*. The only on-screen hint says "Drag to rotate", carries `aria-hidden`, and fades after ~3s — its whole subtree exposed one node, `role=generic name=""`. So the alternative built for 2.1.1 / 2.5.7 was invisible to exactly the users it was built for; `#media` announced only its name and roledescription (today: "car viewer, car 360° viewer") and stopped. **Not a live region** — it must be read on focus and must not interrupt the A7 status region. See B12 for keeping it truthful.
 
 ---
 
@@ -642,7 +642,7 @@ page-level claim.
 
 Verified after the fixes, page-wide: **310 accessibility-tree nodes, 47 interactive controls,
 0 unnamed, 0 duplicate role+name pairs**; landmarks `banner`, `main`, `navigation` ×2 (named),
-`region: Vehicle viewer`.
+`region: car viewer`.
 
 **Still deliberately unchanged:** the four `.topbar-tab` items and four `.topbar-cta` icons have no
 click handlers in this prototype. They are inert for mouse and keyboard alike, so parity holds and

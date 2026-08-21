@@ -24,8 +24,9 @@ criteria are not required and are not listed.
 | ⚪ N/A | The component has no such content |
 | ⚖️ Decide | Passes, but on an arguable reading — record the decision |
 | ⚠️ Open | **Not assessed.** Do not assume a pass |
+| ❌ Fail | Does not meet the criterion |
 
-**56 criteria in scope. 0 failures.** 24 verified · 9 inspected · 15 not applicable · 2 decisions to record · **6 open**.
+**56 criteria in scope. 1 failure** — SC 3.1.2, introduced 2026-08-21 by moving the wheel live region out of its `lang="de"` container. 23 verified · 9 inspected · 15 not applicable · 2 decisions to record · **6 open**.
 
 ---
 
@@ -116,7 +117,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass | Drag-rotate has button and arrow-key alternatives. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass | Arrows fire on pointer-up; drag-off-then-release aborts. |
-| **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
+| **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ⚖️ Decide | **Decide:** `#label-wheel` (17px tall) passes only on the spacing exception, with **8.4px of headroom** (20.4px clearance vs 12px required). **Do:** ship a native `<button>` ≥24×24 and remove the dependency. |
@@ -129,7 +130,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **3.1.1** | Language of Page | A | Yes | ✅ Pass | `<html lang="en">`; axe `html-has-lang` clean. |
-| **3.1.2** | Language of Parts | AA | Yes | ✅ Pass | `lang="de"` on `#grid-wheel` and `#label-wheel`. |
+| **3.1.2** | Language of Parts | AA | Yes | ❌ **Fail** | `lang="de"` is on `#grid-wheel` and `#label-wheel`, but the **new `#wheel-live` region has no `lang`** — it sits in `.bb-sec-header`, outside both, so it inherits `en` from `<html>`. Measured: it announces `Leichtmetallräder "Hudson" 8 J x 19 vorn…` with **`lang="en"` in effect**. **Do:** add `lang="de"` to `#wheel-live`. |
 
 ## 3.2 Predictable
 
@@ -200,12 +201,12 @@ external audit challenges this component, expect it to be on one of these.
 
 | Decision in the reference | Argument against | If challenged |
 |---|---|---|
-| `aria-roledescription="3D viewer"` on `#media` | Overrides the announced role; some auditors treat it as noise, and AT support varies | Drop the attribute — `role="region"` + label alone still conforms |
+| `aria-roledescription="car 360° viewer"` on `#media` | Overrides the announced role; some auditors treat it as noise, and AT support varies | Drop the attribute — `role="region"` + label alone still conforms |
 | `role="dialog" aria-modal="false"` on the spec panel | A non-modal dialog is semantically ambiguous; AT may still imply modality | Use `role="region"` with `aria-live="polite"`; no focus trap is implied |
 | `<canvas role="img">` with one static `aria-label` for the interior panorama | The view **changes** as the user pans; a single fixed label cannot describe it | Announce orientation changes through the existing `#media-status` live region |
 | Rotate/tilt controls live behind the `#btn-a11y` toggle (`inert` when closed) | 2.1.1 **Intent Note 2** permits a separate keyboard mode but explicitly asks how users *discover* it | Expose the group by default, or announce its availability on `#media` focus |
 | Swatch strips use `overflow-x: auto` | Judged bounded sub-widgets rather than primary content under 1.4.10 — arguable either way | Already mitigated: scroll arrows + every swatch individually focusable |
-| `#label-wheel` is `role="button"` **and** `aria-live="polite"` | A live region on an interactive control is unusual and may double-announce | Move the live region to a sibling element |
+| ~~`#label-wheel` is `role="button"` **and** `aria-live="polite"`~~ **RESOLVED 2026-08-21** — the live region was moved to a sibling `#wheel-live`, which is the fallback this row recommended | A live region on an interactive control is unusual and may double-announce | Move the live region to a sibling element |
 
 **Editorial limit, not a code issue:** `img#img-car` alt is generated from state
 (`"VW ID.7, Grenadilla Black Metallic, exterior view"`). Whether that accurately describes every

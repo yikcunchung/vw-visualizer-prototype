@@ -221,6 +221,14 @@ half alone is what scored 100 on a build with a Level A failure.
 
 # 7. Audit records
 
+> **Regression found 2026-08-21, after the records below.** The accessible labels were reworded and
+> the wheel live region was moved off `#label-wheel` onto a new `#wheel-live` sibling. That resolves
+> a Part G concern, but `#wheel-live` sits in `.bb-sec-header` — outside both `lang="de"` elements —
+> so it announces German wheel names with `lang="en"` in effect. **SC 3.1.2 fails until `lang="de"`
+> is added to `#wheel-live`.** Note no tool reported this: axe stayed at 0 violations and the AX tree
+> stayed at 0 unnamed / 0 duplicate. It was found by checking `closest('[lang]')` on the new node.
+
+
 Dated evidence, kept so a later run can be diffed against this one rather than started from
 scratch.
 
