@@ -164,7 +164,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **4.1.1** | Parsing (obsolete — removed from WCAG 2.2) | A | Yes | ✅ Pass | **Obsolete in WCAG 2.2 — but still required if EN 301 549 is ever the formal target.** EN 301 549 V3.2.1 (2021-03) references **WCAG 2.1**, where 4.1.1 is normative, and lists it as clause 9.4.1.1. Already fixed in the reference (commit `d2245d8`, two validity errors); keep the Nu validator clean and it stays closed. |
-| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: 157 AX nodes, 33 named, **0 unnamed, 0 duplicate role+name**; **18 radios / 18 unique names**, embedded `"` in wheel names intact after the 2026-08-21 translation. (Whole page also 0/0.) **Porting risk — see B14:** `#label-wheel` hardcodes `role="button" tabindex="0"`, so with a short production name it becomes a focusable button with nothing to expand. Not a defect in the reference, where the fixture name is always truncated. |
+| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: 157 AX nodes, 33 named, **0 unnamed, 0 duplicate role+name**; **18 radios / 18 unique names**, embedded `"` in wheel names intact after the 2026-08-21 translation. (Whole page also 0/0.) **See B14 — live at 768px:** `#label-wheel` hardcodes `role="button" tabindex="0" aria-expanded="false"`. At 768 the text fits exactly (666 = 666) yet it still announces as a collapsed button; activating it flips `aria-expanded` to true while nothing changes. Announced state with nothing behind it. |
 | **4.1.3** | Status Messages | AA | Yes | ✅ Pass | `#media-status` announces on all 8 zoom paths; `disabled` derived from state. |
 
 ---

@@ -408,9 +408,22 @@ Measured at 1440 with the label's own text swapped for a realistic production na
 | `tabindex` | `0` | **`0`** |
 | `aria-expanded` | `false` | **`false`** |
 
-**This is not a defect in the reference**, because the long fixture name is truncated at every
-tested width, so the button always has something to do. **It becomes one the moment production
-supplies short names** — which is the normal case. The result is a control that:
+**This already happens in the reference, at 768px.** The wheel label is 666px wide there and the
+text fits exactly — `scrollWidth 666 = clientWidth 666`, nothing truncated — yet:
+
+```
+role="button"  tabindex="0"  aria-expanded="false"     <- all still present
+screen reader: "button, Alloy wheels \"Mataró\" 8.5 J…, collapsed"
+activate:      height 24px -> 24px   (nothing changes)
+               aria-expanded "false" -> "true"
+```
+
+A screen-reader user is told the control is **collapsed**, activates it, is told it is now
+**expanded**, and nothing happened. The state is announced but corresponds to nothing. That is the
+4.1.2 problem, and it is live at tablet width today — not a future production risk.
+
+It gets worse with production data: short real names fit at *every* width, so the control is inert
+everywhere. The result is a control that:
 
 - announces as a **collapsed expandable button** with nothing to expand,
 - occupies a **tab stop** that does nothing when activated,
@@ -606,8 +619,10 @@ Two things worth knowing:
 Growing the label also shrinks the gap to the swatches (12px → 8px), which no longer matters — once
 the target meets 24×24 the spacing exception is irrelevant.
 
-**Recommended:** `padding-block: 4px` on the label. One line, no display change, ellipsis still
-works, and 2.5.8 stops depending on a layout measurement.
+**Implemented** as `line-height: 1.6; padding-block: 1px` → 24.4px, verified at 1440 / 768 / 390 /
+320 / 320@400%. The target now meets 24×24 outright and the spacing exception no longer applies.
+(`line-height: 1.6` alone gives 22.4px and would **not** have been enough — the padding is doing the
+last 2px.)
 
 **Do not inherit the dependency:** ship a native `<button>` sized ≥24×24.
 
