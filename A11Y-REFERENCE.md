@@ -300,6 +300,92 @@ The claim this document supports is therefore unchanged:
 
 ---
 
+## Verification record — 2026-08-21 (`27d1940` + uncommitted working tree)
+
+Supersedes the 2026-08-20 record below for the seven invariants it left open. Headless Chrome 151,
+axe-core 4.13.0, bare `axe.run(document)` (no tag filter), component initialised first (*Step 0*).
+
+> Served from the working tree, which at the time carried uncommitted `index.html` edits (Grand
+> California colour remap; `media.focus({preventScroll:true})` in `closeDisclaimer`). The
+> `preventScroll` argument is **not** in `27d1940`, so it is not yet on the deployed build.
+
+### The seven previously-unverified invariants — all now PASS
+
+Driven with real `Input.dispatchMouseEvent` / `dispatchKeyEvent`, not `element.click()`.
+
+| Inv | SC | Evidence |
+|---|---|---|
+| **B3** | 2.5.2 | At 390 **and** 320 (the only widths where the swatch row overflows): `scrollLeft` 0 → **unchanged on pointer-down** → 180 on pointer-up. Press-then-drag-off-then-release leaves it at **0**, so the action is genuinely abortable. |
+| **B4** | 2.2.2 | Interior panorama canvas hash changes while auto-rotating, then is **identical across two samples after a keyboard `ArrowLeft`** — stopped by keyboard alone, mouse never used. |
+| **B5** | 4.1.3 | All **8** zoom paths in sync (pointer in/out, button in/out, Enter in/out, Space in/out): `disabled` flags mirror state and `#media-status` reads "Zoomed in"/"Zoomed out" every time. |
+| **B6** | 2.4.3 | Open → focus `#btn-close`, `aria-expanded=true`; close → focus back to `#btn-info`, `aria-expanded=false`. |
+| **B13** | 2.4.3 | Auto-opened panel closed with Escape → focus lands on **`media`**, not the trigger. Escape pressed while focus is *outside* the panel closes it and **does not move focus at all**. |
+| **C1** | 1.4.11, 2.4.7 | Ring measured under a **real** hover (`:hover` asserted true, not assumed): navy `#1B2236` on the tan fill = **8.61:1** in both hover and active. |
+| **C6** | 2.4.11 | After the *browser* scrolls each control into view: **20/20** applicable controls fully visible at 1440/390/320, **zero fixed or sticky occluders**. `scroll-padding` resolves to 120/84 (desktop) and 116/96 (narrow). |
+
+### Harness validated against deliberately broken code
+
+Every detector above was re-run against a copy with that specific defect injected. A clean run is
+only meaningful if the detector can fail:
+
+| Inv | Injected defect | Detector output |
+|---|---|---|
+| B3 | arrow fires on `pointerdown` | scrolled **on down-event**, and drag-off no longer aborts |
+| B4 | `stopAutoRotate()` removed from arrow keys | still rotating after `ArrowLeft` |
+| B5 | `syncZoomBtns()` removed from the key path | `OUT-OF-SYNC:[key-Enter-in, key-Space-in]` — pointer/button paths still clean |
+| B6 | `btnClose.focus()` removed | focus stayed on `#btn-info` |
+| B13 | opener guard replaced with `btnInfo.focus()` | focus yanked to `#btn-info` instead of `media` |
+| C1 | hover/active `outline-color` rule deleted | **2.04:1** — exactly the figure this document predicts |
+| C6 | `scroll-padding` zeroed + 520px fixed bar | `FIXED-OCCLUDER` on every control, 0/23 pass |
+
+**Two of my own fixtures were wrong before they were right, and both would have produced a false
+result.** A composite broken build put the 520px test bar over `#btn-a11y`, so C1 scored a false
+PASS on the broken code (the button was never hovered) — the breaks had to be split into isolated
+builds. And bounding-box *corner* sampling reported the 32px circular buttons as occluded by
+`#img-car`, because a circle's bbox corners are outside its painted pixels. Sample inside the shape.
+
+### Re-confirmed this pass
+
+| Check | Result |
+|---|---|
+| axe, 90 rules, 5 viewports incl. literal 400% zoom | **0 violations**, 0 JS exceptions |
+| Accessibility tree | 394 nodes, **0 unnamed interactive**, **0 duplicate role+name** |
+| **B1** | 18 radios / **18 unique names** read from the AX tree, German wheel names intact |
+| **C2 / 1.4.3** | every axe *needs-review* contrast node resolved on composited pixels: **23/23 pass, 8.59:1 – 21.00:1** |
+| **C5** | no horizontal scroll at 320 / 390 / 768 / 1440 |
+| **3.1.2** | `lang="de"` on `#grid-wheel` and `#label-wheel`; the German wheel names inherit it |
+
+**SC 2.5.8 target size — one exception relied upon.** `#label-wheel` is 17px tall (under 24). It
+passes only via the **spacing exception**: the nearest other target centre is **48px** away, ≥ the
+24px required. If production tightens that layout, this becomes a real failure. It is also a
+`<span role="button" tabindex="0">` rather than a native button — named and fully keyboard-operable
+(Enter / Space / Escape, with `preventDefault`), but a native `<button>` is the safer port.
+
+*A caution for whoever re-runs this:* the `13x13` targets an earlier pass reported were controls
+measured mid-transition, and `uniqueNames: 1` came from reading `aria-label || textContent` instead
+of the accessibility tree. Both were artifacts. Filter by ancestor visibility, and take accessible
+names from `Accessibility.getFullAXTree`.
+
+### Unchanged: the one real gap
+
+**Real screen-reader output has still never been tested.** The AX tree proves what is *exposed*;
+NVDA, JAWS and VoiceOver differ in what they *announce*. Several Part G decisions
+(`aria-roledescription`, the non-modal dialog, the static `role="img"` label on a panorama that
+changes as you pan) can only be settled by listening. No headless pass closes this.
+
+### The claim this document now supports
+
+> *"Every WCAG 2.2 A/AA requirement that can be verified by static analysis, by the accessibility
+> tree, or by driving real pointer and keyboard events is verified and passing on this component —
+> including all 13 behavioural and 6 visual invariants, with detectors proven against injected
+> defects. Two conformance claims rest on documented judgement calls (the 2.5.8 spacing exception
+> and six Part G decisions), and screen-reader announcement remains unverified."*
+
+That is a stronger claim than 2026-08-20's and still stops short of "fully compliant", which no
+automated pass can establish.
+
+---
+
 ## Source of truth
 
 Criterion wording, Intent, Benefits, Examples, Techniques and ACT Rules for all 56 A/AA criteria:
