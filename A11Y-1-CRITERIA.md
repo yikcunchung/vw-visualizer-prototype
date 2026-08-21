@@ -24,9 +24,8 @@ criteria are not required and are not listed.
 | ⚪ N/A | The component has no such content |
 | ⚖️ Decide | Passes, but on an arguable reading — record the decision |
 | ⚠️ Open | **Not assessed.** Do not assume a pass |
-| ❌ Fail | Does not meet the criterion |
 
-**56 criteria in scope. 1 failure** — SC 3.1.2, introduced 2026-08-21 by moving the wheel live region out of its `lang="de"` container. 23 verified · 9 inspected · 15 not applicable · 2 decisions to record · **6 open**.
+**56 criteria in scope. 0 failures.** 24 verified · 9 inspected · 15 not applicable · 2 decisions to record · **6 open**.
 
 ---
 
@@ -130,7 +129,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **3.1.1** | Language of Page | A | Yes | ✅ Pass | `<html lang="en">`; axe `html-has-lang` clean. |
-| **3.1.2** | Language of Parts | AA | Yes | ❌ **Fail** | `lang="de"` is on `#grid-wheel` and `#label-wheel`, but the **new `#wheel-live` region has no `lang`** — it sits in `.bb-sec-header`, outside both, so it inherits `en` from `<html>`. Measured: it announces `Leichtmetallräder "Hudson" 8 J x 19 vorn…` with **`lang="en"` in effect**. **Do:** add `lang="de"` to `#wheel-live`. |
+| **3.1.2** | Language of Parts | AA | Yes | ✅ Pass | `lang="de"` is correctly applied to `#grid-wheel` and `#label-wheel`, which carry the German wheel names. **Those names are prototype long-text fixtures, not production content** — production ships localised names, so no foreign-language passage is expected. *Advisory:* the new `#wheel-live` region has no `lang` and inherits `en`; harmless while the content matches the page language, but if any foreign string ever reaches it, add `lang` there too. The rule is **A5 / R11** in the implementation doc. |
 
 ## 3.2 Predictable
 

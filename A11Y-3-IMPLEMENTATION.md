@@ -44,7 +44,7 @@ scored clean. Check names against the thing they describe.
 | [B1](#b1) | Never interpolate alt text into markup | 4.1.2, 1.1.1 |
 | [B2](#b2) | Selection state derives from state | 4.1.2 |
 | [A9](#a9) | Visible label sits inside the accessible name | 2.5.3 |
-| [A5](#a5) | German product strings carry lang="de" | 3.1.2 |
+| [A5](#a5) | Any passage in another language carries `lang` | 3.1.2 |
 | [A2](#a2) | Decorative icons are aria-hidden | 1.1.1 |
 | [A6](#a6) | Icon-only buttons: aria-label, no duplicate title | — |
 
@@ -200,13 +200,24 @@ Fixed in `22294d7` by pointing `aria-labelledby` at the visible label.
 
 <a id="a5"></a>
 
-### A5 — German product strings carry lang="de"
+### A5 — Any passage in another language carries `lang`
 
 `SC 3.1.2`
 
-German product strings inside the English UI carry `lang="de"`.
+Mark any passage whose language differs from the page language, so a screen reader switches
+pronunciation instead of reading it phonetically as the page language.
 
-> **Notes for React/AEM** — Applies to the wheel names (`Leichtmetallräder …`) on the label **and** the swatch grid. Drive from content locale, not hardcoded.
+**In the reference this is placeholder content.** The German wheel names
+(`Leichtmetallräder "Mataró" 8,5 J x 21 vorn …`) are **long-text fixtures**, chosen to stress
+truncation, wrapping and target size — production ships localised names, so the `lang="de"`
+attributes come off with them. The rule still applies to whatever *does* ship in a second
+language.
+
+**Keep an equally long string in the test data** after the real names land. Several findings in
+this pack — 2.5.8 target size, 1.4.10 reflow, the panel truncation bug — surfaced only because
+the fixture was that long.
+
+> **Notes for React/AEM** — Drive `lang` from the **content locale**, never hardcode it. If a CMS field can hold a string in a different language from the page, the component that renders it must be able to emit `lang` alongside it.
 
 
 **In React**

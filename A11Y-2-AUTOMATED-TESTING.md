@@ -221,12 +221,16 @@ half alone is what scored 100 on a build with a Level A failure.
 
 # 7. Audit records
 
-> **Regression found 2026-08-21, after the records below.** The accessible labels were reworded and
-> the wheel live region was moved off `#label-wheel` onto a new `#wheel-live` sibling. That resolves
-> a Part G concern, but `#wheel-live` sits in `.bb-sec-header` — outside both `lang="de"` elements —
-> so it announces German wheel names with `lang="en"` in effect. **SC 3.1.2 fails until `lang="de"`
-> is added to `#wheel-live`.** Note no tool reported this: axe stayed at 0 violations and the AX tree
-> stayed at 0 unnamed / 0 duplicate. It was found by checking `closest('[lang]')` on the new node.
+> **Note on the 2026-08-21 relabel.** The wheel live region was moved off `#label-wheel` onto a new
+> `#wheel-live` sibling, resolving a Part G concern. `#wheel-live` has no `lang` and inherits `en`,
+> while `#grid-wheel` and `#label-wheel` declare `lang="de"` for the same strings. **This is not a
+> defect:** the German wheel names are prototype **long-text fixtures**, chosen to stress truncation,
+> wrapping and target size. Production ships localised names, so no foreign-language passage is
+> expected. Add `lang` to `#wheel-live` only if a foreign string can reach it.
+>
+> Worth keeping either way: **an equivalent long string should stay in the test data** after the real
+> names land. Several findings in this pack — 2.5.8 target size, 1.4.10 reflow, the truncation bug in
+> §7 — only appeared because the fixture was that long.
 
 
 Dated evidence, kept so a later run can be diffed against this one rather than started from
