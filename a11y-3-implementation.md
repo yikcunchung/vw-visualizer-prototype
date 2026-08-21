@@ -580,6 +580,35 @@ and the same `.bb-sec-value` class, but carry **no `role` and no `tabindex`** �
 live-region text, not targets, so 2.5.8 does not apply and they need no gap. Give either one a
 `role="button"` or a `tabindex` and it inherits the whole problem.
 
+#### Better: make the target 24px tall and the exception stops applying
+
+Widening the *gap* is the wrong lever — it buys slack on an exception you should not need. Growing
+the *target* removes the exception entirely. Measured at 1440 / 390 / 320, label height and verdict:
+
+| Change | Height | Meets 24×24 | Verdict |
+|---|---|---|---|
+| none — `line-height: 1.2` | 16.8px | ✗ | passes **via exception**, 8.4px slack |
+| `line-height: 1.5` | 21.0px | ✗ | **still** via exception — *not enough* |
+| `line-height: 1.72` | 24.1px | ✓ | **passes outright** — but only 0.1px over |
+| `line-height: 1.8` | 25.2px | ✓ | passes outright |
+| `min-height: 24px` | 24.0px | ✓ | passes outright |
+| **`padding-block: 4px`** | **24.8px** | ✓ | **passes outright** |
+
+Two things worth knowing:
+
+- **`line-height: 1.5` does not get you there.** At a 14px font it yields 21px — the instinctive
+  "bump the line-height" value leaves you still relying on the exception.
+- **Prefer `padding-block` or `min-height` over `line-height`.** SC 1.4.12 lets users override
+  `line-height` to 1.5; padding and `min-height` are orthogonal to every property 1.4.12 touches, so
+  they hold regardless. Measured under a 1.4.12 override: `padding-block: 4px` → 29px,
+  `min-height: 24px` → 24px, both still passing outright.
+
+Growing the label also shrinks the gap to the swatches (12px → 8px), which no longer matters — once
+the target meets 24×24 the spacing exception is irrelevant.
+
+**Recommended:** `padding-block: 4px` on the label. One line, no display change, ellipsis still
+works, and 2.5.8 stops depending on a layout measurement.
+
 **Do not inherit the dependency:** ship a native `<button>` sized ≥24×24.
 
 ---
