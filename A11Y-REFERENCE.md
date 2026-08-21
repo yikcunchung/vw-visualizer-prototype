@@ -95,64 +95,79 @@ change, or behind a tab has the same hazard; assert a known child count before b
 ## PART A — Structural invariants (markup)
 
 These port cleanly to JSX.
+#### A1 — Viewer container is a region, not a control
 
-**A1** · `SC 4.1.2`
+`SC 4.1.2`
 
 The viewer container is **not** an interactive role. It is `role="region"` + `aria-label` + `aria-roledescription="3D viewer"`, and is focusable (`tabIndex={0}`) for arrow-key/zoom handling.
 
 > **Notes for React/AEM** — **Originally `role="button"` wrapping 10 `<button>`s** — nested interactive controls. In React this recurs as `<ClickableCard><Button/></ClickableCard>`: the violation exists in *neither* component's source.
 
-<br>
+---
 
-**A2** · `SC 1.1.1`
+#### A2 — Decorative icons are aria-hidden
+
+`SC 1.1.1`
 
 Every decorative icon/SVG is `aria-hidden="true"`. (40 in the reference; 0 unnamed graphics remain in the a11y tree.)
 
 > **Notes for React/AEM** — Put it on the SVG/wrapper inside the icon component so every consumer inherits it.
 
-<br>
+---
 
-**A3** · `SC 1.3.1, 4.1.2`
+#### A3 — Swatch groups are radiogroups
+
+`SC 1.3.1, 4.1.2`
 
 Each swatch group is `role="radiogroup"` with `aria-labelledby` → its visible title; each swatch is `role="radio"` with `aria-checked`.
 
 > **Notes for React/AEM** — **AEM risk:** `EditableComponent` injects a wrapper `<div>` around authorable components. A radiogroup must *own* its radios — if each swatch becomes separately authorable, ownership breaks and the group collapses in the a11y tree. Keep a group as **one** component, or wire `aria-owns` explicitly.
 
-<br>
+---
 
-**A4** · `SC 4.1.2`
+#### A4 — Spec panel is a named dialog
+
+`SC 4.1.2`
 
 The spec/disclaimer panel is `role="dialog"` with an accessible name.
 
 > **Notes for React/AEM** — If it is non-modal, keep `aria-modal="false"`. Do not set `aria-modal="true"` without a focus trap.
 
-<br>
+---
 
-**A5** · `SC 3.1.2`
+#### A5 — German product strings carry lang="de"
+
+`SC 3.1.2`
 
 German product strings inside the English UI carry `lang="de"`.
 
 > **Notes for React/AEM** — Applies to the wheel names (`Leichtmetallräder …`) on the label **and** the swatch grid. Drive from content locale, not hardcoded.
 
-<br>
+---
 
-**A6** · *no single SC*
+#### A6 — Icon-only buttons: aria-label, no duplicate title
+
+*no single SC*
 
 Icon-only buttons have an `aria-label` and **no** duplicate `title` with the same text.
 
 > **Notes for React/AEM** — Redundant `title` is a WAVE alert. Losing `title` also loses the hover tooltip — accepted trade.
 
-<br>
+---
 
-**A7** · `SC 4.1.3`
+#### A7 — A visually hidden polite live region exists
+
+`SC 4.1.3`
 
 A visually hidden `aria-live="polite"` region exists for status announcements.
 
 > **Notes for React/AEM** — `.sr-only` = `position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap`. Do **not** use `display:none`.
 
-<br>
+---
 
-**A8** · `SC 1.3.1`
+#### A8 — Viewer describes its own keyboard operation
+
+`SC 1.3.1`
 
 The viewer carries `aria-describedby` pointing at a visually hidden element that **states how to operate it by keyboard**.
 
@@ -165,103 +180,131 @@ The viewer carries `aria-describedby` pointing at a visually hidden element that
 **This is the half a developer reading the HTML will not see.** Every item here is
 **[tool-invisible]** unless stated otherwise.
 
-**B1** · `SC 4.1.2, 1.1.1`
+---
+
+#### B1 — Never interpolate alt text into markup
+
+`SC 4.1.2, 1.1.1`
 
 **Image alt text must never be interpolated into a markup string.** Set it as a property/prop.
 
 > **Why it exists** — **Level A failure found in the original.** Wheel names contain `"` (`Leichtmetallräder "Mataró"`, `16" Silver`), which terminated `alt="…"` early. All five wheel radios ended up with the identical name `"Leichtmetallräder "` — indistinguishable to a screen reader. JSX `alt={name}` is safe; `dangerouslySetInnerHTML` is **not**.
 
-<br>
+---
 
-**B2** · `SC 4.1.2`
+#### B2 — Selection state derives from state
+
+`SC 4.1.2`
 
 Selection state (`aria-checked`, `aria-expanded`, `aria-pressed`) must be **derived from state**, never set imperatively in one code path only.
 
 > **Why it exists** — The original updated CSS classes but not ARIA. In React use `aria-checked={i === selected}` so desync is impossible.
 
-<br>
+---
 
-**B3** · `SC **2.5.2**`
+#### B3 — Pointer actions fire on the up-event
+
+`SC **2.5.2**`
 
 Single-pointer actions fire on **up-event**, not down-event.
 
 > **Why it exists** — Swatch scroll-arrows fired on `pointerdown` — no way to abort by dragging off. Use `onPointerUp` / `onClick`. *Exception (W3C note): controls that emulate a keyboard key press may use the down-event.*
 
-<br>
+---
 
-**B4** · `SC **2.2.2**`
+#### B4 — Auto-rotation stoppable by keyboard
+
+`SC **2.2.2**`
 
 Auto-rotation (interior panorama) must be stoppable **by keyboard**, not only by mouse.
 
 > **Why it exists** — `stopAutoRotate()` was bound only to `mousedown`, so a keyboard user could never stop indefinite motion. Now also called from arrow keys and every rotate/tilt control. In React: cancel the rAF in the effect **and** on any interaction; clean up on unmount or it leaks.
 
-<br>
+---
 
-**B5** · `SC 4.1.3`
+#### B5 — Zoom announces and syncs on every path
+
+`SC 4.1.3`
 
 Zoom state must announce, and must keep dependent controls in sync, on **every** path (pointer tap, buttons, Enter/Space).
 
 > **Why it exists** — Keyboard zoom updated state but never re-synced the zoom-in/out `disabled` flags — a functional bug as well as an a11y one. Derive `disabled` from state.
 
-<br>
+---
 
-**B6** · `SC 2.4.3`
+#### B6 — Panel opening moves focus in
+
+`SC 2.4.3`
 
 Opening the spec panel moves focus into it; closing returns focus to the trigger.
 
 > **Why it exists** — **React trap:** if the panel is conditionally rendered (`{open && <Panel/>}`), unmounting while focus is inside drops focus to `<body>`. Prefer keeping it mounted and hidden, or explicitly restore focus. Effect dependency mistakes break this **silently**.
 
-<br>
+---
 
-**B7** · `SC 2.1.1`
+#### B7 — Arrow keys have two scopes
+
+`SC 2.1.1`
 
 Arrow keys drive the viewer on **two different scopes, split by which keys the browser itself needs**. Left/Right act when the viewer has focus **or when nothing does** (`active === media || active === document.body || active == null`). Up/Down act **only** when the viewer itself has focus. Anything else focused — a button, a swatch — yields to that widget's keys.
 
 > **Why it exists** — **Revised 2026-08-20 (`5dc4a90`); the previous "`active === media`, nothing looser" wording is superseded — do not implement it.** Requiring viewer focus made rotation unreachable for *pointer* users: clicking the car does not focus it, because the drag handler `preventDefault()`s the mousedown, so `activeElement` stays `<body>` and the arrows did nothing (measured: click centre of `#media`, `activeElement` BODY, ArrowRight frame-00 → frame-00). Up/Down must stay viewer-only because they are the browser's page-scroll keys — an earlier build that accepted body/null for all four `preventDefault()`ed ArrowDown and panned the panorama while the page stayed put (`scrollY 400 → 400`) for a user who had focused nothing. Porting note: implement the two axes as two separate guards, or you will reintroduce one bug while fixing the other.
 
-<br>
+---
 
-**B8** · `SC **2.4.7**`
+#### B8 — Hidden controls leave the tab order
+
+`SC **2.4.7**`
 
 A hidden/non-functional control must be **removed from the tab order** (`disabled`), not just visually hidden.
 
 > **Why it exists** — Scroll-arrows kept `tabindex=0` while at `opacity:0; pointer-events:none` — keyboard users landed on an invisible, dead button with no visible focus. Matches BITV finding #8.
 
-<br>
+---
 
-**B9** · `SC 4.1.2`
+#### B9 — Inactive groups are inert, not just hidden
+
+`SC 4.1.2`
 
 Non-active control groups are hidden from AT with `inert`, not just CSS.
 
 > **Why it exists** — React support is version-dependent; set via ref if the pinned React version lacks the prop.
 
-<br>
+---
 
-**B10** · `SC **2.5.7**`
+#### B10 — Drag has a non-drag alternative
+
+`SC **2.5.7**`
 
 Drag interactions must have a single-pointer, non-drag alternative.
 
 > **Why it exists** — Drag-to-rotate is covered by the rotate/tilt buttons + arrow keys. *W3C exempts only path-dependent underlying functions (e.g. freehand drawing) — reaching a view angle is endpoint-based, so no exemption applies.*
 
-<br>
+---
 
-**B11** · `SC 2.4.3`
+#### B11 — List keys stable across filtering
+
+`SC 2.4.3`
 
 List `key`s must be stable across filtering.
 
 > **Why it exists** — **React trap:** wheel availability is filtered per colour. Index-based keys remount swatches and throw focus to `<body>` mid-keyboard-navigation.
 
-<br>
+---
 
-**B12** · `SC 1.3.1`
+#### B12 — Keyboard description stays truthful
+
+`SC 1.3.1`
 
 The A8 keyboard description must be **rewritten whenever the key bindings change**, not written once.
 
 > **Why it exists** — The arrow keys genuinely differ by mode: exterior steps left/right only, interior pans on all four axes. A single static sentence is therefore false in one of the two states. The reference swaps the text inside the mode-toggle callback, next to where the mode flag flips — putting it after the call is wrong, because the toggle defers through a width animation and the flag is not yet set. In React derive the string from mode rather than assigning it.
 
-<br>
+---
 
-**B13** · `SC 2.4.3`
+#### B13 — Panel closing returns focus to its opener
+
+`SC 2.4.3`
 
 Closing the spec panel returns focus to **whoever opened it**, and only when focus was inside the panel.
 
@@ -271,55 +314,71 @@ Closing the spec panel returns focus to **whoever opened it**, and only when foc
 
 ## PART C — Visual / CSS invariants
 
-**C1** · `SC 1.4.11, 2.4.7`
+---
+
+#### C1 — Focus indicator ≥3:1 in every state
+
+`SC 1.4.11, 2.4.7`
 
 Every interactive control has a visible focus indicator with **≥3:1** contrast against its adjacent background — **in every state**, including hover and active.
 
 > **Notes** — The orange ring (`#C86C03`) is 3.75:1 on white but only **2.04:1** on the tan hover/active fill (`#CCBDAB`). Reference switches the ring to navy `#1B2236` (8.61:1) when the control is hovered or active. **This cannot be ported as-is** — it uses ID specificity (`#btn-a11y.active:focus-visible`), which styled-components cannot generate. Re-express as prop-driven component styles (`$active`, `$hovered`).
 
-<br>
+---
 
-**C2** · `SC 1.4.3`
+#### C2 — Text and icon contrast ≥4.5:1
+
+`SC 1.4.3`
 
 Text and icon contrast ≥ **4.5:1** (≥3:1 for large text).
 
 > **Notes** — Reference measures ≥8.4:1 throughout. Verify **composited** values — the disclaimer sits on `rgba(0,0,0,0.7)` over photography, so compute against the blend, not the declared colour.
 
-<br>
+---
 
-**C3** · `SC 1.4.11`
+#### C3 — Selected-state indicators ≥3:1
+
+`SC 1.4.11`
 
 Selected-state indicators ≥ **3:1**.
 
 > **Notes** — Selected swatch border `#997F67` = 3.76:1.
 
-<br>
+---
 
-**C4** · `SC 2.5.8`
+#### C4 — Every target ≥24×24 CSS px
+
+`SC 2.5.8`
 
 Every target ≥ **24×24** CSS px.
 
 > **Notes** — Smallest in the reference is the close button at exactly 24×24. Scroll-arrows 28, touch controls 32, swatches 48.
 
-<br>
+---
 
-**C5** · `SC 1.4.10`
+#### C5 — No content loss at 320×256
+
+`SC 1.4.10`
 
 No horizontal scrolling / content loss at **320×256** CSS px.
 
 > **Notes** — Verified at 1× emulation. Sufficient techniques: **C31** (flexbox), **C32** (media queries + grid), **C34** (un-fix sticky elements).
 
-<br>
+---
 
-**C6** · `SC **2.4.11**`
+#### C6 — Focused control not behind fixed bars
+
+`SC **2.4.11**`
 
 A focused viewer control must not end up **behind the page's fixed bars**. Reserve clearance with `scroll-padding-top` / `scroll-padding-bottom` on the scroll container.
 
 > **Notes** — The browser scrolls a focused control into the *layout* viewport and considers that done — it has no idea a `position:fixed` header or action bar is painted on top. `#btn-toggle-view` landed **entirely** behind the bottom bar, 0 of 5 test points visible. The clearance values must track the real bar heights per breakpoint. This is a page-chrome interaction, but the control that disappears is the viewer's, so it is the viewer's problem to verify.
 
-<br>
+---
 
-**C7** · `SC 2.1.1`
+#### C7 — Scrollable regions are keyboard reachable
+
+`SC 2.1.1`
 
 A control that scrolls (the spec panel's text block) needs `tabindex="0"`.
 
@@ -498,37 +557,37 @@ Driven with real `Input.dispatchMouseEvent` / `dispatchKeyEvent`, not `element.c
 
 At 390 **and** 320 (the only widths where the swatch row overflows): `scrollLeft` 0 → **unchanged on pointer-down** → 180 on pointer-up. Press-then-drag-off-then-release leaves it at **0**, so the action is genuinely abortable.
 
-<br>
+---
 
 **B4** · `SC 2.2.2`
 
 Interior panorama canvas hash changes while auto-rotating, then is **identical across two samples after a keyboard `ArrowLeft`** — stopped by keyboard alone, mouse never used.
 
-<br>
+---
 
 **B5** · `SC 4.1.3`
 
 All **8** zoom paths in sync (pointer in/out, button in/out, Enter in/out, Space in/out): `disabled` flags mirror state and `#media-status` reads "Zoomed in"/"Zoomed out" every time.
 
-<br>
+---
 
 **B6** · `SC 2.4.3`
 
 Open → focus `#btn-close`, `aria-expanded=true`; close → focus back to `#btn-info`, `aria-expanded=false`.
 
-<br>
+---
 
 **B13** · `SC 2.4.3`
 
 Auto-opened panel closed with Escape → focus lands on **`media`**, not the trigger. Escape pressed while focus is *outside* the panel closes it and **does not move focus at all**.
 
-<br>
+---
 
 **C1** · `SC 1.4.11, 2.4.7`
 
 Ring measured under a **real** hover (`:hover` asserted true, not assumed): navy `#1B2236` on the tan fill = **8.61:1** in both hover and active.
 
-<br>
+---
 
 **C6** · `SC 2.4.11`
 
