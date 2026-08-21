@@ -2,11 +2,13 @@
 
 **Component:** VW Visualizer — media viewer + selector bar (colour / rim / interior / trim / zoom).
 **Audited:** 2026-08-21 against the deployed reference build.
-**Scope:** `#visualizer` — `#media` + `#bottombar`. Evidence was gathered page-wide and then
+**Scope:** `#visualizer` — `#media` + `#bottombar`. **Out of scope:** page chrome, video, and
+PDFs (brochures, price lists, spec sheets) — PDFs are a separate conformance surface, EN 301 549
+clause 10, checked with PAC rather than anything in this pack. Evidence was gathered page-wide and then
 attributed; where a criterion is satisfied by page chrome rather than the component, the row says so.
-See §0 of `A11Y-2-AUTOMATED-TESTING.md` for the component-vs-page figures.
-**Companion documents:** `A11Y-2-AUTOMATED-TESTING.md` (what the tools can and cannot prove) ·
-`A11Y-3-IMPLEMENTATION.md` (what to build).
+See §0 of `a11y-2-automated-testing.md` for the component-vs-page figures.
+**Companion documents:** `a11y-2-automated-testing.md` (what the tools can and cannot prove) ·
+`a11y-3-implementation.md` (what to build).
 
 The conformance target is **Level A + AA** — what EN 301 549 clause 9 requires, and therefore
 BFSG / the European Accessibility Act. That is **56 criteria** (32 A + 24 AA). The 31 Level AAA
@@ -23,9 +25,11 @@ criteria are not required and are not listed.
 | ✅ Pass\* | Verified by code and accessibility-tree inspection, **not** driven |
 | ⚪ N/A | The component has no such content |
 | ⚖️ Decide | Passes, but on an arguable reading — record the decision |
-| ⚠️ Open | **Not assessed.** Do not assume a pass |
+| ⛔ Out of scope | Outside `#visualizer` — the page template owns it, not tracked here |
 
-**56 criteria in scope. 0 failures.** 24 verified · 9 inspected · 16 not applicable · 2 decisions to record · **6 open**.
+**56 criteria assessed. 0 failures and 0 open items in `#visualizer`.** 25 verified · 9 inspected · 16 not applicable · 2 decisions to record · 4 out of scope (page-level).
+
+> **Scope rule:** only `#visualizer` counts. Errors and failures in page chrome — nav, hero, tiles, footer — are **not findings** and are not tracked here. Where a whole-page number appears it is labelled as context.
 
 ---
 
@@ -56,7 +60,7 @@ criteria are not required and are not listed.
 | **1.3.1** | Info and Relationships | A | Yes | ✅ Pass | axe 0 violations on all structure rules; `role="radiogroup"` + 18 radios correct in the AX tree. |
 | **1.3.2** | Meaningful Sequence | A | Yes | ✅ Pass* | DOM order matches visual order; 34 coherent Tab stops at 390 and 320. |
 | **1.3.3** | Sensory Characteristics | A | Yes | ✅ Pass* | Instructions are textual ("Use the left and right arrow keys…"), not shape or position. |
-| **1.3.4** | Orientation | AA | Yes | ⚠️ Open | **Do:** fullscreen applies `rotate(90deg)`. Confirm content is not *restricted* to one orientation, and that the rotated layout is reachable in both. |
+| **1.3.4** | Orientation | AA | Yes | ✅ Pass | Tested portrait **and** landscape at 390×844 / 844×390 / 320×640 / 640×320, in normal **and** fullscreen. No `@media (orientation:)` rule exists anywhere. Viewer and bottombar visible, 18 radios / 18 swatches present, no horizontal scroll, and the fullscreen exit control visible and inside the viewport in every case. The `rotate(90deg)` is a user-invoked fullscreen mode, reversible, and does not lock orientation. |
 | **1.3.5** | Identify Input Purpose | AA | No | ⚪ N/A | No fields collecting user information. |
 
 ## 1.4 Distinguishable
@@ -70,7 +74,7 @@ criteria are not required and are not listed.
 | **1.4.5** | Images of Text | AA | Yes | ✅ Pass* | All text is real text; imagery is photographic. |
 | **1.4.10** | Reflow | AA | Yes | ✅ Pass | No horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom. |
 | **1.4.11** | Non-text Contrast | AA | Yes | ✅ Pass | Focus ring under real hover: navy on tan = 8.61:1 hover and active. |
-| **1.4.12** | Text Spacing | AA | Yes | ⚠️ Open | **Do:** apply the four text-spacing overrides (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em) and confirm no clipping or overlap. Never tested. |
+| **1.4.12** | Text Spacing | AA | Yes | ✅ Pass | All four overrides applied (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em) at 1440 / 390 / 320. **No newly clipped element, no control lost, no horizontal scroll.** The two elements clipped afterwards were already clipped before: `#media-help` (intentional 1×1 `.sr-only`) and `#label-wheel` (truncates by design) — and `#label-wheel` **expands to fully visible** under the overrides, all 86 characters, at every width. Detector validated with a deliberately clipped canary. |
 | **1.4.13** | Content on Hover or Focus | AA | Yes | ✅ Pass* | Hover/focus changes are background and outline only — no popups to dismiss. |
 
 # 2. Operable
@@ -105,7 +109,7 @@ criteria are not required and are not listed.
 | **2.4.2** | Page Titled | A | Yes | ✅ Pass | axe `document-title` clean. |
 | **2.4.3** | Focus Order | A | Yes | ✅ Pass | Open moves focus in; close returns to whoever opened it; Escape from outside moves nothing. |
 | **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | 0 unnamed links, 0 duplicate role+name — 157 nodes in the component subtree, 394 page-wide. |
-| **2.4.5** | Multiple Ways | AA | Yes | ⚠️ Open | *Page-level.* **Do:** assign to the page-template owner — cannot be judged from one component. |
+| **2.4.5** | Multiple Ways | AA | No | ⛔ Out of scope | *Page-level — belongs to the page-template owner, not this component.* Cannot be judged from one component and is not tracked here. |
 | **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | One `h1`, two `h2`, `heading-order` clean, every control named. |
 | **2.4.7** | Focus Visible | AA | Yes | ✅ Pass | 34 Tab stops, 0 invisible; ring verified in default, hover and active. |
 | **2.4.11** | Focus Not Obscured (Minimum) | AA | Yes | ✅ Pass | 20/20 controls fully visible after browser scroll-into-view; 0 fixed/sticky occluders. |
@@ -137,9 +141,9 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **3.2.1** | On Focus | A | Yes | ✅ Pass* | Focus causes no context change; swatch focus only scrolls the strip. |
 | **3.2.2** | On Input | A | Yes | ✅ Pass* | Changing the model select updates in place; no new window, no focus jump. |
-| **3.2.3** | Consistent Navigation | AA | Yes | ⚠️ Open | *Page-level.* **Do:** assign to the page-template owner — needs a second page to compare. |
-| **3.2.4** | Consistent Identification | AA | Yes | ⚠️ Open | *Page-level.* **Do:** assign to the page-template owner — needs a second page to compare. |
-| **3.2.6** | Consistent Help | A | Yes | ⚠️ Open | *Page-level.* **Do:** assign to the page-template owner — where the help mechanism sits across pages. |
+| **3.2.3** | Consistent Navigation | AA | No | ⛔ Out of scope | *Page-level — belongs to the page-template owner, not this component.* Cannot be judged from one component and is not tracked here. |
+| **3.2.4** | Consistent Identification | AA | No | ⛔ Out of scope | *Page-level — belongs to the page-template owner, not this component.* Cannot be judged from one component and is not tracked here. |
+| **3.2.6** | Consistent Help | A | No | ⛔ Out of scope | *Page-level — belongs to the page-template owner, not this component.* Cannot be judged from one component and is not tracked here. |
 
 ## 3.3 Input Assistance
 
@@ -167,29 +171,29 @@ criteria are not required and are not listed.
 
 # What is actually left to do
 
-Six A/AA criteria are unanswered. **Four are page-level** and belong to whoever owns the page
-template, not the Visualizer team.
+**No open criteria and no known failures.** Every Level A/AA criterion in scope for `#visualizer` is
+either verified, inspected, not applicable, or out of scope. 1.3.4 and 1.4.12 were the last two open
+items and both were tested on 2026-08-21 — see their rows above.
 
-| SC | Owner | Action |
-|---|---|---|
-| **1.3.4** Orientation | **Component** | Fullscreen applies `rotate(90deg)` — confirm content is not restricted to one orientation. |
-| **1.4.12** Text Spacing | **Component** | Apply the four spacing overrides; confirm no clipping. |
-| **2.4.5** Multiple Ways | Page template | Needs the real IA. |
-| **3.2.3** Consistent Navigation | Page template | Needs a second page. |
-| **3.2.4** Consistent Identification | Page template | Needs a second page. |
-| **3.2.6** Consistent Help | Page template | Help placement across pages. |
+**Two decisions to record.** Both currently pass; they need a recorded position, not code:
 
-Two decisions to record (both pass): **2.5.3** and **2.5.8** — see rows above.
+| SC | Decision |
+|---|---|
+| **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes — a value display is not a label — but a speech user saying "ID.7" would miss it. Safer: `aria-labelledby` on a real visible label. |
+| **2.5.8** Target Size | `#label-wheel` (17px tall) passes **only** on the spacing exception, with **8.4px of headroom**. Ship a native `<button>` ≥24×24 and the dependency disappears. |
 
-One thing no automated pass can close: **real screen-reader testing** (NVDA / VoiceOver). The
-accessibility tree proves what is *exposed*, not what is *announced*. See `A11Y-2-AUTOMATED-TESTING.md`.
+**One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
+names NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the
+browser extension *after scrolling*, and one pass through the axe DevTools 4.131.2 UI. See
+`a11y-2-automated-testing.md`.
+
+**Not this team's work.** 2.4.5, 3.2.3, 3.2.4 and 3.2.6 are page-level and belong to whoever owns the
+page template.
 
 **One optional extra, outside the AA target.** `prefers-reduced-motion` is honoured nowhere in a
 component with 23 CSS transitions, 7 keyframe sets, 5 WAAPI animations and an indefinite
-auto-rotation. That is SC 2.3.3, Level AAA, so it is **not required** — but it is a few lines of
-CSS and it matters to users with vestibular disorders. Your call.
-
----
+auto-rotation. That is SC 2.3.3, Level AAA, so **not required** — but it is a few lines of CSS and it
+matters to users with vestibular disorders.
 
 # Decisions an auditor could challenge
 

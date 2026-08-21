@@ -1,7 +1,7 @@
 # A11y 2 of 3 — What the automated tests cover, and what they cannot
 
 **Component:** VW Visualizer. **Audited:** 2026-08-21, headless Chrome 151, axe-core 4.13.0.
-**Companions:** `A11Y-1-CRITERIA.md` (every criterion) · `A11Y-3-IMPLEMENTATION.md` (what to build).
+**Companions:** `a11y-1-criteria.md` (every criterion) · `a11y-3-implementation.md` (what to build).
 
 The single most important sentence in this pack:
 
@@ -33,12 +33,17 @@ own. Both scopes, measured at 1440×900:
 
 **The component passes on its own** — scoping axe to `#visualizer` still gives 0 violations.
 
-**Four of the eight contrast nodes are outside the component:** `h1`, `.label-subline`,
-`.btn-secondary` and `.usp-4` are page chrome. They were measured and they pass, but they are not
-the Visualizer team's to fix. The four inside are `.disclaimer-i`, both `#label-group` paragraphs
-and `#select-model-lg`.
+> **Scope rule: only `#visualizer` counts.** Errors and failures in page chrome — nav, subnav, hero,
+> `.usp-*`, tiles, NBA bar, footer, skip link — are **not findings** and are not tracked in this
+> pack. The whole-page column above is **context only**: it shows the component is not being carried
+> by a clean environment. Never quote it as a component result.
 
-Everything in `A11Y-3-IMPLEMENTATION.md` **is** component-scoped: all 16 elements named by the 29
+**Already dismissed as page chrome, do not re-raise:** contrast on `h1`, `.label-subline`,
+`.btn-secondary` and `.usp-4`; WAVE's duplicate `alt="VW ID.7"` on three images. All measured, all
+passing anyway, none of them this team's. The contrast nodes that *are* inside are `.disclaimer-i`,
+both `#label-group` paragraphs and `#select-model-lg`.
+
+Everything in `a11y-3-implementation.md` **is** component-scoped: all 16 elements named by the 29
 invariants sit inside `#visualizer`, verified by `contains()`.
 
 ---
@@ -54,6 +59,92 @@ invariants sit inside `#visualizer`, verified by `contains()`.
 | **CDP `Accessibility.getFullAXTree`** | The real exposed tree: unnamed nodes, duplicate role+name | Shows what is *exposed*, never what is *announced* |
 | **CDP `Input.dispatch*Event`** | Real keyboard and pointer behaviour — the half nothing else reaches | Synthetic keys do not fire native page scroll (see §4) |
 | **Composited-pixel screenshots** | True contrast over gradients and imagery | Clip coordinates and anti-aliasing will lie to you (see §4) |
+
+## Required toolchain — coverage against it
+
+The audit protocol specifies these tools and conditions. Status of each against the Visualizer:
+
+| Required | Status | Detail |
+|---|---|---|
+| **WAVE Evaluation Tool 3.3.1.0** | ◐ **Run — but it cannot see this component** | Real WAVE against the live URL: **0 errors**, 6 contrast, 9 alerts, 105 ARIA. But it analysed the page **before the viewer built** — 0 radios, 0 swatches, 7 of 25 images. Must be run as the **browser extension after scrolling**. See below. |
+| **Zoom 400% and 320 × 256 px** | ✅ **Done** | Exactly this: `320×256 @ deviceScaleFactor 4`. axe 0 violations, no horizontal scroll, nothing clipped. `dsf 1` would be a small screen, not a zoom — see §4 trap 4. |
+| **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, via CDP — with **no `runOnly` filter**, which is what the extension's default scan executes (90 rules). The extension's own build number is not the engine version, so to satisfy the protocol literally, one run with the 4.131.2 extension UI is still worth doing. Expect it to agree. |
+| **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent`, not `element.click()`: Tab/Shift+Tab sweep (34 stops, 0 invisible), arrows, Enter, Space, Escape, with `document.activeElement` asserted at each step. |
+| **NVDA 2026.1.1.55980** | ❌ **Not done** | The one real gap. **VoiceOver is planned instead** — see the deviation note below. |
+| **PAC 26.1.0.0** | ⚪ **Not applicable** | PAC validates **PDF/UA-1 (ISO 14289-1)** inside PDF files; it cannot open an HTML page. There is **no PDF in this component or repo** (`*.pdf` count: 0). See below. |
+
+**Both remaining items need a human at a browser** — neither can be automated from here.
+
+### WAVE: the hosted service cannot audit this component
+
+Run against the live URL, the real WAVE engine reports:
+
+| error | contrast | alert | feature | structure | aria |
+|---|---|---|---|---|---|
+| **0** | 6 | 9 | 9 | 11 | 105 |
+
+**0 errors is real and good** — the five sibling prototypes had 10 empty-form-label errors between
+them. But the result is **not** a clearance for the Visualizer, because of what WAVE analysed:
+
+| | hosted WAVE saw | a scrolled browser sees |
+|---|---|---|
+| colour radios | **0** | 13 |
+| swatches | **0** | 18 |
+| images with `alt` | **7** | 25 |
+
+The component builds behind an `IntersectionObserver`. The hosted service loads the URL and analyses
+it **without scrolling**, so it measured the page chrome and the static viewer shell and nothing
+else. This is the same lazy-init trap as §4 trap 1, except it **cannot be fixed by adding a scroll
+step** — the service is not scriptable.
+
+> **How to actually satisfy this line of the protocol:** use **WAVE 3.3.1.0 as the browser
+> extension**, which analyses the live DOM. Load the page, **scroll the viewer into view, confirm
+> the swatches have rendered, then run WAVE.** Running it on page load produces a clean report of
+> almost nothing.
+
+The 9 alerts break down as `alt_duplicate ×2` and `heading_possible ×7`. The duplicate alt is
+`"VW ID.7"` on **three** images, all **outside `#visualizer`** — page chrome, therefore **not a
+finding** under the scope rule. Recorded only so nobody re-raises it.
+
+### NVDA vs VoiceOver — a deviation to record
+
+The protocol names **NVDA 2026.1.1.55980**. **VoiceOver is planned instead.**
+
+That is worth doing and will surface real problems — but record it as a deviation rather than a
+substitution, because the two disagree in ways that matter here:
+
+- **Different engines, different announcements.** `aria-roledescription` (Part G), a non-modal
+  `role="dialog"`, and a `<canvas role="img">` whose view changes as you pan are exactly the
+  constructs where NVDA and VoiceOver diverge. A VoiceOver pass cannot predict the NVDA result for
+  those three.
+- **Different browser pairing.** NVDA is normally tested with Firefox or Chrome, VoiceOver with
+  Safari. Safari's accessibility mapping differs independently of the screen reader.
+- **A formal BITV / EN 301 549 audit that names NVDA will not accept VoiceOver evidence** for that
+  line item.
+
+**Practical read:** run VoiceOver now — it will catch genuine issues, and it is far better than no
+screen-reader pass. Budget an NVDA pass before any formal sign-off.
+
+### If PDFs are in scope elsewhere
+
+This audit covers the **Visualizer component only**. Page chrome, video, and **PDFs — brochures,
+price lists, spec sheets — are out of scope here.** That is a boundary, not a clean bill of health:
+
+- Under **EN 301 549**, non-web documents fall under **clause 10**, separately from clause 9 (Web).
+- WCAG conformance is defined **per full page** and **per complete process**, so a downloadable spec
+  sheet inside a purchase journey is part of that process.
+- **That is where PAC 26.1.0.0 belongs.** If VW ships PDFs, run PAC against them and track the
+  result as a separate line item — nothing in this pack speaks to it.
+
+### Other tools, and why they are absent
+
+| Tool | Why not used |
+|---|---|
+| **ARC Toolkit · IBM Equal Access · Siteimprove · Tenon** | Same class as axe — rule engines over the DOM. A second scanner raises the rule count, not the confidence: the failures this project actually shipped were behavioural or semantic, which no DOM scanner detects. |
+| **Colour Contrast Analyser (CCA)** | Superseded here by composited-pixel measurement. CCA needs a human to pick two colours; over a gradient or a photograph that choice is the whole question. |
+| **Formal BITV-Test procedure** | A conformance *audit method*, not a tool. It consumes evidence like this pack; it does not replace it. |
+
+---
 
 ## Which criteria are machine-decidable at all
 
@@ -115,6 +206,40 @@ Seven invariants that no scanner reaches, each driven with `Input.dispatchMouseE
 | Escape from outside the panel moves no focus | Pass |
 | Focus ring ≥3:1 in default, hover **and** active | Pass — 8.61:1 on the tan fill |
 | Focused control never behind a fixed bar | Pass — 20/20 controls, 0 occluders |
+
+## Orientation and text spacing — the last two open criteria, tested 2026-08-21
+
+**SC 1.3.4 Orientation — pass.** Tested portrait *and* landscape at 390×844 / 844×390 / 320×640 /
+640×320, in normal and fullscreen mode. There is **no `@media (orientation:)` rule anywhere** in the
+stylesheet. In all eight combinations: viewer and bottombar visible, 18 radios and 18 swatches
+present, no horizontal scroll, and the fullscreen exit control visible **and inside the viewport**.
+The `rotate(90deg)` is a user-invoked, reversible fullscreen mode — not an orientation lock.
+
+**SC 1.4.12 Text Spacing — pass.** All four overrides applied together:
+
+```css
+*, *::before, *::after {
+  line-height: 1.5 !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+p { margin-bottom: 2em !important; }
+```
+
+At 1440 / 390 / 320: **no newly clipped element, no control lost** (26→26, 28→28), **no horizontal
+scroll**. The clipped set was *identical* before and after — compared by element identity, not by
+string, because the dimensions in a label change even when the set does not:
+
+| Element | Clipped? | Why it is not a loss |
+|---|---|---|
+| `#media-help` | before **and** after | The intentional 1×1 `.sr-only` clip. Nothing is rendered to lose. |
+| `#label-wheel` | before **and** after | Truncates by design. Under the overrides it still **expands to fully visible** — all 86 characters, at every width. |
+
+**Detector validated.** A deliberately clipped canary (`60px` box, `overflow:hidden`, a sentence far
+too long) was injected and *was* detected. Without that, "no new clipping" would be an untested
+claim — which is the same discipline as §3.
+
+---
 
 ## Target size and reflow
 
@@ -185,7 +310,7 @@ use — kill Chrome and start fresh if `initialised: false` appears twice. And *
 
 | Gap | Why no tool reaches it |
 |---|---|
-| **Screen-reader output** | The AX tree shows what is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. One manual pass is required |
+| **Screen-reader output** | The AX tree shows what is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. **NVDA 2026.1.1.55980** is named in the protocol and has not been run |
 | **SC 2.5.3 Label in Name** | No rule exists in axe. A sibling VW prototype shipped a real Level A failure here that axe, Lighthouse **and** WAVE all passed |
 | **Whether a name is *correct*** | Tools check that names are present and unique, never that they are true. Four Grand California swatches carried the wrong colour name while scoring clean |
 | **Judgement calls** | 2.5.3 and 2.5.8 pass on arguable readings. A tool cannot weigh an exception |

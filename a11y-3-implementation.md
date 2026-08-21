@@ -2,12 +2,13 @@
 
 **Component:** VW Visualizer. **Target:** production vw.com — AEM + React SPA Editor +
 styled-components.
-**Companions:** `A11Y-1-CRITERIA.md` (every criterion, pass/fail) ·
-`A11Y-2-AUTOMATED-TESTING.md` (what the tools can and cannot prove).
+**Companions:** `a11y-1-criteria.md` (every criterion, pass/fail) ·
+`a11y-2-automated-testing.md` (what the tools can and cannot prove).
 
 **Scope:** everything below applies to `#visualizer` (`#media` + `#bottombar`). All 16 elements
 named by these rules were verified to sit inside that subtree. Page chrome — the nav, hero, tiles
-and footer bar — is **out of scope** and belongs to the page-template owner.
+and footer bar — is **out of scope** and belongs to the page-template owner. **Errors and failures
+there are not findings for this team** and are not tracked in this pack.
 
 > **Do not copy the reference build.** It is vanilla HTML/JS and it is a *behavioural
 > specification*, not source to port. Roughly half the required behaviour lives in
@@ -474,7 +475,10 @@ Drag interactions must have a single-pointer, non-drag alternative.
 
 Every target ≥ **24×24** CSS px.
 
-> **Notes** — Smallest in the reference is the close button at exactly 24×24. Scroll-arrows 28, touch controls 32, swatches 48.
+> **Notes** — Smallest **`<button>`** is the close button at exactly 24×24; scroll-arrows 28, touch
+> controls 32, swatches 48. But the smallest **target** is `#label-wheel`, a `<span role="button">`
+> at **17px tall** — it is not a `<button>`, so a survey of button sizes misses it entirely. That is
+> the one target relying on the spacing exception below.
 
 
 **The exception, and where the reference depends on it.** 24×24 is the rule, but 2.5.8 permits
@@ -685,7 +689,7 @@ containing Level A failures.
 
 # 9. Two open items for this team
 
-From `A11Y-1-CRITERIA.md`, four of the six unanswered criteria are page-level. These two are yours:
+From `a11y-1-criteria.md`, four of the six unanswered criteria are page-level. These two are yours:
 
 | SC | Action |
 |---|---|
