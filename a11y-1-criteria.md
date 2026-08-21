@@ -4,9 +4,9 @@
 **Audited:** 2026-08-21 against the deployed reference build.
 **Scope:** `#visualizer` — `#media` + `#bottombar`. Evidence was gathered page-wide and then
 attributed; where a criterion is satisfied by page chrome rather than the component, the row says so.
-See §0 of `A11Y-2-AUTOMATED-TESTING.md` for the component-vs-page figures.
-**Companion documents:** `A11Y-2-AUTOMATED-TESTING.md` (what the tools can and cannot prove) ·
-`A11Y-3-IMPLEMENTATION.md` (what to build).
+See §0 of `a11y-2-automated-testing.md` for the component-vs-page figures.
+**Companion documents:** `a11y-2-automated-testing.md` (what the tools can and cannot prove) ·
+`a11y-3-implementation.md` (what to build).
 
 The conformance target is **Level A + AA** — what EN 301 549 clause 9 requires, and therefore
 BFSG / the European Accessibility Act. That is **56 criteria** (32 A + 24 AA). The 31 Level AAA
@@ -182,7 +182,7 @@ template, not the Visualizer team.
 Two decisions to record (both pass): **2.5.3** and **2.5.8** — see rows above.
 
 One thing no automated pass can close: **real screen-reader testing** (NVDA / VoiceOver). The
-accessibility tree proves what is *exposed*, not what is *announced*. See `A11Y-2-AUTOMATED-TESTING.md`.
+accessibility tree proves what is *exposed*, not what is *announced*. See `a11y-2-automated-testing.md`.
 
 **One optional extra, outside the AA target.** `prefers-reduced-motion` is honoured nowhere in a
 component with 23 CSS transitions, 7 keyframe sets, 5 WAAPI animations and an indefinite

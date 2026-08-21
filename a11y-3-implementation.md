@@ -2,8 +2,8 @@
 
 **Component:** VW Visualizer. **Target:** production vw.com — AEM + React SPA Editor +
 styled-components.
-**Companions:** `A11Y-1-CRITERIA.md` (every criterion, pass/fail) ·
-`A11Y-2-AUTOMATED-TESTING.md` (what the tools can and cannot prove).
+**Companions:** `a11y-1-criteria.md` (every criterion, pass/fail) ·
+`a11y-2-automated-testing.md` (what the tools can and cannot prove).
 
 **Scope:** everything below applies to `#visualizer` (`#media` + `#bottombar`). All 16 elements
 named by these rules were verified to sit inside that subtree. Page chrome — the nav, hero, tiles
@@ -685,7 +685,7 @@ containing Level A failures.
 
 # 9. Two open items for this team
 
-From `A11Y-1-CRITERIA.md`, four of the six unanswered criteria are page-level. These two are yours:
+From `a11y-1-criteria.md`, four of the six unanswered criteria are page-level. These two are yours:
 
 | SC | Action |
 |---|---|

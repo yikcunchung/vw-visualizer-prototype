@@ -1,7 +1,7 @@
 # A11y 2 of 3 — What the automated tests cover, and what they cannot
 
 **Component:** VW Visualizer. **Audited:** 2026-08-21, headless Chrome 151, axe-core 4.13.0.
-**Companions:** `A11Y-1-CRITERIA.md` (every criterion) · `A11Y-3-IMPLEMENTATION.md` (what to build).
+**Companions:** `a11y-1-criteria.md` (every criterion) · `a11y-3-implementation.md` (what to build).
 
 The single most important sentence in this pack:
 
@@ -38,7 +38,7 @@ own. Both scopes, measured at 1440×900:
 the Visualizer team's to fix. The four inside are `.disclaimer-i`, both `#label-group` paragraphs
 and `#select-model-lg`.
 
-Everything in `A11Y-3-IMPLEMENTATION.md` **is** component-scoped: all 16 elements named by the 29
+Everything in `a11y-3-implementation.md` **is** component-scoped: all 16 elements named by the 29
 invariants sit inside `#visualizer`, verified by `contains()`.
 
 ---
