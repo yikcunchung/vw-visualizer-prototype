@@ -27,7 +27,7 @@ criteria are not required and are not listed.
 | ⚖️ Decide | Passes, but on an arguable reading — record the decision |
 | ⛔ Out of scope | Outside `#visualizer` — the page template owns it, not tracked here |
 
-**56 criteria assessed. 0 failures and 0 open items in `#visualizer`.** 25 verified · 9 inspected · 16 not applicable · 2 decisions to record · 4 out of scope (page-level).
+**56 criteria assessed. 0 failures and 0 open items in `#visualizer`.** 26 verified · 9 inspected · 16 not applicable · 1 decision to record · 4 out of scope (page-level).
 
 > **Scope rule:** only `#visualizer` counts. Errors and failures in page chrome — nav, hero, tiles, footer — are **not findings** and are not tracked here. Where a whole-page number appears it is labelled as context.
 
@@ -123,7 +123,7 @@ criteria are not required and are not listed.
 | **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
-| **2.5.8** | Target Size (Minimum) | AA | Yes | ⚖️ Decide | **Decide:** `#label-wheel` (`<span role="button">`, 17px tall) passes **only** on the spacing exception. Nearest full-size neighbour is `.btn-swatch` above; centre-to-box is **20.4px against 12px required — 8.4px slack, identical at 1440 / 390 / 320 / 400% zoom**. Minimum viable gap is 3.6px: measured, a 4px gap leaves 0.4px slack and a 3px gap **fails**. `#label-colour` and `#label-material` look identical but have no `role`/`tabindex`, so they are **not targets**. **Fixed 2026-08-21:** `line-height: 1.6; padding-block: 2px` → **26.4px**, so the target meets 24×24 outright and the exception no longer applies. The component now has **no undersized target at any width**. (`line-height: 1.6` alone is 22.4px — not enough.) See also **B14**: the role should not exist at all when the text fits. |
+| **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | **No target in the component is under 24×24.** `#label-wheel` — the only one that ever was — is 26.4px tall (`line-height: 1.6` + `padding-block: 2px`), so it meets the minimum outright and nothing relies on the spacing exception. Smallest `<button>` is the close button at exactly 24×24. |
 
 # 3. Understandable
 
@@ -164,7 +164,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **4.1.1** | Parsing (obsolete — removed from WCAG 2.2) | A | Yes | ✅ Pass | **Obsolete in WCAG 2.2 — but still required if EN 301 549 is ever the formal target.** EN 301 549 V3.2.1 (2021-03) references **WCAG 2.1**, where 4.1.1 is normative, and lists it as clause 9.4.1.1. Already fixed in the reference (commit `d2245d8`, two validity errors); keep the Nu validator clean and it stays closed. |
-| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: 157 AX nodes, 33 named, **0 unnamed, 0 duplicate role+name**; **18 radios / 18 unique names**, embedded `"` in wheel names intact after the 2026-08-21 translation. (Whole page also 0/0.) **See B14 — live at 768px:** `#label-wheel` hardcodes `role="button" tabindex="0" aria-expanded="false"`. At 768 the text fits exactly (666 = 666) yet it still announces as a collapsed button; activating it flips `aria-expanded` to true while nothing changes. Announced state with nothing behind it. |
+| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: **160 AX nodes, 41 named, 0 unnamed, 0 duplicate role+name**; 18 radios / 18 unique names with embedded `"` intact. `#label-wheel` exposes `role="button"` **only while its text is truncated** — see **B14**. |
 | **4.1.3** | Status Messages | AA | Yes | ✅ Pass | `#media-status` announces on all 8 zoom paths; `disabled` derived from state. |
 
 ---
@@ -175,12 +175,11 @@ criteria are not required and are not listed.
 either verified, inspected, not applicable, or out of scope. 1.3.4 and 1.4.12 were the last two open
 items and both were tested on 2026-08-21 — see their rows above.
 
-**Two decisions to record.** Both currently pass; they need a recorded position, not code:
+**One decision to record.** It passes; it needs a recorded position, not code:
 
 | SC | Decision |
 |---|---|
 | **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes — a value display is not a label — but a speech user saying "ID.7" would miss it. Safer: `aria-labelledby` on a real visible label. |
-| **2.5.8** Target Size | `#label-wheel` (17px tall) passes **only** on the spacing exception, 8.4px slack at every width. The 12px gap cannot drop below 4px without failing. Ship a native `<button>` ≥24×24 and the dependency disappears. |
 
 **One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
 names NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the
@@ -209,7 +208,6 @@ external audit challenges this component, expect it to be on one of these.
 | `<canvas role="img">` with one static `aria-label` for the interior panorama | The view **changes** as the user pans; a single fixed label cannot describe it | Announce orientation changes through the existing `#media-status` live region |
 | Rotate/tilt controls live behind the `#btn-a11y` toggle (`inert` when closed) | 2.1.1 **Intent Note 2** permits a separate keyboard mode but explicitly asks how users *discover* it | Expose the group by default, or announce its availability on `#media` focus |
 | Swatch strips use `overflow-x: auto` | Judged bounded sub-widgets rather than primary content under 1.4.10 — arguable either way | Already mitigated: scroll arrows + every swatch individually focusable |
-| ~~`#label-wheel` is `role="button"` **and** `aria-live="polite"`~~ **RESOLVED 2026-08-21** — the live region was moved to a sibling `#wheel-live`, which is the fallback this row recommended | A live region on an interactive control is unusual and may double-announce | Move the live region to a sibling element |
 
 **Editorial limit, not a code issue:** `img#img-car` alt is generated from state
 (`"VW ID.7, Grenadilla Black Metallic, exterior view"`). Whether that accurately describes every
