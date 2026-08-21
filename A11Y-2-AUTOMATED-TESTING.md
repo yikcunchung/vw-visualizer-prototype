@@ -221,6 +221,21 @@ half alone is what scored 100 on a build with a Level A failure.
 
 # 7. Audit records
 
+> **Note on the 2026-08-21 relabel and translation.** The wheel live region was moved off
+> `#label-wheel` onto a `#wheel-live` sibling, resolving a Part G concern. The German wheel names —
+> which were **long-text placeholders**, not content — were then translated to English and the two
+> `lang="de"` attributes removed. No foreign-language passage remains, so SC 3.1.2 is now N/A.
+>
+> Re-verified after the translation: **18 radios / 18 unique names** with the embedded `"` intact,
+> `#label-wheel` still 17px tall with 19.9–20.4px clearance (2.5.8 exception holds), axe 0 violations,
+> 0 JS exceptions at 1440 / 390 / 320.
+>
+> **Keep a long string in the test data.** The longest name went from 100 to 90 characters, which is
+> still long enough — but several findings here (2.5.8 target size, 1.4.10 reflow, the panel
+> truncation bug) surfaced *only* because the fixture was that long. Short production names would
+> hide them.
+
+
 Dated evidence, kept so a later run can be diffed against this one rather than started from
 scratch.
 

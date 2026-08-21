@@ -1470,25 +1470,25 @@ body.in-fullscreen #img-car { will-change: transform; }
     <div id="visualizer">
 
     <!-- VISUALIZER -->
-    <div id="media" role="region" tabindex="0" aria-label="Vehicle viewer" aria-roledescription="3D viewer" aria-describedby="media-help">
+    <div id="media" role="region" tabindex="0" aria-label="car viewer" aria-roledescription="car 360° viewer" aria-describedby="media-help">
       <!-- SC 2.4.11: the disclaimer overlays the viewer controls on narrow screens.
            It is position:absolute, so placing it first changes tab order only —
            the user reaches its close button before the controls it covers. -->
       <!-- Disclaimer overlay -->
-      <div id="disclaimer" role="dialog" aria-label="Vehicle specification" aria-modal="false">
+      <div id="disclaimer" role="dialog" aria-label="Disclaimer" aria-modal="false">
         <div class="disclaimer-body">
           <div class="disclaimer-text">
             <span class="disclaimer-i" aria-hidden="true">i</span>
             <!-- tabindex=0: this block scrolls (SC 1.4.10 fix), and a scrollable
                  region must be keyboard-scrollable — ACT rule 0ssw9k / SC 2.1.1 -->
-            <div class="label-group" id="label-group" tabindex="0" role="group" aria-label="Vehicle specification details">
+            <div class="label-group" id="label-group" tabindex="0" role="group" aria-label="Disclaimer details">
               <p>Pro Match Plus 77kWh 286 PS 1-Speed Automatic 5 Door;&nbsp; 14.8 kWh/62mi &nbsp;and&nbsp; CO2 emissions: &nbsp;0 g/km &nbsp;and&nbsp; Efficiency class: &nbsp;A</p>
               <p>UK specification may vary. Images are for illustrative purposes only and some options may incur an extra cost.</p>
             </div>
           </div>
         </div>
         <div class="disclaimer-close-wrap">
-          <button class="btn-close" id="btn-close" aria-label="Close specification panel">
+          <button class="btn-close" id="btn-close" aria-label="Close Disclaimer">
             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M20.9559 3.98495L20.0139 3.04395L11.9999 11.0589L3.98495 3.04395L3.04395 3.98495L11.0589 11.9999L3.04395 20.0149L3.98495 20.9559L11.9999 12.9409L20.0139 20.9559L20.9559 20.0149L12.9409 11.9999L20.9559 3.98495Z" fill="white"/>
             </svg>
@@ -1506,7 +1506,7 @@ body.in-fullscreen #img-car { will-change: transform; }
            focus, and must not interrupt #media-status announcements. -->
       <span id="media-help" class="sr-only">Use the left and right arrow keys to rotate the car. Press Enter or Space to zoom in or out.</span>
       <span id="media-status" class="sr-only" aria-live="polite"></span>
-      <img id="img-car" alt="VW ID. Polo, exterior view" draggable="false"
+      <img id="img-car" alt="Car exterior view" draggable="false"
            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
 
       <!-- Accessibility button (bottom-right) -->
@@ -1515,7 +1515,7 @@ body.in-fullscreen #img-car { will-change: transform; }
       </button>
 
       <!-- Touch controls bar (slides in when a11y active) -->
-      <div id="btn-a11y-group" role="group" aria-label="Accessibility controls" inert>
+      <div id="btn-a11y-group" role="group" aria-label="Accessibility buttons" inert>
         <button class="touch-ctrl-btn" id="btn-zoom-in" aria-label="Zoom in"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M5.25 0C8.46176 -0.000201288 10.5 2.35051 10.5 5.25C10.5 6.47643 10.1336 7.60338 9.46973 8.49707L12 11.0303L11.5303 11.501L11.0596 11.9707L8.53809 9.44629C7.67682 10.1076 6.56151 10.4999 5.25 10.5C2.03835 10.5002 0.000149098 8.15033 0 5.25098C0 2.35148 2.03824 0.000201741 5.25 0ZM5.25 1.33008C2.82481 1.33023 1.33008 3.03288 1.33008 5.25098C1.33026 7.46888 2.82496 9.17007 5.25 9.16992C7.67519 9.16977 9.16992 7.46809 9.16992 5.25C9.16988 3.03195 7.67516 1.32993 5.25 1.33008ZM5.89941 4.58008H7.66504V5.91016H5.89941V7.67578H4.56934V5.91016H2.83496V4.58008H4.56934V2.8457H5.89941V4.58008Z" fill="#1B2236"/></svg></button>
         <button class="touch-ctrl-btn" id="btn-zoom-out" aria-label="Zoom out" disabled><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M5.25 6.10352e-05C8.46176 -0.000140253 10.5 2.35057 10.5 5.25006C10.5 6.47649 10.1336 7.60344 9.46973 8.49713L12 11.0303L11.5303 11.501L11.0596 11.9708L8.53809 9.44635C7.67684 10.1075 6.56143 10.5 5.25 10.5001C2.03849 10.5001 0.000149094 8.15031 0 5.25104C0 2.35162 2.03838 0.000381913 5.25 6.10352e-05ZM5.25 1.33014C2.82495 1.33041 1.33008 3.03302 1.33008 5.25104C1.33026 7.46886 2.8251 9.17002 5.25 9.16998C7.67519 9.16983 9.16992 7.46816 9.16992 5.25006C9.16988 3.03201 7.67516 1.32999 5.25 1.33014ZM7.66504 5.92584H2.83496V4.59576H7.66504V5.92584Z" fill="#1B2236"/></svg></button>
         <button class="touch-ctrl-btn" id="btn-rot-left" aria-label="Rotate left"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32" fill="none"><g clip-path="url(#tc-cl)"><path d="M32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16C0 7.16344 7.16345 0 16 0C24.8366 0 32 7.16345 32 16Z" fill="white"/><path d="M12 16C11.9983 15.5607 12.1668 15.1378 12.47 14.82L17.07 10L18 10.94L13.39 15.76C13.2678 15.8967 13.2678 16.1033 13.39 16.24L18 21.06L17.07 22L12.47 17.18C12.1685 16.861 12.0004 16.4389 12 16Z" fill="#1B2236"/></g><defs><clipPath id="tc-cl"><path d="M32 16C32 24.8366 24.8366 32 16 32C7.16344 32 0 24.8366 0 16C0 7.16344 7.16345 0 16 0C24.8366 0 32 7.16345 32 16Z" fill="white"/></clipPath></defs></svg></button>
@@ -1546,7 +1546,7 @@ body.in-fullscreen #img-car { will-change: transform; }
       </div>
 
       <!-- Pano canvas for interior 360° -->
-      <canvas id="image-interior" role="img" aria-label="Interior 360° panorama view — use the accessibility controls to pan"></canvas>
+      <canvas id="image-interior" role="img" aria-label="Interior 360° panorama view; use the accessibility buttons to pan"></canvas>
 
       <!-- Fullscreen button (top-right, mobile only) -->
       <button class="vis-btn" id="btn-fullscreen" aria-label="Enter fullscreen mode">
@@ -1582,12 +1582,13 @@ body.in-fullscreen #img-car { will-change: transform; }
         <div class="bb-section exterior-only" id="selector-wheel" role="group" aria-labelledby="title-wheel">
           <div class="bb-swatches-wrap">
             <div class="swatch-fade left"  id="fade-left-wheel"><button class="swatch-arrow" id="bb-scroll-left-wheel" aria-label="Scroll wheels left"><svg aria-hidden="true" viewBox="0 0 10.5024 21" preserveAspectRatio="none"><use href="#icon-chevron-left"/></svg></button></div>
-            <div class="bb-swatches" id="grid-wheel" role="radiogroup" aria-labelledby="title-wheel" lang="de"></div>
+            <div class="bb-swatches" id="grid-wheel" role="radiogroup" aria-labelledby="title-wheel"></div>
             <div class="swatch-fade right" id="fade-right-wheel"><button class="swatch-arrow" id="bb-scroll-right-wheel" aria-label="Scroll wheels right"><svg aria-hidden="true" viewBox="0 0 10.5 21" preserveAspectRatio="none"><use href="#icon-chevron-right"/></svg></button></div>
           </div>
           <div class="bb-sec-header">
             <span class="bb-sec-title" id="title-wheel">Wheels</span>
-            <span class="bb-sec-value" id="label-wheel" role="button" tabindex="0" aria-expanded="false" aria-live="polite" lang="de">Leichtmetallräder "Mataró" 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht</span>
+            <span class="bb-sec-value" id="label-wheel" role="button" tabindex="0" aria-expanded="false">Alloy wheels "Mataró" 8.5 J x 21 front, 9 J x 21 rear, in black, diamond-turned finish</span>
+            <span id="wheel-live" class="sr-only" aria-live="polite" aria-atomic="true"></span>
           </div>
         </div>
 
@@ -1610,7 +1611,7 @@ body.in-fullscreen #img-car { will-change: transform; }
       <div id="select-model" class="select-model-row">
         <div class="select-wrap" id="wrapper-select-model-lg">
           <span class="select-label" id="label-select-model-lg">ID.7</span>
-          <select class="select-native" id="select-model-lg" aria-label="Select model">
+          <select class="select-native" id="select-model-lg" aria-label="Select car model">
             <optgroup label="ID.7">
               <option value="id7" selected>Pro Match Plus</option>
             </optgroup>
@@ -1732,9 +1733,9 @@ const POLO_THUMBS = [
 ];
 
 const POLO_WHEEL_THUMBS = [
-  { name: "4 Leichtmetallräder \"Edinburgh\" 7 J x 17 in Schwarz, Oberfläche glanzgedreht", src: "assets/media/idpolo/exterior/variants/wheels/wheel1.webp" },
-  { name: "4 Leichtmetallräder \"Linz\" 7 J x 18 in Schwarz, Oberfläche glanzgedreht",      src: "assets/media/idpolo/exterior/variants/wheels/wheel2.webp" },
-  { name: "Stahlräder 7 J x 17",                                                              src: "assets/media/idpolo/exterior/variants/wheels/wheel3.webp" }
+  { name: "4 alloy wheels \"Edinburgh\" 7 J x 17 in black, diamond-turned finish", src: "assets/media/idpolo/exterior/variants/wheels/wheel1.webp" },
+  { name: "4 alloy wheels \"Linz\" 7 J x 18 in black, diamond-turned finish",      src: "assets/media/idpolo/exterior/variants/wheels/wheel2.webp" },
+  { name: "Steel wheels 7 J x 17",                                                              src: "assets/media/idpolo/exterior/variants/wheels/wheel3.webp" }
 ];
 
 const ID7_THUMBS = [
@@ -1754,11 +1755,11 @@ const ID7_THUMBS = [
 ];
 
 const ID7_WHEEL_THUMBS = [
-  { name: 'Leichtmetallräder "Mataró" 8,5 J x 21 vorn, 9 J x 21 hinten, in Schwarz, Oberfläche glanzgedreht',     src: "assets/media/id7/exterior/variants/wheels/wheel1.webp" },
-  { name: 'Leichtmetallräder "Hudson" 8 J x 19 vorn, 8,5 J x 19 hinten, in Schwarz, Oberfläche glanzgedreht',     src: "assets/media/id7/exterior/variants/wheels/wheel2.webp" },
-  { name: 'Leichtmetallräder "Bergen" 8 J x 19 vorn, 8,5 J x 19 hinten, in Schwarz, Volkswagen R',                src: "assets/media/id7/exterior/variants/wheels/wheel3.webp" },
-  { name: 'Leichtmetallräder "Trondheim" 8,5 J x 20 vorn, 9,5 J x 20 hinten',                                     src: "assets/media/id7/exterior/variants/wheels/wheel4.webp" },
-  { name: 'Leichtmetallräder "Montreal" 8,5 J x 20 vorn, 9,5 J x 20 hinten, in Schwarz, Oberfläche glanzgedreht', src: "assets/media/id7/exterior/variants/wheels/wheel5.webp" },
+  { name: 'Alloy wheels "Mataró" 8.5 J x 21 front, 9 J x 21 rear, in black, diamond-turned finish',     src: "assets/media/id7/exterior/variants/wheels/wheel1.webp" },
+  { name: 'Alloy wheels "Hudson" 8 J x 19 front, 8.5 J x 19 rear, in black, diamond-turned finish',     src: "assets/media/id7/exterior/variants/wheels/wheel2.webp" },
+  { name: 'Alloy wheels "Bergen" 8 J x 19 front, 8.5 J x 19 rear, in black, Volkswagen R',                src: "assets/media/id7/exterior/variants/wheels/wheel3.webp" },
+  { name: 'Alloy wheels "Trondheim" 8.5 J x 20 front, 9.5 J x 20 rear',                                     src: "assets/media/id7/exterior/variants/wheels/wheel4.webp" },
+  { name: 'Alloy wheels "Montreal" 8.5 J x 20 front, 9.5 J x 20 rear, in black, diamond-turned finish', src: "assets/media/id7/exterior/variants/wheels/wheel5.webp" },
 ];
 
 const POLO_COLOUR_FOLDER = {
@@ -1816,11 +1817,11 @@ const GC_THUMBS = [
   { name: "Oyster Silver / Indium Grey",        src: "assets/media/grandcalifornia/exterior/variants/colour/ffa76f426a1657413d0acea47f8a738f.webp" },
 ];
 const GC_WHEEL_THUMBS = [
-  { name: "Stahlräder 16\" Silver", src: "assets/media/grandcalifornia/exterior/variants/wheels/1b02967d81a2e7d8790e32d298a84225.webp" },
-  { name: "Stahlräder 16\" Silver", src: "assets/media/grandcalifornia/exterior/variants/wheels/1ef6848bf05f8c0ee33b1779fc42b2e5.webp" },
-  { name: "Stahlräder 16\" Black",  src: "assets/media/grandcalifornia/exterior/variants/wheels/8d0cff18773b5f7b1d2a124e5aca655a.webp" },
+  { name: "Steel wheels 16\" Silver", src: "assets/media/grandcalifornia/exterior/variants/wheels/1b02967d81a2e7d8790e32d298a84225.webp" },
+  { name: "Steel wheels 16\" Silver", src: "assets/media/grandcalifornia/exterior/variants/wheels/1ef6848bf05f8c0ee33b1779fc42b2e5.webp" },
+  { name: "Steel wheels 16\" Black",  src: "assets/media/grandcalifornia/exterior/variants/wheels/8d0cff18773b5f7b1d2a124e5aca655a.webp" },
   { name: "Lismore 17\" Silver",    src: "assets/media/grandcalifornia/exterior/variants/wheels/a68ec5a08a5636287d26c4b0835bb392.webp" },
-  { name: "Stahlräder 16\" Black",  src: "assets/media/grandcalifornia/exterior/variants/wheels/de2b4c50e138aa10276ea6c3d1b99327.webp" },
+  { name: "Steel wheels 16\" Black",  src: "assets/media/grandcalifornia/exterior/variants/wheels/de2b4c50e138aa10276ea6c3d1b99327.webp" },
   { name: "Lismore 17\" Black",     src: "assets/media/grandcalifornia/exterior/variants/wheels/ee0fa2f992503bfcd59d5517a75c3fd6.webp" },
 ];
 
@@ -1845,6 +1846,7 @@ const media      = document.getElementById('media');
 const rotatePill = document.getElementById('hint-rotate');
 const colorName  = document.getElementById('label-colour');
 const wheelName  = document.getElementById('label-wheel');
+const wheelLive  = document.getElementById('wheel-live');
 const colorGrid  = document.getElementById('grid-colour');
 const wheelGrid  = document.getElementById('grid-wheel');
 // Bottom bar is universal — no separate mobile grids
@@ -2156,7 +2158,7 @@ function makeSwatchBtn(src, alt, idx, isSelected, onClick) {
         </svg>
       </div>
     </div>`;
-  // Set src/alt as properties — names may contain quotes (e.g. 'Leichtmetallräder "Mataró"',
+  // Set src/alt as properties — names may contain quotes (e.g. 'Alloy wheels "Mataró"',
   // '16" Silver'), which would terminate the attribute early if interpolated into markup
   const imgEl = btn.querySelector('img.img-swatch');
   imgEl.src = src;
@@ -2323,6 +2325,7 @@ function selectWheel(idx) {
   wheelName.textContent = currentWheels()[idx].name;
   wheelName.title = currentWheels()[idx].name;
   mWheelName.textContent = currentWheels()[idx].name;
+  wheelLive.textContent = currentWheels()[idx].name;
   updateCarImage();
   scrollSwatchIntoView(wheelGrid, idx);
   preloadActiveFrames();
