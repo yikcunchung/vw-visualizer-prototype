@@ -355,11 +355,35 @@ builds. And bounding-box *corner* sampling reported the 32px circular buttons as
 | **C5** | no horizontal scroll at 320 / 390 / 768 / 1440 |
 | **3.1.2** | `lang="de"` on `#grid-wheel` and `#label-wheel`; the German wheel names inherit it |
 
-**SC 2.5.8 target size — one exception relied upon.** `#label-wheel` is 17px tall (under 24). It
-passes only via the **spacing exception**: the nearest other target centre is **48px** away, ≥ the
-24px required. If production tightens that layout, this becomes a real failure. It is also a
+**SC 2.5.8 target size — one exception relied upon.** `#label-wheel` is 17px tall, so it does not
+meet the 24x24 minimum. **It still passes 2.5.8, via the spacing exception** — verified with the
+correct geometry at 1440 / 768 / 390 / 320.
+
+The exception is *not* "centres 24px apart". The normative test is: a **24px-diameter circle centred
+on the undersized target's bounding box** must not intersect **another target** (that neighbour's
+actual box, when the neighbour is full-size) or **the circle of another undersized target** (centres
+>= 24px apart). `#label-wheel`'s nearest neighbour is `.btn-swatch`, which is full-size, so the
+binding test is **circle-to-box**:
+
+| Viewport | Nearest full-size target | Centre → its box | Required | Headroom |
+|---|---|---|---|---|
+| 1440 | `.btn-swatch` | **20.4px** | >= 12px (circle radius) | 8.4px |
+| 768 | `.btn-swatch` | 122px | >= 12px | large |
+| 390 | `.btn-swatch` | **20.4px** | >= 12px | 8.4px |
+| 320 | `.btn-swatch` | **20.4px** | >= 12px | 8.4px |
+
+It is the **only** undersized target at any of the four widths, and it passes at all of them.
+
+**But the margin is 8.4px, not 24px.** Removing roughly 8px of vertical breathing room between the
+wheel label and the swatch row turns a pass into a genuine AA failure with no exception left.
+Treat the spacing around this element as load-bearing, and prefer fixing the root cause: it is a
 `<span role="button" tabindex="0">` rather than a native button — named and fully keyboard-operable
-(Enter / Space / Escape, with `preventDefault`), but a native `<button>` is the safer port.
+(Enter / Space / Escape, with `preventDefault`) — so shipping it as a real `<button>` with a >= 24px
+target removes the dependency entirely.
+
+*(An earlier draft of this record cited "48px centre-to-centre". That is the wrong measurement for a
+full-size neighbour — it compares centres when the spec compares the circle against the neighbour's
+box edge. The conclusion is unchanged; the true clearance is 20.4px.)*
 
 *A caution for whoever re-runs this:* the `13x13` targets an earlier pass reported were controls
 measured mid-transition, and `uniqueNames: 1` came from reading `aria-label || textContent` instead

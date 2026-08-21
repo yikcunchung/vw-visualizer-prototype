@@ -52,10 +52,19 @@ These are real bugs that were found and fixed here, each invisible to axe:
 
 ### One thing to fix rather than copy
 
-`#label-wheel` is a `<span role="button" tabindex="0">`, 17px tall. It passes **SC 2.5.8 only via
-the spacing exception** — the nearest other target centre is 48px away, and 24px is required. If
-production tightens that layout it becomes a real failure. Ship it as a native `<button>` with a
-≥24px target and the risk disappears.
+`#label-wheel` is a `<span role="button" tabindex="0">`, only **17px tall** — under the 24×24
+minimum. **It does pass SC 2.5.8**, but only through the **spacing exception**, and the margin is
+thin.
+
+The normative test is a 24px-diameter circle centred on the undersized target, which must not
+intersect a full-size neighbour's **box** (not "centres 24px apart" — that variant only applies when
+both neighbours are undersized). Measured clearance from `#label-wheel`'s centre to the nearest
+`.btn-swatch` box is **20.4px** at 1440 / 390 / 320, against a **12px** requirement — i.e. **8.4px
+of headroom**. Remove roughly 8px of vertical spacing from that row and it becomes a real AA
+failure with no exception available.
+
+**Recommendation: don't port this pattern.** Ship a native `<button>` sized ≥ 24×24. That removes
+both the dependency on a layout-sensitive exception and the `role="button"` span.
 
 ---
 
