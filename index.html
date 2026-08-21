@@ -1810,10 +1810,10 @@ const GC_THUMBS = [
   { name: "Candy White",                        src: "assets/media/grandcalifornia/exterior/variants/colour/0238632bf8d09ad0c1ee36e51a693756.webp" },
   { name: "Indium Grey Metallic",               src: "assets/media/grandcalifornia/exterior/variants/colour/2535a543a409bb4538eed1b6c528d596.webp" },
   { name: "Oyster Silver",                      src: "assets/media/grandcalifornia/exterior/variants/colour/27a4db43d0498f9c7233b09f5718ad37.webp" },
-  { name: "Oyster Silver / Indium Grey",        src: "assets/media/grandcalifornia/exterior/variants/colour/69a8a67650856c97909cbc448fb8a79c.webp" },
-  { name: "Candy White / Deep Ocean Blue",      src: "assets/media/grandcalifornia/exterior/variants/colour/b4b067505e0d8f4df740c12b82fc6c96.webp" },
-  { name: "Candy White upper / Cherry Red lower",    src: "assets/media/grandcalifornia/exterior/variants/colour/c156c0441e94093100a20e38213d9e41.webp" },
-  { name: "Candy White upper / Mojave Beige lower",  src: "assets/media/grandcalifornia/exterior/variants/colour/ffa76f426a1657413d0acea47f8a738f.webp" },
+  { name: "Candy White / Deep Ocean Blue",      src: "assets/media/grandcalifornia/exterior/variants/colour/69a8a67650856c97909cbc448fb8a79c.webp" },
+  { name: "Candy White upper / Cherry Red lower",    src: "assets/media/grandcalifornia/exterior/variants/colour/b4b067505e0d8f4df740c12b82fc6c96.webp" },
+  { name: "Candy White upper / Mojave Beige lower",  src: "assets/media/grandcalifornia/exterior/variants/colour/c156c0441e94093100a20e38213d9e41.webp" },
+  { name: "Oyster Silver / Indium Grey",        src: "assets/media/grandcalifornia/exterior/variants/colour/ffa76f426a1657413d0acea47f8a738f.webp" },
 ];
 const GC_WHEEL_THUMBS = [
   { name: "Stahlräder 16\" Silver", src: "assets/media/grandcalifornia/exterior/variants/wheels/1b02967d81a2e7d8790e32d298a84225.webp" },
@@ -3003,7 +3003,7 @@ function closeDisclaimer() {
   if (focusWasInside) {
     // focus would otherwise be orphaned on a hidden element
     if (disclaimerOpener) disclaimerOpener.focus();     // user opened it -> go back
-    else media.focus();                                 // auto-opened -> stay put; Tab continues forward
+    else media.focus({ preventScroll: true });         // auto-opened -> stay put; Tab continues forward
   }
   disclaimerOpener = null;
 }
