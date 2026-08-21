@@ -123,7 +123,7 @@ criteria are not required and are not listed.
 | **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
-| **2.5.8** | Target Size (Minimum) | AA | Yes | ⚖️ Decide | **Decide:** `#label-wheel` (17px tall) passes only on the spacing exception, with **8.4px of headroom** (20.4px clearance vs 12px required). **Do:** ship a native `<button>` ≥24×24 and remove the dependency. |
+| **2.5.8** | Target Size (Minimum) | AA | Yes | ⚖️ Decide | **Decide:** `#label-wheel` (`<span role="button">`, 17px tall) passes **only** on the spacing exception. Nearest full-size neighbour is `.btn-swatch` directly above; minimum edge gap is **3.6px**, actual is 12.0 / 9.9 / 10.6px at 1440 / 390 / 320 — **headroom 8.4 / 6.3 / 7.0px, tightest at mobile**. `#label-colour` and `#label-material` look identical but have no `role`/`tabindex`, so they are **not targets** and need no gap. **Do:** ship a native `<button>` ≥24×24 and the dependency disappears. |
 
 # 3. Understandable
 
@@ -164,7 +164,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **4.1.1** | Parsing (obsolete — removed from WCAG 2.2) | A | Yes | ✅ Pass | **Obsolete in WCAG 2.2 — but still required if EN 301 549 is ever the formal target.** EN 301 549 V3.2.1 (2021-03) references **WCAG 2.1**, where 4.1.1 is normative, and lists it as clause 9.4.1.1. Already fixed in the reference (commit `d2245d8`, two validity errors); keep the Nu validator clean and it stays closed. |
-| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: 157 AX nodes, 33 named, **0 unnamed, 0 duplicate role+name**; **18 radios / 18 unique names**, embedded `"` in wheel names intact after the 2026-08-21 translation. (Whole page also 0/0.) |
+| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: 157 AX nodes, 33 named, **0 unnamed, 0 duplicate role+name**; **18 radios / 18 unique names**, embedded `"` in wheel names intact after the 2026-08-21 translation. (Whole page also 0/0.) **Porting risk — see B14:** `#label-wheel` hardcodes `role="button" tabindex="0"`, so with a short production name it becomes a focusable button with nothing to expand. Not a defect in the reference, where the fixture name is always truncated. |
 | **4.1.3** | Status Messages | AA | Yes | ✅ Pass | `#media-status` announces on all 8 zoom paths; `disabled` derived from state. |
 
 ---
@@ -180,7 +180,7 @@ items and both were tested on 2026-08-21 — see their rows above.
 | SC | Decision |
 |---|---|
 | **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes — a value display is not a label — but a speech user saying "ID.7" would miss it. Safer: `aria-labelledby` on a real visible label. |
-| **2.5.8** Target Size | `#label-wheel` (17px tall) passes **only** on the spacing exception, with **8.4px of headroom**. Ship a native `<button>` ≥24×24 and the dependency disappears. |
+| **2.5.8** Target Size | `#label-wheel` (17px tall) passes **only** on the spacing exception. Minimum edge gap 3.6px; actual headroom 8.4 / 6.3 / 7.0px at 1440 / 390 / 320 — tightest at mobile. Ship a native `<button>` ≥24×24 and the dependency disappears. |
 
 **One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
 names NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the
