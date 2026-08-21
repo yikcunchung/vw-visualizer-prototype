@@ -1206,6 +1206,15 @@ body.in-fullscreen #img-car { will-change: transform; }
   -webkit-tap-highlight-color: transparent;
   flex: 1 1 0%;
   min-width: 160px;
+  /* SC 2.5.8 Target Size: at line-height 1.2 this span is 16.8px tall, so it fails
+     the 24x24 minimum and passes only on the spacing exception — which left the
+     whole claim resting on the 12px gap to the swatch row above.
+     line-height 1.6 alone reaches 22.4px, still short; even 1.7 is 23.8px. The 1px
+     padding takes it to 24.4px so the target meets 24x24 outright and the exception
+     no longer applies. Padding rather than a larger line-height on purpose: SC 1.4.12
+     invites users to override line-height to 1.5, and padding is unaffected by it. */
+  line-height: 1.6;
+  padding-block: 1px;
 }
 #label-wheel.expanded {
   white-space: normal;
