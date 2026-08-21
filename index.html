@@ -1202,11 +1202,11 @@ body.in-fullscreen #img-car { will-change: transform; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
 }
 #label-wheel {
-  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   flex: 1 1 0%;
   min-width: 160px;
 }
+#label-wheel[role="button"] { cursor: pointer; }
 #label-wheel.expanded {
   white-space: normal;
   text-overflow: clip;
@@ -1587,7 +1587,7 @@ body.in-fullscreen #img-car { will-change: transform; }
           </div>
           <div class="bb-sec-header">
             <span class="bb-sec-title" id="title-wheel">Wheels</span>
-            <span class="bb-sec-value" id="label-wheel" role="button" tabindex="0" aria-expanded="false">Alloy wheels "Mataró" 8.5 J x 21 front, 9 J x 21 rear, in black, diamond-turned finish</span>
+            <span class="bb-sec-value" id="label-wheel">Alloy wheels "Mataró" 8.5 J x 21 front, 9 J x 21 rear, in black, diamond-turned finish</span>
             <span id="wheel-live" class="sr-only" aria-live="polite" aria-atomic="true"></span>
           </div>
         </div>
@@ -2326,6 +2326,7 @@ function selectWheel(idx) {
   wheelName.title = currentWheels()[idx].name;
   mWheelName.textContent = currentWheels()[idx].name;
   wheelLive.textContent = currentWheels()[idx].name;
+  if (window.syncWheelLabelControl) window.syncWheelLabelControl();
   updateCarImage();
   scrollSwatchIntoView(wheelGrid, idx);
   preloadActiveFrames();
@@ -2964,9 +2965,43 @@ const PANO_STEP = 0.1745;
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-// Wheel label accordion — toggle on click/Enter/Space, collapse on Escape
+// Wheel label accordion — toggle on click/Enter/Space, collapse on Escape.
+// The label is a control ONLY while its text is actually truncated. Hardcoding
+// role="button" made it announce as a collapsed expandable even when the full name
+// already fitted — at 768px the name fits exactly (scrollWidth === clientWidth), so a
+// screen reader was told "collapsed", activating it said "expanded", and nothing
+// happened. Announced state with nothing behind it. Derive it from the measurement.
 (function () {
   const lbl = document.getElementById('label-wheel');
+
+  function overflows() {
+    // expanded sets white-space:normal, which makes scrollWidth === clientWidth and
+    // would report "fits". Measure the collapsed state, then restore.
+    const wasExpanded = lbl.classList.contains('expanded');
+    if (wasExpanded) lbl.classList.remove('expanded');
+    const over = lbl.scrollWidth > lbl.clientWidth + 1;
+    if (wasExpanded) lbl.classList.add('expanded');
+    return over;
+  }
+
+  function syncControl() {
+    if (overflows()) {
+      lbl.setAttribute('role', 'button');
+      lbl.setAttribute('tabindex', '0');
+      lbl.setAttribute('aria-expanded', String(lbl.classList.contains('expanded')));
+    } else {
+      // nothing to reveal: plain text, out of the tab order, no state to announce
+      lbl.classList.remove('expanded');
+      lbl.removeAttribute('role');
+      lbl.removeAttribute('tabindex');
+      lbl.removeAttribute('aria-expanded');
+    }
+  }
+  window.syncWheelLabelControl = syncControl;
+
+  syncControl();
+  // width changes and name changes both flip whether it overflows
+  if (window.ResizeObserver) new ResizeObserver(syncControl).observe(lbl);
 
   function toggle(force) {
     // Deliberately does NOT scroll the label into view. Expanding grows the wrapper,
@@ -2976,6 +3011,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     // (1440/768/390/320 all reach 100%), so no content is lost under 1.4.10, and
     // focusing the label already scrolls it clear of the bars for 2.4.11. A previous
     // scrollIntoView({block:'nearest'}) here was reverted as unwanted movement.
+    if (lbl.getAttribute('role') !== 'button') return;   // nothing to expand
     const next = force !== undefined ? force : !lbl.classList.contains('expanded');
     lbl.classList.toggle('expanded', next);
     lbl.setAttribute('aria-expanded', String(next));
