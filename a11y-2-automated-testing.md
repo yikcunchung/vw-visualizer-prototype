@@ -235,6 +235,18 @@ string, because the dimensions in a label change even when the set does not:
 | `#media-help` | before **and** after | The intentional 1×1 `.sr-only` clip. Nothing is rendered to lose. |
 | `#label-wheel` | before **and** after | Truncates by design. Under the overrides it still **expands to fully visible** — all 86 characters, at every width. |
 
+**Trap: measure after the reveal animation settles.** `revealSwatches()` animates swatches in from
+`translateY(12px)` over ~0.45s with staggered delays. Measuring before it settles put the swatches
+~9px low and produced **a phantom SC 2.5.8 failure at 390** (11.4px vs 12px required). The settled
+value is 20.4px at every width. Poll until the label→swatch distance stops changing. This one nearly
+went into the report as a real mobile failure.
+
+**A finding that only appears with production data.** `#label-wheel` hardcodes
+`role="button" tabindex="0"`. Swapping its text for a realistic short name (16 chars) at 1440 leaves
+it **untruncated** — 214 = 214 — while the role, tabindex and `aria-expanded` all remain. In
+production that is a focusable button with nothing to expand. No scanner would flag it, because the
+markup is valid and the name is present; it needs the content swap to surface. See **B14**.
+
 **Detector validated.** A deliberately clipped canary (`60px` box, `overflow:hidden`, a sentence far
 too long) was injected and *was* detected. Without that, "no new clipping" would be an untested
 claim — which is the same discipline as §3.
@@ -244,7 +256,7 @@ claim — which is the same discipline as §3.
 ## Target size and reflow
 
 Only one target under 24×24: `#label-wheel` at 17px tall, passing on the **spacing exception**
-with 8.4px of headroom. No horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom.
+with 8.4px of slack, identical at 1440 / 390 / 320 and at 400% zoom. No horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom.
 
 ---
 

@@ -265,6 +265,7 @@ Icon-only buttons have an `aria-label` and **no** duplicate `title` with the sam
 | [B8](#b8) | Hidden controls leave the tab order | **2.4.7** |
 | [B9](#b9) | Inactive groups are inert, not just hidden | 4.1.2 |
 | [B4](#b4) | Auto-rotation stoppable by keyboard | **2.2.2** |
+| [B14](#b14) | The expand control exists only when there is something to expand | 4.1.2 |
 | [B11](#b11) | List keys stable across filtering | 2.4.3 |
 | [B12](#b12) | Keyboard description stays truthful | 1.3.1 |
 | [A8](#a8) | Viewer describes its own keyboard operation | 1.3.1 |
@@ -385,6 +386,75 @@ onKeyDown={e => { if (isArrow(e.key)) { stopAutoRotate(); pan(e.key); } }}
 
 ---
 
+<a id="b14"></a>
+
+### B14 — The expand control exists only when there is something to expand
+
+`SC 4.1.2` · **Level A in production**
+
+**Rule:** the wheel label becomes a button **only when its text is actually truncated**. Derive
+`role`, `tabindex` and `aria-expanded` from the overflow state — never hardcode them.
+
+The design intent is that the label turns into a button when the width cannot show the full name.
+**The reference does not implement that.** `role="button" tabindex="0" aria-expanded="false"` are
+hardcoded in the markup, and the only attribute JavaScript ever touches is `aria-expanded`.
+
+Measured at 1440 with the label's own text swapped for a realistic production name:
+
+| | long fixture name (86 chars) | short production name (16 chars) |
+|---|---|---|
+| truncated | **yes** — 498 > 214 | **no** — 214 = 214 |
+| `role` | `button` | **`button`** |
+| `tabindex` | `0` | **`0`** |
+| `aria-expanded` | `false` | **`false`** |
+
+**This already happens in the reference, at 768px.** The wheel label is 666px wide there and the
+text fits exactly — `scrollWidth 666 = clientWidth 666`, nothing truncated — yet:
+
+```
+role="button"  tabindex="0"  aria-expanded="false"     <- all still present
+screen reader: "button, Alloy wheels \"Mataró\" 8.5 J…, collapsed"
+activate:      height 24px -> 24px   (nothing changes)
+               aria-expanded "false" -> "true"
+```
+
+A screen-reader user is told the control is **collapsed**, activates it, is told it is now
+**expanded**, and nothing happened. The state is announced but corresponds to nothing. That is the
+4.1.2 problem, and it is live at tablet width today — not a future production risk.
+
+It gets worse with production data: short real names fit at *every* width, so the control is inert
+everywhere. The result is a control that:
+
+- announces as a **collapsed expandable button** with nothing to expand,
+- occupies a **tab stop** that does nothing when activated,
+- and is a **17px target**, dragging in the whole 2.5.8 spacing dependency (see C4) for no reason.
+
+```jsx
+// ✗ hardcoded — a fake control whenever the text fits
+<span role="button" tabIndex={0} aria-expanded={open}>{name}</span>
+
+// ✓ derive it from the measured overflow, and re-measure on resize and on name change
+const ref = useRef(null);
+const [truncated, setTruncated] = useState(false);
+useLayoutEffect(() => {
+  const el = ref.current; if (!el) return;
+  const measure = () => setTruncated(el.scrollWidth > el.clientWidth + 1);
+  measure();
+  const ro = new ResizeObserver(measure); ro.observe(el);
+  return () => ro.disconnect();
+}, [name]);
+
+<span ref={ref}
+      role={truncated ? 'button' : undefined}
+      tabIndex={truncated ? 0 : undefined}
+      aria-expanded={truncated ? open : undefined}>{name}</span>
+```
+
+**Check:** set a short name, confirm the label is **not** in the tab order and exposes **no** role.
+Set a long one, confirm it is a button and expands.
+
+---
+
 <a id="b11"></a>
 
 ### B11 — List keys stable across filtering
@@ -491,13 +561,72 @@ i.e. **≥12px clearance from centre to box edge**.
 
 `#label-wheel` (a `<span role="button">`, **17px tall**) passes on this exception alone:
 
-| Viewport | Clearance to `.btn-swatch` | Required | Headroom |
-|---|---|---|---|
-| 1440 / 390 / 320 | 20.4px | ≥12px | **8.4px** |
-| 768 | 122px | ≥12px | large |
+The nearest full-size neighbour is `.btn-swatch`, directly **above**. Because the label is 17px tall,
+its edge sits ~8.4px from its own centre, so the **minimum edge-to-edge gap is 12 − 8.4 = 3.6px**.
 
-That spacing is **load-bearing** — remove ~8px and it becomes a real AA failure with no exception
-left. **Do not inherit the dependency:** ship a native `<button>` sized ≥24×24.
+Measured at 1440 / 390 / 320 / 320@400% — **identical at all four**:
+
+| Current gap | Centre → swatch box | Required | Slack |
+|---|---|---|---|
+| **12px** | 20.4px | ≥12px | **8.4px — passes** |
+
+**Gap budget, measured by forcing each value:**
+
+| Total gap | Centre → box | Slack | Verdict |
+|---|---|---|---|
+| 12px (current) | 20.4px | +8.4px | ✅ pass |
+| **4px** | 12.4px | **+0.4px** | ⚠️ passes, but that is a rounding error, not a margin |
+| 3px | 11.4px | −0.6px | ❌ **fail** |
+| 2px | 10.4px | −1.6px | ❌ **fail** |
+
+**The cliff is between 3px and 4px.** 4px technically conforms with 0.4 of a pixel to spare — one
+font-metric change, one sub-pixel rounding difference, and it flips. Do not tune the gap to 4px;
+there is no reason to trade 8px of safety for 8px of density.
+
+> **Measurement trap.** `revealSwatches()` animates the swatches in from `translateY(12px)` over
+> ~0.45s with staggered delays. Measure before that settles and the swatches read ~9px lower,
+> giving 11.4px and a **false FAIL** at 390. Poll until the label→swatch distance stops changing
+> before trusting any number here. This produced a phantom mobile failure during the audit.
+
+**Only `#label-wheel` is affected.** `#label-colour` and `#label-material` are the same visual size
+and the same `.bb-sec-value` class, but carry **no `role` and no `tabindex`** — they are plain
+live-region text, not targets, so 2.5.8 does not apply and they need no gap. Give either one a
+`role="button"` or a `tabindex` and it inherits the whole problem.
+
+#### Better: make the target 24px tall and the exception stops applying
+
+Widening the *gap* is the wrong lever — it buys slack on an exception you should not need. Growing
+the *target* removes the exception entirely. Measured at 1440 / 390 / 320, label height and verdict:
+
+| Change | Height | Meets 24×24 | Verdict |
+|---|---|---|---|
+| none — `line-height: 1.2` | 16.8px | ✗ | passes **via exception**, 8.4px slack |
+| `line-height: 1.5` | 21.0px | ✗ | **still** via exception — *not enough* |
+| `line-height: 1.72` | 24.1px | ✓ | **passes outright** — but only 0.1px over |
+| `line-height: 1.8` | 25.2px | ✓ | passes outright |
+| `min-height: 24px` | 24.0px | ✓ | passes outright |
+| **`padding-block: 4px`** | **24.8px** | ✓ | **passes outright** |
+
+Two things worth knowing:
+
+- **`line-height: 1.5` does not get you there.** At a 14px font it yields 21px — the instinctive
+  "bump the line-height" value leaves you still relying on the exception.
+- **Prefer `padding-block` or `min-height` over `line-height`.** SC 1.4.12 lets users override
+  `line-height` to 1.5; padding and `min-height` are orthogonal to every property 1.4.12 touches, so
+  they hold regardless. Measured under a 1.4.12 override: `padding-block: 4px` → 29px,
+  `min-height: 24px` → 24px, both still passing outright.
+
+Growing the label also shrinks the gap to the swatches (12px → 8px), which no longer matters — once
+the target meets 24×24 the spacing exception is irrelevant.
+
+**Implemented** as `line-height: 1.6; padding-block: 2px` → **26.4px**, verified at 1440 / 768 / 390 /
+320 / 320@400%. The target meets 24×24 outright, the spacing exception no longer applies, and
+**the component now has no undersized target at all** — the under-24 list is empty at every width.
+
+`line-height: 1.6` alone gives 22.4px and would not have been enough; 1px of padding gives 24.4px,
+clearing the minimum by four tenths of a pixel. 2px gives 2.4px of real margin.
+
+**Do not inherit the dependency:** ship a native `<button>` sized ≥24×24.
 
 ---
 
