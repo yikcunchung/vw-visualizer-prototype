@@ -11,6 +11,38 @@ The single most important sentence in this pack:
 
 ---
 
+---
+
+# 0. Scope of this evidence — read before quoting a number
+
+The audit ran `axe.run(document)` — **the whole page**, not just the component. That is a stronger
+test, not a weaker one, but it means some figures describe page chrome the Visualizer team does not
+own. Both scopes, measured at 1440×900:
+
+| Measure | `#visualizer` only | Whole page |
+|---|---|---|
+| axe violations | **0** | **0** |
+| axe rules executed | 89 | 90 |
+| axe *needs review* (contrast) | 5 | 8 |
+| Accessibility-tree nodes | 157 | 394 |
+| Named interactive / graphic nodes | 33 | — |
+| Unnamed interactive nodes | **0** | **0** |
+| Duplicate role+name pairs | **0** | **0** |
+| Focusable controls | 29 | 50 |
+| Radios | 18 | 18 |
+
+**The component passes on its own** — scoping axe to `#visualizer` still gives 0 violations.
+
+**Four of the eight contrast nodes are outside the component:** `h1`, `.label-subline`,
+`.btn-secondary` and `.usp-4` are page chrome. They were measured and they pass, but they are not
+the Visualizer team's to fix. The four inside are `.disclaimer-i`, both `#label-group` paragraphs
+and `#select-model-lg`.
+
+Everything in `A11Y-3-IMPLEMENTATION.md` **is** component-scoped: all 16 elements named by the 29
+invariants sit inside `#visualizer`, verified by `contains()`.
+
+---
+
 # 1. Tool coverage at a glance
 
 | Tool | What it genuinely proves | Blind spots that bit this project |
@@ -57,14 +89,17 @@ viewports in default and all-disclosures-expanded state.
 
 ## Accessibility tree
 
-394 nodes · **0 unnamed interactive nodes** · **0 duplicate role+name pairs** · 18 radios with
-**18 unique names**, German quotes intact.
+Whole page: 394 nodes. `#visualizer` subtree: **157 nodes, 33 named interactive/graphic nodes,
+0 unnamed, 0 duplicate role+name**. 18 radios with **18 unique names**, German quotes intact.
 
 ## Contrast — the `incomplete` bucket resolved by hand
 
 axe punts whenever the background is a gradient, an image, or overlapped. Those are not passes;
-a BITV tester must resolve every one. All **23** were measured on composited pixels:
-**8.59:1 – 21:1**, all passing. Lowest was `.disclaimer-i` at 8.59:1.
+a BITV tester must resolve every one. All **23** (across three viewports) were measured on
+composited pixels: **8.59:1 – 21:1**, all passing. Lowest was `.disclaimer-i` at 8.59:1.
+
+Of the eight distinct nodes, **four are page chrome** (`h1`, `.label-subline`, `.btn-secondary`,
+`.usp-4`) and four are inside the component — see §0.
 
 ## Behaviour — driven with real events
 
