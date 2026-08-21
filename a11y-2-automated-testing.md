@@ -33,10 +33,15 @@ own. Both scopes, measured at 1440×900:
 
 **The component passes on its own** — scoping axe to `#visualizer` still gives 0 violations.
 
-**Four of the eight contrast nodes are outside the component:** `h1`, `.label-subline`,
-`.btn-secondary` and `.usp-4` are page chrome. They were measured and they pass, but they are not
-the Visualizer team's to fix. The four inside are `.disclaimer-i`, both `#label-group` paragraphs
-and `#select-model-lg`.
+> **Scope rule: only `#visualizer` counts.** Errors and failures in page chrome — nav, subnav, hero,
+> `.usp-*`, tiles, NBA bar, footer, skip link — are **not findings** and are not tracked in this
+> pack. The whole-page column above is **context only**: it shows the component is not being carried
+> by a clean environment. Never quote it as a component result.
+
+**Already dismissed as page chrome, do not re-raise:** contrast on `h1`, `.label-subline`,
+`.btn-secondary` and `.usp-4`; WAVE's duplicate `alt="VW ID.7"` on three images. All measured, all
+passing anyway, none of them this team's. The contrast nodes that *are* inside are `.disclaimer-i`,
+both `#label-group` paragraphs and `#select-model-lg`.
 
 Everything in `a11y-3-implementation.md` **is** component-scoped: all 16 elements named by the 29
 invariants sit inside `#visualizer`, verified by `contains()`.
@@ -98,8 +103,8 @@ step** — the service is not scriptable.
 > almost nothing.
 
 The 9 alerts break down as `alt_duplicate ×2` and `heading_possible ×7`. The duplicate alt is
-`"VW ID.7"` on **three** images — all **outside `#visualizer`**, in the page hero and tiles. Page
-chrome, not this component, and consistent with §0.
+`"VW ID.7"` on **three** images, all **outside `#visualizer`** — page chrome, therefore **not a
+finding** under the scope rule. Recorded only so nobody re-raises it.
 
 ### NVDA vs VoiceOver — a deviation to record
 

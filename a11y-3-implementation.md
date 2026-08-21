@@ -7,7 +7,8 @@ styled-components.
 
 **Scope:** everything below applies to `#visualizer` (`#media` + `#bottombar`). All 16 elements
 named by these rules were verified to sit inside that subtree. Page chrome — the nav, hero, tiles
-and footer bar — is **out of scope** and belongs to the page-template owner.
+and footer bar — is **out of scope** and belongs to the page-template owner. **Errors and failures
+there are not findings for this team** and are not tracked in this pack.
 
 > **Do not copy the reference build.** It is vanilla HTML/JS and it is a *behavioural
 > specification*, not source to port. Roughly half the required behaviour lives in
