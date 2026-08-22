@@ -160,8 +160,6 @@ btn.className = i === selected ? 'selected' : '';
 
 ### A9 — Visible label sits inside the accessible name
 
-`SC 2.5.3`
-
 `SC 2.5.3` · **Level A**
 
 if a control has a visible text label, the accessible name must **contain** that text —
@@ -208,13 +206,12 @@ Fixed in `22294d7` by pointing `aria-labelledby` at the visible label.
 Mark any passage whose language differs from the page language, so a screen reader switches
 pronunciation instead of reading it phonetically as the page language.
 
-**No foreign-language content remains in the reference.** The German wheel names were long-text
-placeholders; they were translated to English on 2026-08-21 and the `lang="de"` attributes removed
-with them. This rule is here for production: if a CMS field can hold a string in a language other
+**No foreign-language content in the reference.** Every wheel name is English, and no `lang`
+attribute is needed anywhere in the component. This rule is here for production: if a CMS field can hold a string in a language other
 than the page, the component rendering it must be able to emit `lang` alongside it.
 
-**Keep an equally long string in the test data.** The longest wheel name is 90 characters and still
-contains an embedded `"`. Several findings in this pack — 2.5.8 target size, 1.4.10 reflow, the panel
+**Keep an equally long string in the test data.** The longest wheel name in the data is 90
+characters (the one shown by default is 86), and it contains an embedded `"`. Several findings in this pack — 2.5.8 target size, 1.4.10 reflow, the panel
 truncation bug, and the B1 quote-escaping failure — surfaced *only* because the fixture was that long
 and that awkward. Short, clean production names would hide all four.
 
@@ -338,7 +335,7 @@ Closing the spec panel returns focus to **whoever opened it**, and only when foc
 
 A hidden/non-functional control must be **removed from the tab order** (`disabled`), not just visually hidden.
 
-> **Why it exists** — Scroll-arrows kept `tabindex=0` while at `opacity:0; pointer-events:none` — keyboard users landed on an invisible, dead button with no visible focus. Matches BITV finding #8.
+> **Why it exists** — Scroll-arrows kept `tabindex=0` while at `opacity:0; pointer-events:none` — keyboard users landed on an invisible, dead button with no visible focus.
 
 
 **In React**
@@ -703,20 +700,20 @@ Zoom state must announce, and must keep dependent controls in sync, on **every**
 # 7. Page-level fixes, applied outside the component
 
 WCAG conformance is defined **per full page** (spec §5.2.2 *Full pages*), so a conformant component
-does not make the page conformant. These were fixed in `index-visl.html` so the reference is
+does not make the page conformant. These are fixed in `index.html` so the reference is
 genuinely exemplary — none are required for the component port, but all are required for a
 page-level claim.
 
-| Fix | SC | Was |
+| Fix | SC | The defect it removes |
 |---|---|---|
 | 7 subnav tabs → `<button type="button">` with `aria-current` tracked in JS | **2.1.1 (A)** | `<div>`s with click handlers — keyboard users could not reach or activate them. **No automated tool flags this.** |
 | Skip link + `role="banner"` / `role="main"` landmarks | **2.4.1 (A)** | no bypass mechanism at all; skip link is now the first tab stop |
 | `.label-header-midpage` → `<h2>` | 1.3.1 (A) | styled as a section heading but marked up as `<p>` |
 | `aria-hidden="true"` on 17 further decorative SVGs | 1.1.1 (A) | unnamed graphics exposed in the accessibility tree |
 
-Verified after the fixes, page-wide: **310 accessibility-tree nodes, 47 interactive controls,
-0 unnamed, 0 duplicate role+name pairs**; landmarks `banner`, `main`, `navigation` ×2 (named),
-`region: car viewer`.
+Page-wide: **400 accessibility-tree nodes, 45 interactive controls, 0 unnamed**; landmarks `banner`,
+`main`, `navigation` ×2 (named), `region: car viewer`. The only duplicate role+name pair on the page
+is `alt="VW ID.7"` on three tiles — page chrome, none of it inside `#visualizer`.
 
 **Still deliberately unchanged:** the four `.topbar-tab` items and four `.topbar-cta` icons have no
 click handlers in this prototype. They are inert for mouse and keyboard alike, so parity holds and
@@ -746,17 +743,29 @@ containing Level A failures.
 
 ---
 
-# 9. Two open items for this team
+# 9. What is still open
 
-From `a11y-1-criteria.md`, four of the six unanswered criteria are page-level. These two are yours:
+**Nothing is failing and nothing is unanswered.** Every Level A/AA criterion in scope for
+`#visualizer` is verified, inspected, not applicable, or out of scope — see `a11y-1-criteria.md`.
+The four page-level criteria (2.4.5, 3.2.3, 3.2.4, 3.2.6) belong to whoever owns the page template.
 
-| SC | Action |
+**One decision to record.** It passes; it needs a recorded position, not code:
+
+| SC | Decision |
 |---|---|
-| **1.3.4** Orientation | Fullscreen applies `rotate(90deg)` — confirm content is not *restricted* to one orientation. |
-| **1.4.12** Text Spacing | Apply the four spacing overrides (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em); confirm no clipping. |
+| **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". A value display is not a label, so it passes — but a speech-input user saying "ID.7" would miss it. Safer: `aria-labelledby` pointing at a real visible label. |
 
-And two decisions to record, both currently passing: **2.5.3** (`#select-model-lg` naming) and
-**2.5.8** is settled — no target in the component is under 24×24.
+**Two constraints to keep passing.** Both hold today and both are easy to break with a layout
+change, so re-check them after any reflow work:
+
+| SC | Constraint |
+|---|---|
+| **1.3.4** Orientation | No `@media (orientation:)` rule anywhere. Fullscreen's `rotate(90deg)` is user-invoked and reversible — it must never *restrict* content to one orientation. |
+| **1.4.12** Text Spacing | Under the four overrides (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em) nothing may newly clip, no control may be lost, and no horizontal scroll may appear. |
+
+**What no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol names
+NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the browser
+extension *after scrolling*, and one pass through the axe DevTools 4.131.2 UI.
 
 ---
 
@@ -768,9 +777,9 @@ build. Captured from the live accessibility tree, 2026-08-16.
 
 | Observed | Maps to |
 |---|---|
-| `Menu_ChangeColor` — visible "Farben", name "Farbauswahl anzeigen"; `Menu_OpenInterior` — visible "Innenraum", name "Interieur anzeigen". 2 of 3 fail. | **R12** |
-| 6 colour swatches as ungrouped `<button>`s, container `role: null`, selection via `aria-current` | **R4**, **R3** |
-| `aria-label="Active color: Pythongelb Metallic"` on `<html lang="de">` | **R11** |
+| `Menu_ChangeColor` — visible "Farben", name "Farbauswahl anzeigen"; `Menu_OpenInterior` — visible "Innenraum", name "Interieur anzeigen". 2 of 3 fail. | **A9** |
+| 6 colour swatches as ungrouped `<button>`s, container `role: null`, selection via `aria-current` | **A3**, **B2** |
+| `aria-label="Active color: Pythongelb Metallic"` on `<html lang="de">` | **A5** |
 
 **Already correct today — do not regress:** zoom controls are real `<button>`s with German labels,
 and `Zoom_Out` correctly carries `disabled` at minimum zoom.

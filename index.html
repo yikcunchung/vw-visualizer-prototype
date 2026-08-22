@@ -1205,9 +1205,10 @@ body.in-fullscreen #img-car { will-change: transform; }
   -webkit-tap-highlight-color: transparent;
   flex: 1 1 0%;
   min-width: 160px;
-  /* SC 2.5.8 Target Size. At line-height 1.2 this span is 16.8px tall — under the
-     24x24 minimum — so it passed only on the spacing exception, leaving the whole
-     claim resting on the 12px gap to the swatch row above.
+  /* SC 2.5.8 Target Size. This span must clear 24x24 on its own rather than lean on
+     the spacing exception, which would rest the whole claim on the 12px gap to the
+     swatch row above. At a 14px font:
+       line-height 1.2 (bare)  16.8px  under the minimum
        line-height 1.6 alone   22.4px  still short
        + padding-block 1px     24.4px  clears by 0.4px, i.e. a rounding error
        + padding-block 2px     26.4px  clears by 2.4px            <- this
@@ -2977,10 +2978,10 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
 // Wheel label accordion — toggle on click/Enter/Space, collapse on Escape.
 // The label is a control ONLY while its text is actually truncated. Hardcoding
-// role="button" made it announce as a collapsed expandable even when the full name
-// already fitted — at 768px the name fits exactly (scrollWidth === clientWidth), so a
-// screen reader was told "collapsed", activating it said "expanded", and nothing
-// happened. Announced state with nothing behind it. Derive it from the measurement.
+// The button role must be derived from the measurement, never hardcoded. At 768px the
+// full name fits exactly (scrollWidth === clientWidth); a static role="button" there
+// announces a collapsed expandable, activating it announces "expanded", and nothing
+// happens — announced state with nothing behind it.
 (function () {
   const lbl = document.getElementById('label-wheel');
 
