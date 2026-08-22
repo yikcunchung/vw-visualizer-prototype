@@ -23,13 +23,21 @@ own. Both scopes, measured at 1440×900:
 |---|---|---|
 | axe violations | **0** | **0** |
 | axe rules executed | 89 | 90 |
-| axe *needs review* (contrast) | 5 | 9 |
-| Accessibility-tree nodes | 160 | 394 |
-| Named interactive / graphic nodes | 41 | — |
+| axe *needs review* (contrast) | 4 | 8 |
+| Accessibility-tree nodes | 158 | 400 |
+| Named interactive / graphic nodes | 61 | 83 |
 | Unnamed interactive nodes | **0** | **0** |
-| Duplicate role+name pairs | **0** | **0** |
-| Focusable controls | 29 | 50 |
+| Duplicate role+name pairs | **0** | 1 (page chrome) |
+| Focusable controls | 29 | 45 |
 | Radios | 18 | 18 |
+| Targets under 24×24 | **0** | — |
+
+Taken with the `#btn-a11y` control group **open** (the larger surface) and after the *"Drag to
+rotate"* hint has collapsed. **Node and contrast counts wobble by a couple if you measure while that
+hint is on screen** — it is 0×0, then visible from roughly 1.5s to 3s, then gone, and while visible
+it adds itself to the contrast bucket as a fifth component node. Let it settle before quoting a
+number. The single page-wide duplicate is `alt="VW ID.7"` on three tiles, none of them in the
+component.
 
 **The component passes on its own** — scoping axe to `#visualizer` still gives 0 violations.
 
@@ -43,7 +51,7 @@ own. Both scopes, measured at 1440×900:
 passing anyway, none of them this team's. The contrast nodes that *are* inside are `.disclaimer-i`,
 both `#label-group` paragraphs and `#select-model-lg`.
 
-Everything in `a11y-3-implementation.md` **is** component-scoped: all 16 elements named by the 29
+Everything in `a11y-3-implementation.md` **is** component-scoped: all 16 elements named by the 30
 invariants sit inside `#visualizer`, verified by `contains()`.
 
 ---
@@ -113,7 +121,7 @@ The protocol names **NVDA 2026.1.1.55980**. **VoiceOver is planned instead.**
 That is worth doing and will surface real problems — but record it as a deviation rather than a
 substitution, because the two disagree in ways that matter here:
 
-- **Different engines, different announcements.** `aria-roledescription` (Part G), a non-modal
+- **Different engines, different announcements.** `aria-roledescription`, a non-modal
   `role="dialog"`, and a `<canvas role="img">` whose view changes as you pan are exactly the
   constructs where NVDA and VoiceOver diverge. A VoiceOver pass cannot predict the NVDA result for
   those three.
@@ -180,13 +188,13 @@ viewports in default and all-disclosures-expanded state.
 
 ## Accessibility tree
 
-`#visualizer` subtree: **160 nodes, 41 named, 0 unnamed, 0 duplicate role+name**. 18 radios with **18 unique names**, German quotes intact.
+`#visualizer` subtree: **158 nodes, 61 named, 0 unnamed, 0 duplicate role+name**. 18 radios with **18 unique names**, the embedded `"` in the wheel names intact.
 
 ## Contrast — the `incomplete` bucket resolved by hand
 
 axe punts whenever the background is a gradient, an image, or overlapped. Those are not passes;
-a BITV tester must resolve every one. All **23** (across three viewports) were measured on
-composited pixels: **8.59:1 – 21:1**, all passing. Lowest was `.disclaimer-i` at 8.59:1.
+a BITV tester must resolve every one. Every node in the bucket, at every viewport, was measured on
+composited pixels: **8.59:1 – 21:1**, all passing. The lowest is `.disclaimer-i` at 8.59:1.
 
 Of the eight distinct nodes, **four are page chrome** (`h1`, `.label-subline`, `.btn-secondary`,
 `.usp-4`) and four are inside the component — see §0.
