@@ -524,6 +524,10 @@ Drag interactions must have a single-pointer, non-drag alternative.
 **Rule:** every target is at least 24×24 CSS px. If you cannot make one that big, you must justify
 it against an exception — and record the measurement.
 
+> **axe will not catch this for you.** `target-size` is `enabled: false` by default in axe-core
+> 4.13.0, so a stock run reports "0 violations" without testing target size at all. Turn it on
+> explicitly: `axe.run(el, { rules: { 'target-size': { enabled: true } } })`.
+
 In this component **no target is under 24×24**. The smallest `<button>` is the close button at
 exactly 24×24; scroll-arrows are 28, touch controls 32, swatches 48. `#label-wheel` is a
 `<span>` rather than a `<button>`, so a survey of button sizes misses it — it is 26.4px tall via:
@@ -739,6 +743,8 @@ containing Level A failures.
 - [ ] **Screen reader** — one pass with NVDA or VoiceOver. Not optional.
 - [ ] **CI** — `jest-axe` for the structural half, Playwright with real key presses plus
       `expect(page.locator(':focus'))` for the behavioural half. Both, or regressions return.
+- [ ] **`target-size` explicitly enabled** in the axe config — it is off by default, so without
+      this line CI passes SC 2.5.8 without ever testing it.
 - [ ] **The suite fails when it should** — delete a rule and confirm CI goes red.
 
 ---

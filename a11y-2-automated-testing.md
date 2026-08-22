@@ -1,6 +1,7 @@
 # A11y 2 of 3 — What the automated tests cover, and what they cannot
 
-**Component:** VW Visualizer. **Audited:** 2026-08-21, headless Chrome 151, axe-core 4.13.0.
+**Component:** VW Visualizer. **Audited:** 2026-08-22 against the live deployment, headless Chrome
+151.0.7922.174, axe-core 4.13.0 (`axe.version` read from the engine, not the bundle filename).
 **Companions:** `a11y-1-criteria.md` (every criterion) · `a11y-3-implementation.md` (what to build).
 
 The single most important sentence in this pack:
@@ -60,7 +61,7 @@ invariants sit inside `#visualizer`, verified by `contains()`.
 
 | Tool | What it genuinely proves | Blind spots that bit this project |
 |---|---|---|
-| **axe-core 4.13.0** | Structural ARIA, names, roles, contrast on solid backgrounds, ~90 rules | **No `label-in-name` rule at all** (SC 2.5.3). Cannot see behaviour. Punts on contrast over gradients/images. `duplicate-id` was **removed** in 4.x — only `duplicate-id-aria` remains |
+| **axe-core 4.13.0** | Structural ARIA, names, roles, contrast on solid backgrounds, ~90 rules | **No `label-in-name` rule at all** (SC 2.5.3). Cannot see behaviour. Punts on contrast over gradients/images. **`target-size` is disabled by default**, so a bare run never tests SC 2.5.8 — see trap 9. `duplicate-id` still ships but is `deprecated` and disabled; `duplicate-id-aria` is the one that runs |
 | **Lighthouse** | A subset of axe, plus perf/SEO | Scored **100** on a build with a Level A naming failure |
 | **WAVE** | Empty labels, redundant `title`, sr-only contrast — things axe ignores | Needs a **public URL**. Reports `.sr-only` contrast as an error even when clipped to 1×1 |
 | **Nu HTML validator** | Parse errors, invalid ARIA nesting | Says nothing about behaviour or contrast |
@@ -186,6 +187,21 @@ viewports in default and all-disclosures-expanded state.
 
 90 rules executed, 0 JS exceptions.
 
+### With the default-disabled rules force-enabled
+
+A default run leaves 9 rules switched off, including **`target-size`** — the SC 2.5.8 rule. Enabling
+all nine raises the count to **98 rules** and the component is still clean:
+
+| Viewport | Rules | Violations | `target-size` | Needs review |
+|---|---|---|---|---|
+| 1440×900 | 98 | **0** | **passes, 27 nodes** | `aria-roledescription` ×1, contrast ×4 |
+| 390×844 | 98 | **0** | **passes, 29 nodes** | `aria-roledescription` ×1, contrast ×3 |
+| 320×256 @ dsf 4 | 98 | **0** | **passes, 28 nodes** | `aria-roledescription` ×1, contrast ×1 |
+
+So 2.5.8 is confirmed by the engine, not only by measuring boxes by hand. The lone
+`aria-roledescription` *needs-review* is the discretionary decision already recorded in
+`a11y-1-criteria.md` — axe cannot judge it, and asks a human to.
+
 ## Accessibility tree
 
 `#visualizer` subtree: **158 nodes, 61 named, 0 unnamed, 0 duplicate role+name**. 18 radios with **18 unique names**, the embedded `"` in the wheel names intact.
@@ -280,7 +296,7 @@ Do the same in CI. If deleting a rule does not turn the suite red, the suite is 
 
 ---
 
-# 4. Eight traps that produce a confident false pass
+# 4. Nine traps that produce a confident false pass
 
 Each of these produces a confident wrong answer.
 
@@ -290,7 +306,8 @@ container**. Scroll `.intro-vis` into view and **poll** until
 `document.querySelectorAll('#grid-colour [role=radio]').length > 0`. Never use a fixed sleep.
 
 **2 · `runOnly: {type:'tag'}` is not "all rules".** A tag filter silently skips every rule
-without one of those tags. Bare `axe.run(document)` is what the DevTools extension runs.
+without one of those tags. Bare `axe.run(document)` is what the DevTools extension runs — but see
+trap 9: even that is not every rule.
 
 **3 · `violations` is not the whole result.** `incomplete` is the "needs review" bucket. Suppress
 it and "axe 0" means far less than it sounds.
@@ -308,6 +325,14 @@ dominant background, and look at the crop before believing a failure.
 
 **7 · A circle's bounding-box corners are outside the circle.** Sampling bbox corners reported
 every 32px round button as occluded by the image behind it. Sample inside the shape.
+
+**9 · Bare `axe.run()` is not every rule either.** Nine rules are `enabled: false` by default in
+4.13.0 — `target-size`, `aria-roledescription`, `color-contrast-enhanced`, `duplicate-id`,
+`duplicate-id-active`, `identical-links-same-purpose`, `landmark-complementary-is-top-level`,
+`meta-refresh-no-exceptions`, `audio-caption`. **`target-size` is SC 2.5.8**, so a default run
+reports "0 violations" without ever having tested target size. Pass
+`{rules:{'target-size':{enabled:true}, …}}` and confirm the rule appears in `passes`, or verify it
+outside axe. Check `axe._audit.rules.filter(r => !r.enabled)` before believing a rule ran.
 
 **8 · Disabled controls cannot take focus.** `el.focus()` on a `disabled` button is a no-op, so
 the page never scrolls and the control reads as "off-viewport". Enable it, or skip it.
