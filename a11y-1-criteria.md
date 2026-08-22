@@ -1,7 +1,7 @@
 # A11y 1 of 3 — WCAG 2.2 criterion checklist
 
 **Component:** VW Visualizer — media viewer + selector bar (colour / rim / interior / trim / zoom).
-**Audited:** 2026-08-21 against the deployed reference build.
+**Audited:** 2026-08-22 against the live deployment.
 **Scope:** `#visualizer` — `#media` + `#bottombar`. **Out of scope:** page chrome, video, and
 PDFs (brochures, price lists, spec sheets) — PDFs are a separate conformance surface, EN 301 549
 clause 10, checked with PAC rather than anything in this pack. Evidence was gathered page-wide and then
@@ -123,7 +123,7 @@ criteria are not required and are not listed.
 | **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
-| **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | **No target in the component is under 24×24.** `#label-wheel` — the only one that ever was — is 26.4px tall (`line-height: 1.6` + `padding-block: 2px`), so it meets the minimum outright and nothing relies on the spacing exception. Smallest `<button>` is the close button at exactly 24×24. |
+| **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | **No target in the component is under 24×24.** `#label-wheel` is 26.4px tall (`line-height: 1.6` + `padding-block: 2px`), so it meets the minimum outright and nothing relies on the spacing exception. Smallest `<button>` is the close button at exactly 24×24. Confirmed both by measuring every control's box and by axe's own `target-size` rule, which **is disabled by default** and had to be switched on: it then passes on 27–29 nodes at 1440 / 390 / 320×256. |
 
 # 3. Understandable
 
