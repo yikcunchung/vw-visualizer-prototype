@@ -24,7 +24,7 @@ criteria are not required and are not listed.
 | ⚪ N/A | The component has no such content |
 | ⚖️ Decide | Passes, but on an arguable reading — record the decision |
 
-**52 of the 56 A/AA criteria are in scope for `#visualizer`, and all 52 are closed — 0 failures, 0 open items.** 26 verified · 9 inspected · 16 not applicable · 1 decision to record. The remaining 4 (2.4.5, 3.2.3, 3.2.4, 3.2.6) are page-level, cannot be judged from one component, and are not assessed here.
+**52 of the 56 A/AA criteria are in scope for `#visualizer`, and all 52 are closed — 0 failures, 0 open items.** 27 verified · 9 inspected · 16 not applicable. The remaining 4 (2.4.5, 3.2.3, 3.2.4, 3.2.6) are page-level, cannot be judged from one component, and are not assessed here.
 
 > **Scope rule:** only `#visualizer` counts. Errors and failures in page chrome — nav, hero, tiles, footer — are **not findings** and are not tracked here. Every figure in this pack is a component figure.
 
@@ -116,7 +116,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass | Drag-rotate has button and arrow-key alternatives. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass | Arrows fire on pointer-up; drag-off-then-release aborts. |
-| **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
+| **2.5.3** | Label in Name | A | Yes | ✅ Pass | `#select-model-lg` uses `aria-labelledby` pointing at the visible span **plus** an `.sr-only` purpose span, so its name is `"ID.7 Select car model"` — visible text first, purpose retained. Because the label is referenced by id rather than copied into `aria-label`, the name follows the selection: choosing another model gives `"Grand California Select car model"`. No judgement call left. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | **No target in the component is under 24×24.** `#label-wheel` is 26.4px tall (`line-height: 1.6` + `padding-block: 2px`), so it meets the minimum outright and nothing relies on the spacing exception. Smallest `<button>` is the close button at exactly 24×24. Confirmed both by measuring every control's box and by axe's own `target-size` rule, which **is disabled by default** and had to be switched on: it then passes on 27–29 nodes at 1440 / 390 / 320×256. |
@@ -167,11 +167,9 @@ criteria are not required and are not listed.
 **No open criteria and no known failures.** Every Level A/AA criterion in scope for `#visualizer` is
 either verified, inspected, or not applicable.
 
-**One decision to record.** It passes; it needs a recorded position, not code:
-
-| SC | Decision |
-|---|---|
-| **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes — a value display is not a label — but a speech user saying "ID.7" would miss it. Safer: `aria-labelledby` on a real visible label. |
+**No decisions left to record.** SC 2.5.3 was the last one — it was a defensible pass either
+way, so it was closed in code rather than argued: `#select-model-lg` now names itself from the
+visible label, which removes the reading an auditor could have challenged.
 
 **One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
 names NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the
