@@ -1,6 +1,6 @@
 # A11y 2 of 3 — What the automated tests cover, and what they cannot
 
-**Component:** VW Visualizer. **Audited:** 2026-08-22, re-verified and extended 2026-08-23/24 against the live deployment, headless Chrome
+**Component:** VW Visualizer. **Audited:** 2026-08-22, re-verified and extended 2026-08-24 against the live deployment, headless Chrome
 151.0.7922.174, axe-core 4.13.0 (`axe.version` read from the engine, not the bundle filename).
 **Companions:** `a11y-1-criteria.md` (every criterion) · `a11y-3-implementation.md` (what to build).
 

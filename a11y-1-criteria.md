@@ -1,7 +1,7 @@
 # A11y 1 of 3 — WCAG 2.2 criterion checklist
 
 **Component:** VW Visualizer — media viewer + selector bar (colour / rim / interior / trim / zoom).
-**Audited:** 2026-08-22, re-verified and extended 2026-08-23/24 against the live deployment.
+**Audited:** 2026-08-22, re-verified and extended 2026-08-24 against the live deployment.
 **Scope:** `#visualizer` — `#media` + `#bottombar`. **Out of scope:** page chrome, video, and
 PDFs (brochures, price lists, spec sheets) — PDFs are a separate conformance surface, EN 301 549
 clause 10, checked with PAC rather than anything in this pack.
