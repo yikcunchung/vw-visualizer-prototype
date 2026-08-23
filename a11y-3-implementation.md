@@ -164,6 +164,12 @@ btn.className = i === selected ? 'selected' : '';
 if a control has a visible text label, the accessible name must **contain** that text —
 otherwise speech-input users cannot activate it by saying what they see.
 
+> **A visible *value* is not a visible label, and the distinction is load-bearing.**
+> `#select-model-lg` displays `ID.7` next to it; folding that into the name via
+> `aria-labelledby` produces `"ID.7 Select car model"` over an AX value of `"Pro Match Plus"`,
+> a name that changes with every selection and implies the control only concerns ID.7. Name
+> describes *purpose* and must be stable; value carries *state*. Apply A9 to labels only.
+
 ```jsx
 // ✗ visible "Innenraum", name "Interieur anzeigen" — no overlap at all
 // ✓
@@ -727,11 +733,11 @@ containing Level A failures.
 **Nothing is failing and nothing is unanswered.** Every Level A/AA criterion in scope for
 `#visualizer` is verified, inspected, or not applicable — see `a11y-1-criteria.md`.
 
-**One decision to record.** It passes; it needs a recorded position, not code:
-
-| SC | Decision |
-|---|---|
-| **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". A value display is not a label, so it passes — but a speech-input user saying "ID.7" would miss it. Safer: `aria-labelledby` pointing at a real visible label. |
+**The one decision, now recorded.** SC 2.5.3 on `#select-model-lg` passes and stays passing —
+the visible `ID.7` is a value, not a label. See `a11y-1-criteria.md` for why the obvious
+`aria-labelledby` "fix" is wrong; it was tried and reverted. Short version: it makes the
+accessible name mutate with the value and misdescribe a control that also selects ID.Polo and
+Grand California.
 
 **Two constraints to keep passing.** Both hold today and both are easy to break with a layout
 change, so re-check them after any reflow work:

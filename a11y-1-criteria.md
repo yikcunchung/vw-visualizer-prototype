@@ -22,9 +22,8 @@ criteria are not required and are not listed.
 | ✅ Pass | Verified by driving the component — real pointer and key events, or measured pixels |
 | ✅ Pass\* | Verified by code and accessibility-tree inspection, **not** driven |
 | ⚪ N/A | The component has no such content |
-| ⚖️ Decide | Passes, but on an arguable reading — record the decision |
 
-**52 of the 56 A/AA criteria are in scope for `#visualizer`, and all 52 are closed — 0 failures, 0 open items.** 26 verified · 9 inspected · 16 not applicable · 1 decision to record. The remaining 4 (2.4.5, 3.2.3, 3.2.4, 3.2.6) are page-level, cannot be judged from one component, and are not assessed here.
+**52 of the 56 A/AA criteria are in scope for `#visualizer`, and all 52 are closed — 0 failures, 0 open items.** 27 verified · 9 inspected · 16 not applicable. The remaining 4 (2.4.5, 3.2.3, 3.2.4, 3.2.6) are page-level, cannot be judged from one component, and are not assessed here.
 
 > **Scope rule:** only `#visualizer` counts. Errors and failures in page chrome — nav, hero, tiles, footer — are **not findings** and are not tracked here. Every figure in this pack is a component figure.
 
@@ -116,7 +115,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass | Drag-rotate has button and arrow-key alternatives. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass | Arrows fire on pointer-up; drag-off-then-release aborts. |
-| **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
+| **2.5.3** | Label in Name | A | Yes | ✅ Pass | **Position recorded.** `#select-model-lg` is named "Select car model"; the adjacent span shows `ID.7`. That span is a **value display, not a label** — the criterion governs labels, so it does not apply. A speech user saying "ID.7" would not match, which is a real limitation but not this failure. **Do not "fix" it with `aria-labelledby` on that span** — see the note below. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | **No target in the component is under 24×24.** `#label-wheel` is 26.4px tall (`line-height: 1.6` + `padding-block: 2px`), so it meets the minimum outright and nothing relies on the spacing exception. Smallest `<button>` is the close button at exactly 24×24. Confirmed both by measuring every control's box and by axe's own `target-size` rule, which **is disabled by default** and had to be switched on: it then passes on 27–29 nodes at 1440 / 390 / 320×256. |
@@ -164,14 +163,28 @@ criteria are not required and are not listed.
 
 # What is actually left to do
 
-**No open criteria and no known failures.** Every Level A/AA criterion in scope for `#visualizer` is
-either verified, inspected, or not applicable.
+**No open criteria, no known failures, and no decisions left outstanding.** Every Level A/AA
+criterion in scope for `#visualizer` is verified, inspected, or not applicable.
 
-**One decision to record.** It passes; it needs a recorded position, not code:
+**The one decision, now recorded.** SC 2.5.3 on `#select-model-lg` is a pass and stays a pass:
+the visible `ID.7` is the current *value*, and 2.5.3 governs labels.
 
-| SC | Decision |
-|---|---|
-| **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes — a value display is not a label — but a speech user saying "ID.7" would miss it. Safer: `aria-labelledby` on a real visible label. |
+**The tempting fix is wrong, and was tried and reverted.** Pointing `aria-labelledby` at the
+visible span (plus an `.sr-only` purpose span) gives the name `"ID.7 Select car model"` while
+the AX **value** is `"Pro Match Plus"` — measured. Three things break:
+
+1. **It misdescribes the control.** The select chooses between ID.7, ID.Polo and Grand
+   California. A name beginning "ID.7" says the control is *about* ID.7.
+2. **The name mutates with the value** — it becomes `"Grand California Select car model"` on
+   the next selection. Names must be stable; a control that announces differently over time
+   is a moving target in a rotor or elements list.
+3. **It conflates name with value**, which ARIA separates deliberately. `ID.7` is the
+   optgroup label and `Pro Match Plus` the chosen option — two fragments of one selection,
+   one of them wedged into the name.
+
+**The only clean way to close it** is a design change: a visible `Model` label beside the
+control, so visible text and accessible name are the same string by construction. That is a
+design decision, not an implementation one, and nothing is failing without it.
 
 **One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
 names NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the
