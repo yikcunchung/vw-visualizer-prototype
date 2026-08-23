@@ -71,7 +71,7 @@ The audit protocol specifies these tools and conditions. Status of each against 
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | Exactly this: `320×256 @ deviceScaleFactor 4`. axe 0 violations, no horizontal scroll, nothing clipped. `dsf 1` would be a small screen, not a zoom — see §4 trap 4. |
 | **axe DevTools 4.131.2** | ✅ **Done — v4.134.1, version deviation recorded** | This audit ran **axe-core 4.13.0**, the library the extension embeds, via CDP — with **no `runOnly` filter**, which is what the extension's default scan executes (90 rules). The extension's own build number is not the engine version, so to satisfy the protocol literally, one run with the 4.131.2 extension UI is still worth doing. Expect it to agree. |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent`, not `element.click()`: Tab/Shift+Tab sweep (34 stops, 0 invisible), arrows, Enter, Space, Escape, with `document.activeElement` asserted at each step. |
-| **NVDA 2026.1.1.55980** | ◐ **Deviation — VoiceOver run instead** | A screen reader *has* now been run: **VoiceOver**, macOS 26.5.2, Safari + Chrome, against live — see **§7d**. NVDA itself is still not done, and the protocol names NVDA, so this is recorded as a **deviation, not a substitute**. |
+| **NVDA 2026.1.1.55980** | ◐ **Deviation — VoiceOver run instead** | A screen reader *has* now been run: **VoiceOver**, macOS 26.5.2, Safari + Chrome, against live — see **§9.1**. NVDA itself is still not done, and the protocol names NVDA, so this is recorded as a **deviation, not a substitute**. |
 | **PAC 26.1.0.0** | ⚪ **Not applicable** | PAC validates **PDF/UA-1 (ISO 14289-1)** inside PDF files; it cannot open an HTML page. There is **no PDF in this component or repo** (`*.pdf` count: 0). See below. |
 
 **Both remaining items need a human at a browser** — neither can be automated from here.
@@ -100,10 +100,10 @@ not scriptable.
 
 ### NVDA vs VoiceOver — a deviation to record
 
-The protocol names **NVDA 2026.1.1.55980**. **VoiceOver is planned instead.**
+The protocol names **NVDA 2026.1.1.55980**. **VoiceOver was run instead** — see §9.1.
 
-That is worth doing and will surface real problems — but record it as a deviation rather than a
-substitution, because the two disagree in ways that matter here:
+It surfaced real problems — the disclaimer opening past its own content, among them. But it stands
+as a deviation rather than a substitution, because the two disagree in ways that matter here:
 
 - **Different engines, different announcements.** `aria-roledescription`, a non-modal
   `role="dialog"`, and a `<canvas role="img">` whose view changes as you pan are exactly the
@@ -339,10 +339,11 @@ use — kill Chrome and start fresh if `initialised: false` appears twice. And *
 
 | Gap | Why no tool reaches it |
 |---|---|
-| **Screen-reader output** | The AX tree shows what is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. **NVDA 2026.1.1.55980** is named in the protocol and has not been run |
+| **Screen-reader output** | The AX tree shows what is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. **Closed by listening, not by tooling** — VoiceOver run, §9.1. **NVDA 2026.1.1.55980** is named in the protocol and remains owed |
 | **SC 2.5.3 Label in Name** | No rule exists in axe. A sibling VW prototype shipped a real Level A failure here that axe, Lighthouse **and** WAVE all passed |
 | **Whether a name is *correct*** | Tools check that names are present and unique, never that they are true. Four Grand California swatches carried the wrong colour name while scoring clean |
 | **Judgement calls** | 2.5.3 and 2.5.8 pass on arguable readings. A tool cannot weigh an exception |
+| **Discretionary ARIA** | `aria-roledescription` on the viewer, the non-modal `role="dialog"` panel, and a `<canvas role="img">` whose view changes as you pan. axe hands the first back as *needs review* precisely because it cannot judge it — only listening settles these |
 
 ---
 
@@ -374,25 +375,13 @@ half alone is what scored 100 on a build with a Level A failure.
 
 ---
 
-# 7. What automation cannot close
-
-**Real screen-reader output has never been tested.** The accessibility tree proves what is
-*exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. Several discretionary decisions
-— `aria-roledescription` on the viewer, the non-modal `role="dialog"` panel, and a
-`<canvas role="img">` whose view changes as you pan — can only be settled by listening.
-
-The protocol names **NVDA 2026.1.1.55980**; **VoiceOver** is planned instead, which is a deviation
-to record rather than a substitution (§1).
-
----
-
-# 7b. Manual testing — what to do
+# 7. Manual testing — what to do
 
 Actions only, in the order you perform them. **Do not judge anything as you go** — write down
-what happened and grade it against **§7c** afterwards. Judging in the moment is how "it seemed
+what happened and grade it against **§8** afterwards. Judging in the moment is how "it seemed
 fine" becomes evidence.
 
-Everything below is corrected against the runs recorded in §7d–§7f. Several instructions in the
+Everything below is corrected against the runs recorded in §9. Several instructions in the
 first draft of this section were wrong, and each mistake is called out so it is not repeated.
 
 ## Step 0 — before any tool, every single run
@@ -488,7 +477,7 @@ it analyses page chrome and an unbuilt shell — it recorded 0 radios and 0 swat
 > rolls that up as "Guided Issues: 0" — which reads as a clean sheet to anyone skimming an export.
 > Record which ones you actually ran.
 
-# 7c. Verification checklist
+# 8. Verification checklist
 
 Tick only what you observed. **An untested box is not a pass.** A failure is a finding **only if
 the element is inside `#visualizer`** — the car viewer and the bottom bar.
@@ -576,7 +565,7 @@ tiles, NBA bar or footer; the *"Material N"* names.
 > two-paragraph text block whose icon is an `aria-hidden` sibling. `#label-group`'s `tabindex="0"`
 > exists **to satisfy** ACT rule 0ssw9k / SC 2.1.1 — a scrollable region must be
 > keyboard-scrollable — so the suggestion would break the fix it was added for. **`tabindex="0"`
-> does not imply "button".** Full reasoning in §7f.
+> does not imply "button".** Full reasoning in §9.3.
 
 > **A 13 x 13 target reading is an artifact.** Controls measured while the `#btn-a11y` group
 > animates open report 13 x 13. Wait for the box to stop changing before believing it.
@@ -587,12 +576,14 @@ tiles, NBA bar or footer; the *"Material N"* names.
 - [ ] Every failure triaged as in-scope or page chrome.
 - [ ] **VoiceOver recorded as a deviation from NVDA 2026.1.1.55980**, not a substitute — a formal
       BITV / EN 301 549 audit naming NVDA will not accept it, so an NVDA pass is still owed.
-- [ ] Only once all of the above holds may §8 drop *"pending screen-reader verification"* — and
+- [ ] Only once all of the above holds may §10 drop *"pending screen-reader verification"* — and
       **"fully compliant" remains unavailable regardless**: conformance is defined per full page
       (spec §5.2.2) and this is a component, four page-level criteria are out of scope, and three
       more pass on host-page markup this team does not own.
 
-# 7d. Screen-reader run — result, 2026-08-24
+# 9. Manual run results
+
+## 9.1 Screen reader — VoiceOver, 2026-08-24
 
 **VoiceOver, macOS 26.5.2 (25F84), Safari 26.5.2 and Chrome 151.0.7922.174, against the
 live deployment** (`yikcunchung.github.io/vw-visualizer-prototype`) at commit `39fc0c8`.
@@ -639,7 +630,7 @@ Six items were confirmed by ear:
 - **Rotation.** Previously silent while zoom announced. Now spoken, and the 600ms debounce
   does not swallow it.
 
-## What this does NOT close
+### What this does NOT close
 
 - **NVDA 2026.1.1.55980 is still owed.** The protocol names NVDA; VoiceOver is a
   **documented deviation**, not a substitute. A formal BITV / EN 301 549 audit will not
@@ -697,10 +688,10 @@ once shared one name and passed axe, Lighthouse and WAVE alike.
   the data layer — a null, an empty string or a duplicate in that feed becomes a Level A defect
   the moment it renders, and no scanner will catch it. The precedent is on record: four Grand
   California swatches once carried the wrong colour name while every tool scored clean.
-- **Every tool run is done.** VoiceOver §7d, WAVE §7e, axe DevTools §7f. **NVDA remains the
+- **Every tool run is done.** VoiceOver §9.1, WAVE §9.2, axe DevTools §9.3. **NVDA remains the
   only outstanding instrument**, recorded as a deviation rather than a plan.
 
-# 7e. WAVE run — result, 2026-08-24
+## 9.2 WAVE, 2026-08-24
 
 **WAVE 3.3.1.0 browser extension**, against the live deployment at `f49dc03`, run **after**
 scrolling the component into view and letting it settle.
@@ -725,7 +716,7 @@ never comparable.
 
 **All 13 alerts fall outside the component**, so under the scope rule none is a finding.
 
-# 7f. axe DevTools run — result, 2026-08-24
+## 9.3 axe DevTools, 2026-08-24
 
 **axe DevTools extension v4.134.1**, live deployment. **Version deviation:** the protocol names
 **4.131.2**; 4.134.1 is newer, and the rule set only grows between builds, so a newer version
@@ -763,7 +754,7 @@ skipped deliberately — the 92-test Playwright suite with real key events, the 
 and the AX-tree sweep already cover keyboard, images, forms and structure more thoroughly, and
 the component has no tables.
 
-## Test #16 Target Size — no issues
+### Test #16 Target Size — no issues
 
 **SC 2.5.8 now has three independent confirmations**, which makes it the best-evidenced
 criterion in the pack:
@@ -798,7 +789,7 @@ do not claim this tool tested 2.5.8. The engine-level proof is stronger anyway: 
 force-enables all nine default-disabled rules **and asserts the rule appears in the results**,
 so it cannot silently skip.
 
-## Two AI suggestions, both rejected
+### Two AI suggestions, both rejected
 
 The extension's AI advisor flagged two elements as "role missing or incorrect" and recommended
 `button` for both. **Both recommendations are wrong, and both rationales assert visual facts
@@ -835,14 +826,14 @@ If `region` on `#media` were ever revisited, `role="group"` fits a focusable int
 better. `button` does not. Leaving it as `region` keeps the landmark entry point, which the
 VoiceOver rotor confirmed working.
 
-# 8. The claim this evidence supports
+# 10. The claim this evidence supports
 
 > Every WCAG 2.2 Level A/AA requirement that can be verified by static analysis, by the
 > accessibility tree, or by driving real pointer and keyboard events is verified and passing on
 > `#visualizer` — with detectors proven against injected defects, and with a regression suite of
 > 88 tests holding them in place. One conformance point rests on a documented judgement call
 > (SC 2.5.3). Screen-reader announcement has been **verified with VoiceOver** on macOS 26.5.2 in
-> Safari and Chrome (see §7d); **NVDA 2026.1.1.55980, which the protocol names, has not been run
+> Safari and Chrome (see §9.1); **NVDA 2026.1.1.55980, which the protocol names, has not been run
 > and is recorded as a deviation.**
 
 That is deliberately short of "fully compliant". Conformance is defined **per full page**

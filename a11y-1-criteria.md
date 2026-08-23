@@ -186,11 +186,13 @@ the AX **value** is `"Pro Match Plus"` — measured. Three things break:
 control, so visible text and accessible name are the same string by construction. That is a
 design decision, not an implementation one, and nothing is failing without it.
 
-**One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
-names NVDA 2026.1.1.55980, so record that as a deviation. **All three tool runs are done:** VoiceOver, all fifteen
-checks (§7d); WAVE extension, 0 errors and 0 contrast errors (§7e); axe DevTools v4.134.1, 0
-issues inside the component at WCAG 2.2 AA (§7f). **NVDA is the only instrument still owed.**
-See `a11y-2-automated-testing.md`.
+**All three tool runs are done.** VoiceOver, all fifteen checks (§9.1); WAVE extension, 0 errors
+and 0 contrast errors (§9.2); axe DevTools v4.134.1, 0 issues inside the component at WCAG 2.2 AA
+(§9.3). Section numbers refer to `a11y-2-automated-testing.md`.
+
+**NVDA 2026.1.1.55980 is the only instrument still owed.** The protocol names it; VoiceOver was run
+instead, which is a **deviation to record, not a substitution** — a formal BITV / EN 301 549 audit
+naming NVDA will not accept the VoiceOver evidence for that line item.
 
 **One optional extra, outside the AA target.** `prefers-reduced-motion` is honoured nowhere in a
 component with 23 CSS transitions, 7 keyframe sets, 5 WAAPI animations and an indefinite

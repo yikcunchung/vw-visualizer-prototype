@@ -757,13 +757,16 @@ change, so re-check them after any reflow work:
 | **1.3.4** Orientation | No `@media (orientation:)` rule anywhere. Fullscreen's `rotate(90deg)` is user-invoked and reversible — it must never *restrict* content to one orientation. |
 | **1.4.12** Text Spacing | Under the four overrides (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em) nothing may newly clip, no control may be lost, and no horizontal scroll may appear. |
 
-**What no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol names
-NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the browser
-extension *after scrolling*, and one pass through the axe DevTools 4.131.2 UI.
+**The screen-reader pass is done.** VoiceOver, all fifteen checks, Safari and Chrome — see
+`a11y-2-automated-testing.md` §9.1. It found one defect no tool reports: the disclaimer opened
+focus onto its close button, *after* the text, so a user who opened it to read the disclaimer
+heard only "Close Disclaimer". Fixed, with a test guarding the focus target.
+**NVDA 2026.1.1.55980 is still owed** — the protocol names it, and VoiceOver is a deviation to
+record rather than a substitution.
 
 ---
 
-# 9. Appendix — habits in the current live build
+# 9. Appendix A — habits in the current live build
 
 `volkswagen.de/de/modelle/id-polo.html` is the **old** design and is being replaced, so these are
 **not defects to fix**. They are listed because they show patterns likely to carry into the new
@@ -783,7 +786,7 @@ and `Zoom_Out` correctly carries `disabled` at minimum zoom.
 
 ---
 
-# 10. Appendix — measured reference: names, tab order, ARIA wiring
+# 10. Appendix B — measured reference: names, tab order, ARIA wiring
 
 The rest of this document says what to *build*. This section says what the reference
 build currently *exposes*, measured rather than read off the markup, so a port has
