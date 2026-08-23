@@ -476,6 +476,7 @@ Six items were confirmed by ear:
 | Rotor → Landmarks | **`car viewer` present** |
 | Escape from inside the disclaimer | **focus returned to `#btn-info`** — correct for a user-opened panel |
 | Interior materials | announced cleanly as *Material 1*…*5* — **mechanically fine, semantically empty** |
+| `#label-wheel` at ~768px | **plain text: skipped by Tab, announced by the VO cursor** — B14 confirmed both ways |
 
 **What each one settles.**
 
@@ -501,8 +502,23 @@ Six items were confirmed by ear:
 - **NVDA 2026.1.1.55980 is still owed.** The protocol names NVDA; VoiceOver is a
   **documented deviation**, not a substitute. A formal BITV / EN 301 549 audit will not
   accept this run for that line item.
-- **Nine items are evidenced; the rest are observed only.** Still unrecorded by ear:
-  Home/End, panel activation, and **the untruncated half of `#label-wheel` (B14)**.
+- **Ten items are evidenced; the rest are observed only.** Still unrecorded by ear: Home/End
+  and panel activation. Both are low risk — arrows share Home/End's handler, and activation was
+  exercised in the Escape test.
+
+**"Not announced unless you highlight it" is the correct result, not a gap — and the
+distinction is worth internalising.** `Tab` moves only between *focusable* elements; the
+VoiceOver cursor (`VO+Right`) moves through *all* content, static text included. At ~768px
+`#label-wheel` has `tabIndex -1` and no role, so Tab skips it while the VO cursor still reads
+it. Nothing is hidden: the full name is on screen, readable by the cursor, and also announced
+via `#wheel-live` whenever a wheel is selected. It is simply not a tab stop, because with the
+text already fitting there is no expand action to perform. **A control that does nothing must
+not be in the tab order** — the inverse, a label announcing *"button, collapsed"* over a name
+already fully visible, is the defect **B14** exists to prevent.
+
+Expect this to be misread in future audits: *"the label is not announced"* looks like a finding
+and is not one. Check whether the element is *focusable* before treating Tab skipping it as a
+defect.
 
 **On `#label-wheel`: "announced as a button" is the expected result and proves nothing.** At
 any normal desktop width the name *is* truncated, so a button is correct. The rule is that it
