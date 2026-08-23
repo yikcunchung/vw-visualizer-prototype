@@ -587,6 +587,71 @@ never comparable.
 
 **All 13 alerts fall outside the component**, so under the scope rule none is a finding.
 
+# 7f. axe DevTools run — result, 2026-08-23
+
+**axe DevTools extension v4.134.1**, live deployment. **Version deviation:** the protocol names
+**4.131.2**; 4.134.1 is newer, and the rule set only grows between builds, so a newer version
+passing is at least as strong as the named one passing. Recorded rather than hidden.
+
+| Scan | Result |
+|---|---|
+| Automatic, **WCAG 2.1 AA**, whole page | **0 issues** — 0 critical / serious / moderate / minor |
+| Automatic, **WCAG 2.2 AA** | ⬜ *run but total not recorded — outstanding* |
+| Intelligent Guided Tests | **0 of 7 run** |
+
+**The 2.1 AA scan does not cover SC 2.5.8.** `target-size` carries the `wcag22aa` tag, so a 2.1
+rule set excludes it along with every other criterion 2.2 added. A clean 2.1 result is real but
+says nothing about the six new criteria — the same shape of false pass that PR #23 exists to
+prevent.
+
+**"Guided Issues: 0" means 0 tests run, not 0 problems.** The seven IGTs are semi-automated and
+must each be launched by hand. Their zeros are the absence of a test. Skipped deliberately: the
+92-test Playwright suite with real key events, the full VoiceOver pass and the AX-tree sweep
+already cover keyboard, interactive elements, images, forms and structure more thoroughly, and
+the component has no tables.
+
+**Whether the extension UI can confirm `target-size` ran was not established.** If it cannot,
+do not claim this tool tested 2.5.8. The engine-level proof is stronger anyway: the CI suite
+force-enables all nine default-disabled rules **and asserts the rule appears in the results**,
+so it cannot silently skip.
+
+## Two AI suggestions, both rejected
+
+The extension's AI advisor flagged two elements as "role missing or incorrect" and recommended
+`button` for both. **Both recommendations are wrong, and both rationales assert visual facts
+that are false.** Recorded here because the next person to run this tool will see them again.
+
+**1. `#media` — role `region`, name *car viewer*. Suggested: `button`.**
+The rationale cites a *"circular shape, icon, and placement"*. `#media` is the **1440x662** car
+stage — the whole image area. Not circular, not an icon, not small. It also argues that the text
+*"car viewer"* implies an action; it is a noun phrase. Acting on this would put `role="button"`
+on a container holding the swatches, zoom, rotate and view-toggle controls, announcing one
+enormous button and swallowing every child's semantics.
+
+**2. `#label-group` — role `group`, name *Disclaimer details*. Suggested: `button`.**
+The rationale cites a *"clickable icon"*. The icon is `<span class="disclaimer-i"
+aria-hidden="true">i</span>`, a **sibling**, correctly hidden — the AI attributed an adjacent
+decorative element to a two-paragraph text block. Worse, `tabindex="0"` here exists **to satisfy
+an accessibility rule**, as the source comment states: *"this block scrolls (SC 1.4.10 fix), and
+a scrollable region must be keyboard-scrollable — ACT rule 0ssw9k / SC 2.1.1."* Converting it to
+a button would break the fix it was added for and announce a control that performs no action.
+
+**The generalisable error: `tabindex="0"` does not imply "button".** Both flagged elements are
+focusable for reasons that are not "this is a widget":
+
+- `#label-group` — a **scrollable region must be keyboard-scrollable** (SC 2.1.1 / ACT 0ssw9k)
+- `#media` — a **custom interaction surface needs focus** so arrow keys can rotate, which is the
+  **B7** fix; pointer users could not rotate at all while `mousedown preventDefault()` suppressed
+  focus and left `activeElement` on `<body>`
+
+Neither is a failure. Rotation is also available from `#btn-rot-left` / `#btn-rot-right`, real
+buttons with real names, so the functionality is keyboard-operable through labelled controls and
+the focusable region is an additional affordance rather than the only route.
+
+If `region` on `#media` were ever revisited, `role="group"` fits a focusable interactive cluster
+better. `button` does not. Leaving it as `region` keeps the landmark entry point, which the
+VoiceOver rotor confirmed working.
+
 # 7c. Verification checklist
 
 Tick only what you actually observed. An untested box is not a pass. Anything that fails is
