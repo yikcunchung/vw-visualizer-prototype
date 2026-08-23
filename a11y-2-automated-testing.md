@@ -598,7 +598,9 @@ passing is at least as strong as the named one passing. Recorded rather than hid
 |---|---|
 | Automatic, **WCAG 2.1 AA**, whole page | **0 issues** — 0 critical / serious / moderate / minor |
 | Automatic, **WCAG 2.2 AA**, whole page | **1 issue — page chrome, 0 inside `#visualizer`** |
-| Intelligent Guided Tests | **0 of 7 run** |
+| Intelligent Guided Tests — Interactive Elements | **Run** — surfaced two role suggestions, both rejected (below) |
+| Intelligent Guided Tests — **Test #16 Target Size** | **Run — no issues.** SC 2.5.8 confirmed by the protocol's own tool |
+| Intelligent Guided Tests — other five | Not run (Table, Keyboard, Modal Dialog, Structure, Images, Forms) |
 
 **The single 2.2 issue is out of scope.** `p-as-heading` on
 `.highlight:nth-child(2) > .highlight-header > p` — `<p>Ambient lighting</p>`, a card title
@@ -618,10 +620,41 @@ says nothing about the six new criteria — the same shape of false pass that PR
 prevent.
 
 **"Guided Issues: 0" means 0 tests run, not 0 problems.** The seven IGTs are semi-automated and
-must each be launched by hand. Their zeros are the absence of a test. Skipped deliberately: the
-92-test Playwright suite with real key events, the full VoiceOver pass and the AX-tree sweep
-already cover keyboard, interactive elements, images, forms and structure more thoroughly, and
+must each be launched by hand, so a zero against an unrun test reads as a pass to anyone
+skimming. Two were run: **Interactive Elements** and **Test #16 Target Size**. The rest were
+skipped deliberately — the 92-test Playwright suite with real key events, the full VoiceOver pass
+and the AX-tree sweep already cover keyboard, images, forms and structure more thoroughly, and
 the component has no tables.
+
+## Test #16 Target Size — no issues
+
+**SC 2.5.8 now has three independent confirmations**, which makes it the best-evidenced
+criterion in the pack:
+
+1. **Hand measurement** of every control's box
+2. **Engine**, with `target-size` force-enabled and an assertion that the rule *appears in the
+   results* so it cannot silently skip — passing on 27–29 nodes at four viewports
+3. **The protocol's own guided procedure**, walked by a human, no issues
+
+The decision tree reached "is the target at least 24 x 24?" for both elements it surfaced and
+both cleared it outright: `#media` is **1440 x 662** and `#label-group` **1024.5 x 62.3**. Neither
+Equivalent nor Spacing exception was needed.
+
+**Nothing in the component is under 24 x 24 at any viewport.** Smallest is `#btn-close` at exactly
+**24 x 24**; scroll arrows 28 (32 at mobile), most controls 32, `#btn-toggle-view` 46, swatches 48,
+`#label-wheel` 214.2 x **26.4**, `#select-model-lg` 167 x 50. **The Spacing exception is therefore
+not load-bearing** — worth stating plainly, because a claim resting on spacing breaks with any
+layout change.
+
+`#label-wheel`'s 26.4px deserves its note: it is a `<span>`, not a `<button>`, so a survey of
+button sizes misses it, and its height comes from `padding-block: 2px` plus `line-height: 1.6` —
+**padding, not a larger line-height, on purpose.** SC 1.4.12 invites users to override
+`line-height` to 1.5, so a target built on `line-height` is built on the one property another
+criterion tells users they may change.
+
+**Any 13 x 13 reading is an artifact,** not a failure: controls measured while the `#btn-a11y`
+group animates open report 13 x 13. The Playwright suite had to add a box-stability wait for
+exactly this.
 
 **Whether the extension UI can confirm `target-size` ran was not established.** If it cannot,
 do not claim this tool tested 2.5.8. The engine-level proof is stronger anyway: the CI suite
