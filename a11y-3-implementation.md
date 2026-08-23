@@ -928,8 +928,26 @@ the tab order — but each also means *"count the tab stops once"* is not a vali
 |---|---|---|
 | `.swatch-arrow` x6 | the strip can scroll **that way** | `disabled` + `pointer-events: none`; a disabled button is not focusable |
 | `#btn-zoom-out` | zoom > 1 | `syncZoomBtns()` |
-| `#label-wheel` | its text is truncated | `role`/`tabindex`/`aria-expanded` derived from measured overflow (**B14**) |
+| `#label-wheel` | its text is truncated | `role`/`tabindex`/`aria-expanded` derived from measured overflow (**B14**) — measured band below |
 | `#btn-fullscreen` | narrow viewports | CSS |
+
+**`#label-wheel` flips twice across the range, which is the useful test.** Measured on the
+live build, window width against `scrollWidth`/`clientWidth`:
+
+| Width | Label | Exposed as |
+|---|---|---|
+| 1024–1920 | truncated, 498 > 214 | `role="button"`, `tabindex="0"`, `aria-expanded="false"` |
+| **640–900** | **fits exactly**, `scrollWidth === clientWidth` | **no role, `tabIndex -1`** — correctly not a button |
+| 320–540 | truncated, 498 > 214–438 | `role="button"`, `tabindex="0"` |
+
+The middle band exists because the layout changes, not the text: above 1024 the label sits in a
+214px column, but between 640 and 900 it gets the full width (538–798px) and the name fits.
+
+So "it announces as a button" is the **correct** result at any normal desktop width, and proves
+nothing on its own. **Test at ~768px**, where it must announce as plain text and leave the tab
+order. A label that announced as a collapsed button while its full name was already visible
+would tell the user to expand something already expanded — announced state with nothing behind
+it. That is the failure B14 exists to prevent, and it is only observable in that band.
 
 **The arrows are the one that will fool a test.** At 1440 and 768 the colour strip does not
 overflow (`scrollWidth === clientWidth`: 732 at 1440, 736 at 768), so both arrows are

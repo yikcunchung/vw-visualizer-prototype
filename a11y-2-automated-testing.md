@@ -474,6 +474,8 @@ Six items were confirmed by ear:
 | Browser agreement | Safari and Chrome behaved the same |
 | Rotor → Form Controls | **No blank entry, no duplicate, all 18 swatches listed** |
 | Rotor → Landmarks | **`car viewer` present** |
+| Escape from inside the disclaimer | **focus returned to `#btn-info`** — correct for a user-opened panel |
+| Interior materials | announced cleanly as *Material 1*…*5* — **mechanically fine, semantically empty** |
 
 **What each one settles.**
 
@@ -499,10 +501,20 @@ Six items were confirmed by ear:
 - **NVDA 2026.1.1.55980 is still owed.** The protocol names NVDA; VoiceOver is a
   **documented deviation**, not a substitute. A formal BITV / EN 301 549 audit will not
   accept this run for that line item.
-- **Seven items are evidenced; the rest are observed only.** Still unrecorded by ear:
-  Home/End, panel activation, **Escape and where focus lands**, **`#label-wheel`'s
-  conditional button role (B14)**, and the interior material names. Treat those as observed,
-  not as evidence.
+- **Nine items are evidenced; the rest are observed only.** Still unrecorded by ear:
+  Home/End, panel activation, and **the untruncated half of `#label-wheel` (B14)**.
+
+**On `#label-wheel`: "announced as a button" is the expected result and proves nothing.** At
+any normal desktop width the name *is* truncated, so a button is correct. The rule is that it
+must be a button **only** while truncated — and the untruncated state exists only in a
+**640–900px** band, where the layout gives the label full width and the name fits. Verified
+there or not verified at all; see `a11y-3` §10.5 for the measured band.
+
+**Escape returned focus to `#btn-info`, which is the correct branch.** The panel had been
+opened *by the user* from that button, so returning focus to it is right. Had the panel
+auto-opened on scroll, focus should instead stay on `#media` — returning it to a trigger the
+user never pressed would throw them forward past every viewer control. That second branch is
+still unverified by ear.
 
 **The rotor pass is worth more than one line.** Since roving `tabindex` landed, only 2 of the
 18 swatches are Tab stops — the rotor is now the primary random-access route to a specific
