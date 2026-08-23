@@ -711,24 +711,36 @@ Zoom state must announce, and must keep dependent controls in sync, on **every**
 A green CI run does not close this. The reference passed axe, Lighthouse **and** WAVE while
 containing Level A failures.
 
-- [ ] **Accessibility tree** — every interactive node has a non-empty, **unique** accessible name.
-- [ ] **Real keyboard run** — Tab / Shift+Tab / Enter / Space / Arrows / Escape, asserting
+- [x] **Accessibility tree** — 158 nodes in the component subtree, **0 unnamed, 0 duplicate
+      role+name**, 18 radios with 18 unique names. Confirmed again in announced output: the
+      VoiceOver rotor listed all 18 swatches with no blank and no duplicate.
+- [x] **Real keyboard run** — Tab / Shift+Tab / Enter / Space / Arrows / Escape, asserting
       `document.activeElement` at each step. Focus never lands on an invisible control and is
       never lost to `<body>` when a panel closes.
-- [ ] **Reflow** at 320×256 CSS px — nothing lost, no horizontal page scroll.
-- [ ] **Contrast** measured on **composited** pixels wherever text sits over imagery or a gradient.
-- [ ] **SC 2.5.3** by hand — visible label contained in the accessible name. No tool does this.
-- [ ] **Names are correct**, not merely present and unique — check each against what it describes.
-- [ ] **Screen reader** — one pass with NVDA or VoiceOver. Not optional.
+- [x] **Reflow** at 320×256 CSS px (`deviceScaleFactor 4` = literal 400% zoom) — 0 violations,
+      no horizontal scroll, 27 tab stops with 0 landing on an invisible control.
+- [x] **Contrast** measured on **composited** pixels wherever text sits over imagery or a
+      gradient — 8.59:1 to 21:1, every `incomplete` node resolved by hand.
+- [x] **SC 2.5.3** by hand — no tool does this. Position recorded on `#select-model-lg`: the
+      visible `ID.7` is a *value*, not a label. The obvious `aria-labelledby` fix was tried and
+      **reverted** — it made the name mutate with the value. See `a11y-1-criteria.md`.
+- [x] **Names are correct**, not merely present and unique — all 18 swatch names read aloud and
+      checked against the thing they describe, quotes and diacritics intact.
+      ⚠️ **Carries forward:** the interior materials are placeholders fed from JSON in
+      production, so this check moves to the **data layer** — assert non-empty, unique within
+      the group, and actually descriptive. No engine has a rule for a name that is wrong.
+- [x] **Screen reader** — VoiceOver, all fifteen checks, Safari and Chrome. It found a defect no
+      tool reports: the disclaimer opened focus past its own text. ⚠️ **NVDA 2026.1.1.55980 is
+      still owed** — the protocol names it, and VoiceOver is a deviation, not a substitution.
 - [x] **CI** — built: `npm test` runs Playwright over four viewports (1440, 768, 390, and
-      320x256 @ dsf 4), on every push and PR via `.github/workflows/a11y.yml`. **88 tests,
-      all passing.**
+      320x256 @ dsf 4), on every push and PR via `.github/workflows/a11y.yml`. **92 tests,
+      all passing — verified green on GitHub Actions.**
       *Deviation, deliberate:* the structural half runs axe **inside Playwright** rather than
       `jest-axe`. `jest-axe` runs in jsdom, and jsdom cannot run this component at all — init
       is gated on an `IntersectionObserver`, the interior view is a `<canvas>` panorama, and
       both `target-size` and the `#label-wheel` truncation rule need real layout. Same rules,
       a browser that actually built the thing, no false green.
-- [ ] **`target-size` explicitly enabled** in the axe config — it is off by default, so without
+- [x] **`target-size` explicitly enabled** in the axe config — it is off by default, so without
       this line CI passes SC 2.5.8 without ever testing it.
 - [x] **The suite fails when it should** — validated by injecting each defect back and
       confirming the matching test goes red: `aria-expanded` removed from the auto-open path
