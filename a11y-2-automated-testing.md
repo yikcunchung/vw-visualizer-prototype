@@ -386,6 +386,101 @@ to record rather than a substitution (§1).
 
 ---
 
+# 7b. Manual test protocol — the three runs a human must do
+
+Everything below needs a person at a browser. Nothing here can be automated from this
+repo, and until it is done the claim stays *"pending screen-reader verification."*
+
+## Rule zero, for all three tools
+
+**Scroll the component into view and let it settle before you invoke any tool.**
+`initVisualizer()` is gated on an `IntersectionObserver` watching `.intro-vis`, and the
+swatch grids are injected by JS. A tool pointed at the page on load inspects an empty
+shell and reports a clean pass on nothing — this is how hosted WAVE recorded 0 radios.
+
+Before every run, confirm on screen:
+
+- the colour strip shows **13** swatches and the wheel strip **5**
+- the *"Drag to rotate"* hint has come and gone (~3s) — while visible it adds a node to
+  the contrast bucket and the counts move
+- if you also want the zoom/rotate controls in scope, click **#btn-a11y** first
+
+Record the **viewport** with every result. The figures in this pack are 1440x900 unless
+stated, and the contrast bucket differs by width.
+
+## Run 1 — VoiceOver (macOS)
+
+The protocol names **NVDA 2026.1.1.55980**. VoiceOver is what is available, so **record
+this as a documented deviation**: a formal BITV / EN 301 549 audit that names NVDA will
+not accept VoiceOver evidence for that line item. Budget an NVDA pass before sign-off.
+
+**Setup.** Safari + VoiceOver is the canonical pairing — use it first, and Chrome only as a
+second opinion. `Cmd+F5` toggles VoiceOver. `VO` below means `Ctrl+Option`.
+
+Useful keys: `VO+Right`/`VO+Left` to move, `VO+Space` to activate, `VO+Shift+Down` to
+interact with a group, `VO+U` for the rotor.
+
+Work through these and write down **what was said**, not whether it "worked":
+
+| # | Do this | The question it answers |
+|---|---|---|
+| 1 | `VO+Right` into the viewer | Is it announced as a region named *car viewer*? Is `aria-roledescription` (*car 360° viewer*) spoken, ignored, or does it replace the role? This is the one axe hands back as needs-review and cannot judge |
+| 2 | Reach the colour strip | Does it say *Colours, radio group* and then *"Grenadilla Black Metallic, selected, 1 of 13"*? The "1 of 13" is the promise the keyboard has to keep |
+| 3 | Press **Right arrow** inside the group | Does focus move **and** the new colour get announced as selected? This is the fix from `37cdf4d` — the AX tree says it works, only a screen reader proves it is *heard* |
+| 4 | Press **Home**, then **End** | First and last colour announced? |
+| 5 | Move to the wheel strip | Read the names aloud as VoiceOver says them. `Alloy wheels "Mataró" 8.5 J x 21 front, 9 J x 21 rear` — do the quotes and the diacritic survive, and is `8.5 J x 21` intelligible or noise? Unique-and-correct is not the same as *comprehensible* |
+| 6 | Tab to **#btn-info** without touching anything else first | Does it say **expanded**? It used to say collapsed over an open panel — that was the Level A failure fixed in `37cdf4d`. This is the regression check that matters most |
+| 7 | Activate it, then press **Escape** | Where does focus land, and is the change announced at all? |
+| 8 | Focus the viewer, press **Right arrow**, wait ~1s | Is *"Rotated to N degrees"* spoken? It is debounced 600ms — do not judge it in the first half second |
+| 9 | Find **#label-wheel** at a width where the name is cut off | Announced as a collapsed button? Activate it — is the full name then read? |
+| 10 | Switch to interior, reach the materials | They announce as *"Material 1"*..*"Material 5"*. Confirm they are meaningless — this is the evidence for getting real names |
+| 11 | `VO+U` rotor → form controls, then headings | Does the list read as a coherent set of controls, or as noise? |
+
+**What counts as a finding.** Only things inside `#visualizer`. Announcement *order* and
+*verbosity* are judgement calls, not failures — record them as observations. A control that
+announces the wrong thing, no thing, or a state that contradicts the screen **is** a finding.
+
+## Run 2 — WAVE 3.3.1.0, browser extension only
+
+The hosted service at `wave.webaim.org` **cannot see this component** — it loads the URL
+without scrolling, so it measured page chrome and the static shell: 0 radios, 0 swatches,
+7 of 25 images. Use the **extension**.
+
+1. Install the WAVE extension (Chrome or Firefox).
+2. Load the page, **scroll to the visualizer, wait for the swatches**.
+3. *Then* click the WAVE icon.
+4. Sanity-check that WAVE saw the built component before reading anything else:
+   **13 colour radios, 18 swatches, 25 images with alt.** If radios read 0, it ran too
+   early — reload, scroll, and run it again.
+
+Expect **0 errors**. Already dismissed as page chrome, do not re-raise: duplicate
+`alt="VW ID.7"` on three tiles, and contrast on `h1`, `.label-subline`, `.btn-secondary`,
+`.usp-4`.
+
+## Run 3 — axe DevTools 4.131.2, extension UI
+
+The CI suite runs axe-core from npm. This run exists to satisfy the protocol literally with
+the named version. Expect it to agree.
+
+1. Install the axe DevTools extension, confirm it reports **4.131.2**.
+2. Scroll and settle, then **Scan all of my page**.
+3. **Turn the default-disabled rules on**, `target-size` above all — it is the SC 2.5.8 rule
+   and it is off by default. A scan without it reports "0 violations" having never tested
+   target size. If the UI will not enable it, say so in the record rather than implying 2.5.8
+   was covered.
+4. Scope to `#visualizer` with the element picker if your licence has it; otherwise scan the
+   page and check each result against whether the node is inside `#visualizer`.
+
+Expect **0 violations**, with needs-review holding `aria-roledescription` x1 and
+colour-contrast (4 at 1440x900).
+
+## Recording the results
+
+For each run write down: tool + version, browser + version, OS, viewport, date, and the
+outcome per numbered step. File findings **only** for things inside `#visualizer`. When all
+three are done, the last sentence of §8 can drop *"pending screen-reader verification"* —
+and not before.
+
 # 8. The claim this evidence supports
 
 > Every WCAG 2.2 Level A/AA requirement that can be verified by static analysis, by the
