@@ -2130,8 +2130,19 @@ btnZoomOut.addEventListener('click', () => {
 });
 
 // ── Rotate helpers ──
-function stepLeft()  { rotFrame = ((rotFrame - 1) + frameCount()) % frameCount(); rotation -= 360 / frameCount(); updateCarImage(); rotatePill.classList.add('hidden'); pillDismissed = true; }
-function stepRight() { rotFrame = (rotFrame + 1) % frameCount(); rotation += 360 / frameCount(); updateCarImage(); rotatePill.classList.add('hidden'); pillDismissed = true; }
+// Zoom announced itself and rotation did not, so a screen-reader user pressing
+// ArrowRight got no confirmation the car had moved. Debounced: holding the key
+// steps every frame, and a live region rewritten 36x a second is unusable.
+let _rotAnnounceTimer = null;
+function announceRotation() {
+  clearTimeout(_rotAnnounceTimer);
+  _rotAnnounceTimer = setTimeout(() => {
+    const deg = Math.round((((rotation % 360) + 360) % 360));
+    mediaStatus.textContent = 'Rotated to ' + deg + ' degrees';
+  }, 600);
+}
+function stepLeft()  { rotFrame = ((rotFrame - 1) + frameCount()) % frameCount(); rotation -= 360 / frameCount(); updateCarImage(); rotatePill.classList.add('hidden'); pillDismissed = true; announceRotation(); }
+function stepRight() { rotFrame = (rotFrame + 1) % frameCount(); rotation += 360 / frameCount(); updateCarImage(); rotatePill.classList.add('hidden'); pillDismissed = true; announceRotation(); }
 
 media.addEventListener('mousedown',  e => {
   if (e.target.closest('button')) return;
@@ -2154,6 +2165,9 @@ function makeSwatchBtn(src, alt, idx, isSelected, onClick) {
   btn.className = 'btn-swatch' + (isSelected ? ' selected' : '');
   btn.setAttribute('role', 'radio');
   btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+  // Roving tabindex: a radiogroup is ONE tab stop. wireRadiogroup() keeps this
+  // in sync from aria-checked afterwards, so no select* function has to.
+  btn.tabIndex = isSelected ? 0 : -1;
   btn.innerHTML = `
     <div class="stroke">
       <div class="img-swatch">
@@ -3081,6 +3095,10 @@ document.addEventListener('keydown', e => {
   const obs = new IntersectionObserver((entries) => {
     if (entries[0].isIntersecting) {
       disclaimerPanel.classList.add('is-open');
+      // SC 4.1.2: every other path maintains this; the auto-open path used to
+      // forget, so #btn-info advertised "collapsed" over an open panel from
+      // first paint until the user happened to click it.
+      btnInfo.setAttribute('aria-expanded', 'true');
       obs.disconnect();
     }
   }, { threshold: 0.1 });
@@ -3097,6 +3115,64 @@ document.addEventListener('keydown', e => {
   }, { threshold: 0.2 });
   obs.observe(visualizer);
 })();
+// ── Radiogroup keyboard pattern (ARIA APG) ───────────────────────────────────
+// These grids carried role="radiogroup" + role="radio" + aria-checked, so a
+// screen reader announced "radio button, 1 of 13" and told the user to press
+// arrows — but nothing was listening, and all 13 radios sat in the tab order.
+// The roles were right and the keyboard model was absent.
+//
+// tabindex is derived from aria-checked via MutationObserver rather than set by
+// each select* function: there are six grids (colour/wheel/material x main and
+// mobile) and three different selectors that mutate aria-checked, so deriving it
+// in one place is the only version that cannot drift.
+function wireRadiogroup(grid) {
+  if (!grid || grid.__radioWired) return;
+  grid.__radioWired = true;
+  const items = () => Array.from(grid.querySelectorAll('.btn-swatch'));
+
+  function syncRoving() {
+    const btns = items();
+    if (!btns.length) return;
+    let sel = btns.findIndex(b => b.getAttribute('aria-checked') === 'true');
+    if (sel < 0) sel = 0;
+    btns.forEach((b, i) => { b.tabIndex = (i === sel) ? 0 : -1; });
+  }
+
+  grid.addEventListener('keydown', e => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const btns = items();
+    if (!btns.length) return;
+    const active = document.activeElement && document.activeElement.closest('.btn-swatch');
+    const cur = btns.indexOf(active);
+    if (cur < 0) return;
+    let next;
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown': next = (cur + 1) % btns.length; break;
+      case 'ArrowLeft':  case 'ArrowUp':   next = (cur - 1 + btns.length) % btns.length; break;
+      case 'Home':                         next = 0; break;
+      case 'End':                          next = btns.length - 1; break;
+      default: return;
+    }
+    e.preventDefault();
+    // APG: moving within a radiogroup also selects. click() routes through the
+    // existing select* handler so availability/preload logic is untouched.
+    btns[next].focus();
+    btns[next].click();
+    // A selector may re-render its grid; if so the node we focused is gone.
+    requestAnimationFrame(() => {
+      const after = items();
+      if (after[next] && document.activeElement !== after[next]) after[next].focus();
+    });
+  });
+
+  new MutationObserver(syncRoving).observe(grid, {
+    attributes: true, attributeFilter: ['aria-checked'],
+    childList: true, subtree: true,
+  });
+  syncRoving();
+}
+
+document.querySelectorAll('#visualizer [role="radiogroup"]').forEach(wireRadiogroup);
 </script>
 </body>
 </html>

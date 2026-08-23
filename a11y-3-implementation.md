@@ -6,9 +6,8 @@ styled-components.
 `a11y-2-automated-testing.md` (what the tools can and cannot prove).
 
 **Scope:** everything below applies to `#visualizer` (`#media` + `#bottombar`). All 16 elements
-named by these rules were verified to sit inside that subtree. Page chrome — the nav, hero, tiles
-and footer bar — is **out of scope** and belongs to the page-template owner. **Errors and failures
-there are not findings for this team** and are not tracked in this pack.
+named by these rules were verified to sit inside that subtree. Page chrome — nav, hero, tiles,
+footer — is out of scope and is not tracked in this pack.
 
 > **Do not copy the reference build.** It is vanilla HTML/JS and it is a *behavioural
 > specification*, not source to port. Roughly half the required behaviour lives in
@@ -232,7 +231,7 @@ and that awkward. Short, clean production names would hide all four.
 
 `SC 1.1.1`
 
-Every decorative icon/SVG is `aria-hidden="true"`. (40 in the reference; 0 unnamed graphics remain in the a11y tree.)
+Every decorative icon/SVG is `aria-hidden="true"`, so 0 unnamed graphics remain in the accessibility tree.
 
 > **Notes for React/AEM** — Put it on the SVG/wrapper inside the icon component so every consumer inherits it.
 
@@ -701,33 +700,7 @@ Zoom state must announce, and must keep dependent controls in sync, on **every**
 
 ---
 
-# 7. Page-level fixes, applied outside the component
-
-WCAG conformance is defined **per full page** (spec §5.2.2 *Full pages*), so a conformant component
-does not make the page conformant. These are fixed in `index.html` so the reference is
-genuinely exemplary — none are required for the component port, but all are required for a
-page-level claim.
-
-| Fix | SC | The defect it removes |
-|---|---|---|
-| 7 subnav tabs → `<button type="button">` with `aria-current` tracked in JS | **2.1.1 (A)** | `<div>`s with click handlers — keyboard users could not reach or activate them. **No automated tool flags this.** |
-| Skip link + `role="banner"` / `role="main"` landmarks | **2.4.1 (A)** | no bypass mechanism at all; skip link is now the first tab stop |
-| `.label-header-midpage` → `<h2>` | 1.3.1 (A) | styled as a section heading but marked up as `<p>` |
-| `aria-hidden="true"` on 17 further decorative SVGs | 1.1.1 (A) | unnamed graphics exposed in the accessibility tree |
-
-Page-wide: **400 accessibility-tree nodes, 45 interactive controls, 0 unnamed**; landmarks `banner`,
-`main`, `navigation` ×2 (named), `region: car viewer`. The only duplicate role+name pair on the page
-is `alt="VW ID.7"` on three tiles — page chrome, none of it inside `#visualizer`.
-
-**Still deliberately unchanged:** the four `.topbar-tab` items and four `.topbar-cta` icons have no
-click handlers in this prototype. They are inert for mouse and keyboard alike, so parity holds and
-adding button semantics would invent affordance that does not exist.
-
----
-
----
-
-# 8. Definition of Done
+# 7. Definition of Done
 
 A green CI run does not close this. The reference passed axe, Lighthouse **and** WAVE while
 containing Level A failures.
@@ -749,11 +722,10 @@ containing Level A failures.
 
 ---
 
-# 9. What is still open
+# 8. What is still open
 
 **Nothing is failing and nothing is unanswered.** Every Level A/AA criterion in scope for
-`#visualizer` is verified, inspected, not applicable, or out of scope — see `a11y-1-criteria.md`.
-The four page-level criteria (2.4.5, 3.2.3, 3.2.4, 3.2.6) belong to whoever owns the page template.
+`#visualizer` is verified, inspected, or not applicable — see `a11y-1-criteria.md`.
 
 **One decision to record.** It passes; it needs a recorded position, not code:
 
@@ -775,7 +747,7 @@ extension *after scrolling*, and one pass through the axe DevTools 4.131.2 UI.
 
 ---
 
-# 10. Appendix — habits in the current live build
+# 9. Appendix — habits in the current live build
 
 `volkswagen.de/de/modelle/id-polo.html` is the **old** design and is being replaced, so these are
 **not defects to fix**. They are listed because they show patterns likely to carry into the new
@@ -791,3 +763,320 @@ build. Captured from the live accessibility tree, 2026-08-16.
 and `Zoom_Out` correctly carries `disabled` at minimum zoom.
 
 ---
+---
+
+---
+
+# 10. Appendix — measured reference: names, tab order, ARIA wiring
+
+The rest of this document says what to *build*. This section says what the reference
+build currently *exposes*, measured rather than read off the markup, so a port has
+something concrete to diff against.
+
+**How it was measured.** Headless Chrome over CDP at **1440x900** unless a row says
+otherwise, against `index.html` served over HTTP. Names are the computed accessible name
+from `Accessibility.getPartialAXTree`, not `aria-label || textContent`. Tab order is real
+`Input.dispatchKeyEvent` Tab presses reading `document.activeElement`, stopping when the
+order wraps.
+
+> **Measure it settled, or the inventory is empty.** `#visualizer` builds behind an
+> `IntersectionObserver` and the swatch grids are injected by JS — before the component is
+> scrolled into view `[role=radio]` returns **0**, and a run at that moment inventories a
+> shell while looking successful. Scroll it into view, then wait for the *"Drag to rotate"*
+> hint to collapse (~3s). Baseline once settled: **158 AX nodes, 18 radios, 40
+> `aria-hidden="true"`, 13 focusable**. Focusable is 13 rather than 29 because each
+> radiogroup is a single tab stop — 18 radios contribute 2. See 10.9.
+>
+> The radios are `<button role="radio">`, **not** `<input type="radio">`. An
+> `input[type=radio]` selector returns 0 and looks like a build failure.
+
+## 10.1 Viewer controls — `#media`
+
+| Element | Accessible name | Box |
+|---|---|---|
+| `#media` (`role="region"`) | `car viewer` | 1440x662 |
+| `#label-group` (`role="group"`) | `Disclaimer details` | 1024.5x62.3 |
+| `#btn-close` | `Close Disclaimer` | 24x24 |
+| `#btn-a11y` | `Display accessibility buttons` | 32x32 |
+| `#btn-zoom-in` | `Zoom in` | 32x32 |
+| `#btn-rot-left` | `Rotate left` | 32x32 |
+| `#btn-rot-right` | `Rotate right` | 32x32 |
+| `#btn-tilt-up` | `Tilt up` | 32x32 |
+| `#btn-tilt-down` | `Tilt down` | 32x32 |
+| `#btn-toggle-view` | `Toggle interior view` / `Toggle exterior view` | 46x46 |
+| `#btn-fullscreen` | `Enter fullscreen mode` | narrow viewports only |
+| `#img-car` | `VW ID.7, Grenadilla Black Metallic, exterior view` | — |
+| `#image-interior` (`<canvas role="img">`) | `Interior 360° panorama view; use the accessibility buttons to pan` | — |
+
+`#btn-tilt-up` / `#btn-tilt-down` are exposed in **interior** only. `#btn-toggle-view`
+relabels itself per direction — the name is the destination, not the current state.
+
+## 10.2 Selector controls — `#bottombar`
+
+| Element | Role | Accessible name |
+|---|---|---|
+| `#selector-colour` | `group` | `Colours` |
+| `#grid-colour` | `radiogroup` (`aria-labelledby="title-colour"`) | `Colours` |
+| `#selector-wheel` | `group` | `Wheels` |
+| `#grid-wheel` | `radiogroup` (`aria-labelledby="title-wheel"`) | `Wheels` |
+| `#grid-material` | `radiogroup` (`aria-labelledby="title-material"`) | `Materials` (interior only) |
+| `#label-wheel` | `button` **only while truncated** — see **B14** | the selected wheel's full name |
+| `#select-model-lg` | — | `Select car model` |
+| `#btn-info` | — | `Show model information` |
+| `.swatch-arrow` x6 | — | `Scroll colours/wheels/materials left`/`right` |
+
+## 10.3 The 18 swatch names
+
+Each swatch's name comes from a nested `<img alt>`, not from `aria-label` on the button.
+All 18 are unique. **The embedded `"` characters are load-bearing** — the reference once
+built these with `alt="${name}"`, which truncated at the quote and collapsed five wheel
+names into one (**B1**).
+
+**Colour — 13, `#grid-colour`** (selected: *Grenadilla Black Metallic*)
+
+`Grenadilla Black Metallic` · `Scale Silver Metallic` · `Glacier White Metallic` ·
+`Stonewashed Blue Metallic` · `Aquamarine Blue Metallic` · `Moonstone Grey` ·
+`Kings Red Metallic` · `Scale Silver Metallic Black` · `Glacier White Metallic Black` ·
+`Stonewashed Blue Metallic Black` · `Aquamarine Blue Metallic Black` ·
+`Moonstone Grey Black` · `Kings Red Premium Metallic Black`
+
+**Wheel — 5, `#grid-wheel`** (selected: *Mataró*)
+
+- `Alloy wheels "Mataró" 8.5 J x 21 front, 9 J x 21 rear, in black, diamond-turned finish`
+- `Alloy wheels "Hudson" 8 J x 19 front, 8.5 J x 19 rear, in black, diamond-turned finish`
+- `Alloy wheels "Bergen" 8 J x 19 front, 8.5 J x 19 rear, in black, Volkswagen R`
+- `Alloy wheels "Trondheim" 8.5 J x 20 front, 9.5 J x 20 rear`
+- `Alloy wheels "Montreal" 8.5 J x 20 front, 9.5 J x 20 rear, in black, diamond-turned finish`
+
+**Material — 5, `#grid-material`, interior only:** `Material 1` … `Material 5`.
+
+> These five are **placeholders**. They are non-empty and unique, so every tool scores them
+> clean and 4.1.2 passes — but they describe nothing. This is the same class of defect as
+> the four mislabelled Grand California swatches: *a name being present and unique does not
+> make it correct.* Replace them with real material names in the port.
+
+## 10.4 Tab order
+
+Component stops only; page chrome is excluded. Order is DOM order, no `tabindex > 0`
+anywhere.
+
+Each radiogroup is **one** tab stop, not one per radio — see 10.9. Arrows move within a
+group; Tab moves between groups.
+
+**Exterior, `#btn-a11y` group collapsed — 10 stops.**
+
+| # | Stop |
+|---|---|
+| 1 | `#media` (`region`, `tabindex="0"` — the drag/rotate surface) |
+| 2 | `#label-group` |
+| 3 | `#btn-close` |
+| 4 | `#btn-a11y` |
+| 5 | `#btn-toggle-view` |
+| 6 | colour radiogroup — the **checked** radio |
+| 7 | wheel radiogroup — the **checked** radio |
+| 8 | `#label-wheel` |
+| 9 | `#select-model-lg` |
+| 10 | `#btn-info` |
+
+Opening `#btn-a11y` adds `#btn-zoom-in`, `#btn-rot-left`, `#btn-rot-right` after stop 4 →
+**13**.
+
+**Interior, group open — 13 stops.** The colour and wheel sections go `display: none` and
+leave the tab order entirely; the material group takes their place as a single stop, the two
+tilt buttons appear, and `#label-wheel` goes.
+
+| # | Stop |
+|---|---|
+| 1 | `#media` |
+| 2 | `#label-group` |
+| 3 | `#btn-close` |
+| 4 | `#btn-a11y` |
+| 5–7 | `#btn-zoom-in`, `#btn-rot-left`, `#btn-rot-right` |
+| 8–9 | `#btn-tilt-up`, `#btn-tilt-down` |
+| 10 | `#btn-toggle-view` |
+| 11 | material radiogroup — the **checked** radio |
+| 12 | `#select-model-lg` |
+| 13 | `#btn-info` |
+
+**By viewport**, before roving tabindex was added, the collapsed exterior count was 26 at
+1440/768 and 27 at 390/320x256@dsf4 — the extra stop being `#btn-fullscreen`. Roving
+tabindex removes 16 of those (18 radios → 2), so expect **10** at 1440/768 and **11** at
+the narrow widths. **0 stops land on an invisible control.**
+
+## 10.5 Controls that appear and disappear
+
+Four controls are conditional. Each is correct — a control that does nothing must not be in
+the tab order — but each also means *"count the tab stops once"* is not a valid test.
+
+| Control | Present when | Mechanism |
+|---|---|---|
+| `.swatch-arrow` x6 | the strip can scroll **that way** | `disabled` + `pointer-events: none`; a disabled button is not focusable |
+| `#btn-zoom-out` | zoom > 1 | `syncZoomBtns()` |
+| `#label-wheel` | its text is truncated | `role`/`tabindex`/`aria-expanded` derived from measured overflow (**B14**) |
+| `#btn-fullscreen` | narrow viewports | CSS |
+
+**The arrows are the one that will fool a test.** At 1440 and 768 the colour strip does not
+overflow (`scrollWidth === clientWidth`: 732 at 1440, 736 at 768), so both arrows are
+`disabled` and neither appears in the tab order. At 390 the strip *does* overflow (732 > 358) and the **right**
+arrow is enabled from the start while the left is not — there is nothing to scroll left to
+at `scrollLeft: 0`.
+
+Tab all the way round once and `Scroll colours left` is absent. Tab round a **second**
+time and it is there, because moving focus through the swatches scrolled the strip and
+enabled it. A one-pass tab sweep will therefore report a different set of controls from a
+two-pass one, and neither is wrong. At 320x256@dsf4 the strip does not overflow at all
+(288 = 288), so both arrows stay disabled.
+
+## 10.6 Live regions
+
+Three `aria-live="polite"` regions in exterior, four in interior, all visually `.sr-only`
+clipped. **They do not all start empty** — two carry the current selection from first
+paint, two are empty until something happens. Measured at rest:
+
+| Region | At rest | Announces |
+|---|---|---|
+| `#media-status` | *empty* | `Zoomed in` on zoom. **Not** rotation — see below |
+| `#label-colour` | `Grenadilla Black Metallic` | the newly selected colour |
+| `#wheel-live` | *empty* | the newly selected wheel, full name incl. `"` |
+| `#label-material` | `Material 1` | the newly selected material (interior) |
+
+A selection announcement is the swatch's full accessible name — selecting the fourth wheel
+writes `Alloy wheels "Trondheim" 8.5 J x 20 front, 9.5 J x 20 rear` verbatim.
+
+**Rotation announces, at parity with zoom.** Focus `#media` and press ArrowRight: the frame
+advances (`frame-00` → `frame-01`) and `#media-status` reads `Rotated to 10 degrees`. It is
+**debounced by 600ms** on purpose — holding the key steps a frame at a time, and a live
+region rewritten 36 times a second is unusable. Rotation used to be silent while zoom
+announced; that asymmetry is fixed.
+
+When a section is hidden, its live region is removed from the accessibility tree along with
+it — so the hidden colour and wheel regions cannot announce into an interior view. That is
+the behaviour you want, and it is easy to lose in a port that keeps all four mounted.
+
+## 10.7 ARIA wiring
+
+| Relationship | Wiring |
+|---|---|
+| `#btn-a11y` → `#btn-a11y-group` | `aria-expanded` + `aria-controls`; the group is `role="group"`, name `Accessibility buttons` |
+| `#btn-info` → `#disclaimer` | `aria-expanded` + `aria-controls` |
+| `#label-wheel` | `aria-expanded` only while it is a button; no `aria-controls` |
+| `#grid-colour` / `#grid-wheel` / `#grid-material` | `role="radiogroup"` + `aria-labelledby` → `#title-*` |
+| swatches | `role="radio"` + `aria-checked`; name from nested `<img alt>` |
+| `#media` | `aria-roledescription="car 360° viewer"`, accessible name `car viewer` |
+| `#disclaimer` | `role="dialog"` + `aria-modal="false"` |
+| `#image-interior` | `<canvas role="img">` with a static `aria-label` |
+
+The last three are **recorded decisions, not settled facts** — `aria-roledescription` is the
+one rule axe cannot judge and hands back as *needs review*, and `aria-modal="false"` on a
+`dialog` is deliberate because the disclaimer does not trap focus. See
+`a11y-1-criteria.md` for the positions taken.
+
+## 10.8 Keyboard map
+
+Measured by dispatching real key events and reading the resulting DOM, not from the
+handlers.
+
+| Focus | Key | Result |
+|---|---|---|
+| `#media` | ArrowLeft / ArrowRight | rotate one frame; reversible (`frame-00` ⇄ `frame-01`) |
+| `#media` | ArrowUp / ArrowDown | tilt — **interior only** |
+| any swatch | Space | select it; writes the full name to the section's live region |
+| any swatch | Enter | select it — same as Space (measured: selection moved 1→8, live region wrote `Scale Silver Metallic Black`) |
+| any swatch | ArrowLeft / ArrowRight | move to the previous / next radio **and select it**, wrapping at both ends (10.9) |
+| any swatch | Home / End | jump to the first / last radio and select it (10.9) |
+| any swatch | Tab | leave the group entirely — a radiogroup is one tab stop (10.4) |
+| `#btn-info` | Enter / Space | toggle `#disclaimer`; on open, focus moves to `#btn-close` |
+| `#btn-close` | Enter / Space | closes `#disclaimer` — see the focus note below |
+| `#disclaimer` open | Escape | closes it from anywhere |
+| `#label-wheel` | Enter / Space | `aria-expanded` false→true and the label unwraps to its full name — `scrollWidth` 498→214, height 26.4→71px (**B14**) |
+
+**Where focus goes when the disclaimer closes depends on who opened it,** and that is
+deliberate rather than a bug. Closed after the *user* opened it via `#btn-info`, focus
+returns to `#btn-info`. Closed when the panel had **auto-opened** on scroll, focus goes to
+`#media` instead — returning it to a trigger the user never pressed would throw them forward
+past every viewer control. Both paths were driven and neither leaves focus on `<body>`.
+
+Two behaviours worth keeping in a port. Opening the disclaimer moves focus **into** it
+(`#btn-close`), and Escape closes it without stranding focus. Neither is free in React —
+both are the effect-cleanup failure mode described in **B6** / **B13**.
+
+> **Harness trap, cost me a false finding.** A CDP `rawKeyDown` for Enter carrying only
+> `text: "\r"` fires `keydown` and `keyup` but **no `keypress`**, and a native `<button>`
+> activates on `keypress`. Enter then looks completely dead — every control reads as
+> "Enter does nothing" — while Space works fine. Send the `char` event too and the log
+> becomes `keydown → keypress → click → keyup`. Arrow keys are unaffected, which is why
+> viewer rotation measured correctly in the same run that wrongly cleared Enter. Verify a
+> key works on a control you *know* responds before concluding a control ignores it.
+
+## 10.9 The radiogroup keyboard pattern — implemented
+
+This was the one behavioural gap in the component, and **no tool reported it.** It is now
+fixed; what follows is the shape of the fix and why it is built the way it is.
+
+`#grid-colour`, `#grid-wheel` and `#grid-material` are `role="radiogroup"` containing
+`role="radio"` buttons with `aria-checked`. The roles are right and the names are right.
+The **interaction model is not**:
+
+| ARIA APG expects | Before | Now |
+|---|---|---|
+| one tab stop per group (roving `tabindex`) | 13 stops for colour, every radio `tabIndex 0` | **1 stop** — checked radio `0`, other 12 `-1` |
+| ArrowLeft/Right move and select | nothing | moves and selects, wrapping both ends |
+| Home / End jump to first / last | nothing | jumps and selects |
+
+The old state was a real gap rather than a measurement artifact: the same arrow dispatch
+rotated `#media` in the same session, so events were being delivered — there was simply no
+handler. A screen reader announced *"radio button, 1 of 13"*, telling the user to press
+arrows that did nothing.
+
+Measured after the fix, colour group: ArrowRight 0→1 announcing `Scale Silver Metallic`,
+End→12, Home→0, ArrowLeft wrapping 0→12. Wheel group behaves the same. Component tab stops
+fell **29 → 10**.
+
+**`wireRadiogroup(grid)` — the two decisions worth keeping in a port.**
+
+*Selection follows focus.* APG says moving within a radiogroup also selects, so the handler
+calls `.click()` on the target rather than setting `aria-checked` directly — that routes
+through the existing `selectColor` / `selectWheel` / `selectMaterial` path, so wheel
+availability, preloading and scroll-into-view keep working untouched.
+
+*`tabindex` is derived, never assigned.* A `MutationObserver` on `aria-checked` recomputes
+which radio is the group's tab stop. There are six grids (colour/wheel/material x main and
+mobile) and three selectors that mutate `aria-checked`; deriving the roving index in one
+place is the only version that cannot drift out of sync. Any select function added later
+inherits the behaviour for free.
+
+One guard worth understanding: a selector may re-render its grid, destroying the node just
+focused. The handler re-queries on the next frame and re-focuses by index, so focus is never
+dropped to `<body>` — the same failure mode as **B6** / **B13**.
+
+## 10.10 Three defects found by measurement, and fixed
+
+None of these was caught by axe at 98 rules, by the AX-tree sweep, or by contrast
+measurement. They were found by driving the component and reading what it actually exposed.
+All three are fixed in `index.html`; each is the kind of thing to add a regression test for,
+because nothing in a scanner will notice it going wrong again.
+
+**1. `#btn-info` advertised the wrong state — SC 4.1.2, Level A.** The disclaimer
+auto-opens on scroll via an `IntersectionObserver`. That path added `is-open` to the panel
+but never set `aria-expanded` on the trigger, so from first paint until the user happened to
+click, `#btn-info` said `"false"` over a panel that was open (`height: 94`,
+`display: flex`). Every *other* path maintained the attribute correctly, which is why it
+survived review — the bug was in the one path nobody clicks.
+
+A screen-reader user tabbing there before touching anything was told "collapsed" about an
+open panel. **Fixed** by setting `aria-expanded="true"` in the observer. The general rule is
+**B14**'s: derive the attribute from the thing's real state, never hardcode it and never
+maintain it in only the paths you happened to think of.
+
+**2. The radiogroups had no keyboard model** — see **10.9**. Fixed with roving `tabindex`
+plus arrow / Home / End handling.
+
+**3. Rotation was silent while zoom announced** — see **10.6**. Fixed with a 600ms-debounced
+`#media-status` write.
+
+> **What generalises.** All three are *state* bugs, not *markup* bugs: an attribute that
+> disagreed with reality, a role that promised an interaction it did not implement, and a
+> view change that told nobody. No engine has a rule for any of them, because a rule would
+> have to know what the markup was *supposed* to mean. This is the half of the component
+> that lives in behaviour — which is also why `a11y-2` insists roughly half the
+> accessibility here is untestable by scanning.

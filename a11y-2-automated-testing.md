@@ -16,41 +16,33 @@ The single most important sentence in this pack:
 
 # 0. Scope of this evidence — read before quoting a number
 
-The audit ran `axe.run(document)` — **the whole page**, not just the component. That is a stronger
-test, not a weaker one, but it means some figures describe page chrome the Visualizer team does not
-own. Both scopes, measured at 1440×900:
+The audit ran `axe.run(document)` and then attributed every result. **Only `#visualizer` is reported
+here** — page chrome is not this team's surface and is not tracked. Scoping axe to `#visualizer`
+alone gives the same answer: **0 violations**. Measured at 1440×900:
 
-| Measure | `#visualizer` only | Whole page |
-|---|---|---|
-| axe violations | **0** | **0** |
-| axe rules executed | 89 | 90 |
-| axe *needs review* (contrast) | 4 | 8 |
-| Accessibility-tree nodes | 158 | 400 |
-| Named interactive / graphic nodes | 61 | 83 |
-| Unnamed interactive nodes | **0** | **0** |
-| Duplicate role+name pairs | **0** | 1 (page chrome) |
-| Focusable controls | 29 | 45 |
-| Radios | 18 | 18 |
-| Targets under 24×24 | **0** | — |
+| Measure | `#visualizer` |
+|---|---|
+| axe violations | **0** |
+| axe *needs review* (contrast) | 4 |
+| Accessibility-tree nodes | 158 |
+| Named interactive / graphic nodes | 61 |
+| Unnamed interactive nodes | **0** |
+| Duplicate role+name pairs | **0** |
+| Focusable controls | 13 |
+| Radios | 18 |
+| Targets under 24×24 | **0** |
 
 Taken with the `#btn-a11y` control group **open** (the larger surface) and after the *"Drag to
 rotate"* hint has collapsed. **Node and contrast counts wobble by a couple if you measure while that
 hint is on screen** — it is 0×0, then visible from roughly 1.5s to 3s, then gone, and while visible
 it adds itself to the contrast bucket as a fifth component node. Let it settle before quoting a
-number. The single page-wide duplicate is `alt="VW ID.7"` on three tiles, none of them in the
-component.
-
-**The component passes on its own** — scoping axe to `#visualizer` still gives 0 violations.
+number.
 
 > **Scope rule: only `#visualizer` counts.** Errors and failures in page chrome — nav, subnav, hero,
-> `.usp-*`, tiles, NBA bar, footer, skip link — are **not findings** and are not tracked in this
-> pack. The whole-page column above is **context only**: it shows the component is not being carried
-> by a clean environment. Never quote it as a component result.
+> tiles, footer, skip link — are **not findings** and are not tracked in this pack.
 
-**Already dismissed as page chrome, do not re-raise:** contrast on `h1`, `.label-subline`,
-`.btn-secondary` and `.usp-4`; WAVE's duplicate `alt="VW ID.7"` on three images. All measured, all
-passing anyway, none of them this team's. The contrast nodes that *are* inside are `.disclaimer-i`,
-both `#label-group` paragraphs and `#select-model-lg`.
+The four nodes in the contrast *needs-review* bucket are `.disclaimer-i`, both `#label-group`
+paragraphs and `#select-model-lg`. All four are resolved by hand in §2.
 
 Everything in `a11y-3-implementation.md` **is** component-scoped: all 16 elements named by the 30
 invariants sit inside `#visualizer`, verified by `contains()`.
@@ -75,7 +67,7 @@ The audit protocol specifies these tools and conditions. Status of each against 
 
 | Required | Status | Detail |
 |---|---|---|
-| **WAVE Evaluation Tool 3.3.1.0** | ◐ **Run — but it cannot see this component** | Real WAVE against the live URL: **0 errors**, 6 contrast, 9 alerts, 105 ARIA. But it analysed the page **before the viewer built** — 0 radios, 0 swatches, 7 of 25 images. Must be run as the **browser extension after scrolling**. See below. |
+| **WAVE Evaluation Tool 3.3.1.0** | ◐ **Run — but it cannot see this component** | Real WAVE against the live URL returned **0 errors**. But it analysed the page **before the viewer built** — 0 radios, 0 swatches. Must be run as the **browser extension after scrolling**. See below. |
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | Exactly this: `320×256 @ deviceScaleFactor 4`. axe 0 violations, no horizontal scroll, nothing clipped. `dsf 1` would be a small screen, not a zoom — see §4 trap 4. |
 | **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, via CDP — with **no `runOnly` filter**, which is what the extension's default scan executes (90 rules). The extension's own build number is not the engine version, so to satisfy the protocol literally, one run with the 4.131.2 extension UI is still worth doing. Expect it to agree. |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent`, not `element.click()`: Tab/Shift+Tab sweep (34 stops, 0 invisible), arrows, Enter, Space, Escape, with `document.activeElement` asserted at each step. |
@@ -86,11 +78,7 @@ The audit protocol specifies these tools and conditions. Status of each against 
 
 ### WAVE: the hosted service cannot audit this component
 
-Run against the live URL, the real WAVE engine reports:
-
-| error | contrast | alert | feature | structure | aria |
-|---|---|---|---|---|---|
-| **0** | 6 | 9 | 9 | 11 | 105 |
+Run against the live URL, the real WAVE engine reports **0 errors**.
 
 **0 errors is real and good** — the five sibling prototypes had 10 empty-form-label errors between
 them. But the result is **not** a clearance for the Visualizer, because of what WAVE analysed:
@@ -99,21 +87,16 @@ them. But the result is **not** a clearance for the Visualizer, because of what 
 |---|---|---|
 | colour radios | **0** | 13 |
 | swatches | **0** | 18 |
-| images with `alt` | **7** | 25 |
 
 The component builds behind an `IntersectionObserver`. The hosted service loads the URL and analyses
-it **without scrolling**, so it measured the page chrome and the static viewer shell and nothing
-else. This is the same lazy-init trap as §4 trap 1, except it **cannot be fixed by adding a scroll
-step** — the service is not scriptable.
+it **without scrolling**, so it measured the static viewer shell and nothing else. This is the same
+lazy-init trap as §4 trap 1, except it **cannot be fixed by adding a scroll step** — the service is
+not scriptable.
 
 > **How to actually satisfy this line of the protocol:** use **WAVE 3.3.1.0 as the browser
 > extension**, which analyses the live DOM. Load the page, **scroll the viewer into view, confirm
 > the swatches have rendered, then run WAVE.** Running it on page load produces a clean report of
 > almost nothing.
-
-The 9 alerts break down as `alt_duplicate ×2` and `heading_possible ×7`. The duplicate alt is
-`"VW ID.7"` on **three** images, all **outside `#visualizer`** — page chrome, therefore **not a
-finding** under the scope rule. Recorded only so nobody re-raises it.
 
 ### NVDA vs VoiceOver — a deviation to record
 
@@ -136,8 +119,8 @@ screen-reader pass. Budget an NVDA pass before any formal sign-off.
 
 ### If PDFs are in scope elsewhere
 
-This audit covers the **Visualizer component only**. Page chrome, video, and **PDFs — brochures,
-price lists, spec sheets — are out of scope here.** That is a boundary, not a clean bill of health:
+This audit covers the **Visualizer component only**. **PDFs — brochures, price lists, spec sheets —
+are out of scope here.** That is a boundary, not a clean bill of health:
 
 - Under **EN 301 549**, non-web documents fall under **clause 10**, separately from clause 9 (Web).
 - WCAG conformance is defined **per full page** and **per complete process**, so a downloadable spec
@@ -157,15 +140,15 @@ price lists, spec sheets — are out of scope here.** That is a boundary, not a 
 
 ## Which criteria are machine-decidable at all
 
-Of the 56 Level A/AA criteria:
+Of the 52 Level A/AA criteria in scope:
 
 - **~23** can be verified by driving the component (axe + AX tree + real events + pixels).
 - **~9** are settled by reading the code and the tree, not by a tool.
-- **6** are site-level or untested and no scanner can close them.
 - **1** — SC 2.5.3 Label in Name — has **no rule in any tool used here**.
+- The rest no scanner can close at all — see §5.
 
 W3C's own ACT Rules cover only **32 of 56** A/AA criteria. The rest are either too new
-(2.4.11, 2.5.7, 2.5.8, 3.2.6, 3.3.7, 3.3.8) or not machine-decidable. That is the structural
+(2.4.11, 2.5.7, 2.5.8, 3.3.7, 3.3.8) or not machine-decidable. That is the structural
 reason a green CI run is not conformance.
 
 ---
@@ -177,15 +160,16 @@ reason a green CI run is not conformance.
 Bare `axe.run(document)`, **no tag filter**, both `violations` and `incomplete` read, at five
 viewports in default and all-disclosures-expanded state.
 
-| Viewport | Violations | Needs review |
-|---|---|---|
-| 320×256 @ dsf 4 (**literal 400% zoom**) | 0 | 4 contrast |
-| 320×640 | 0 | 6 contrast |
-| 390×844 | 0 | 7 contrast |
-| 768×1024 | 0 | 7 contrast |
-| 1440×900 | 0 | 8 contrast |
+| Viewport | Violations |
+|---|---|
+| 320×256 @ dsf 4 (**literal 400% zoom**) | 0 |
+| 320×640 | 0 |
+| 390×844 | 0 |
+| 768×1024 | 0 |
+| 1440×900 | 0 |
 
-90 rules executed, 0 JS exceptions.
+90 rules executed, 0 JS exceptions. The `incomplete` (needs-review) bucket is contrast only, and is
+resolved node by node below.
 
 ### With the default-disabled rules force-enabled
 
@@ -209,11 +193,9 @@ So 2.5.8 is confirmed by the engine, not only by measuring boxes by hand. The lo
 ## Contrast — the `incomplete` bucket resolved by hand
 
 axe punts whenever the background is a gradient, an image, or overlapped. Those are not passes;
-a BITV tester must resolve every one. Every node in the bucket, at every viewport, was measured on
-composited pixels: **8.59:1 – 21:1**, all passing. The lowest is `.disclaimer-i` at 8.59:1.
-
-Of the eight distinct nodes, **four are page chrome** (`h1`, `.label-subline`, `.btn-secondary`,
-`.usp-4`) and four are inside the component — see §0.
+a BITV tester must resolve every one. Every node in the component's bucket — the four named in §0 —
+was measured on composited pixels at every viewport: **8.59:1 – 21:1**, all passing. The lowest is
+`.disclaimer-i` at 8.59:1.
 
 ## Behaviour — driven with real events
 
@@ -352,7 +334,6 @@ use — kill Chrome and start fresh if `initialised: false` appears twice. And *
 | **SC 2.5.3 Label in Name** | No rule exists in axe. A sibling VW prototype shipped a real Level A failure here that axe, Lighthouse **and** WAVE all passed |
 | **Whether a name is *correct*** | Tools check that names are present and unique, never that they are true. Four Grand California swatches carried the wrong colour name while scoring clean |
 | **Judgement calls** | 2.5.3 and 2.5.8 pass on arguable readings. A tool cannot weigh an exception |
-| **Page-level criteria** | 2.4.5, 3.2.3, 3.2.4, 3.2.6 need more than one page |
 
 ---
 
