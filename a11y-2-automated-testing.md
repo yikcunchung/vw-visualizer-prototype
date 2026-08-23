@@ -472,6 +472,8 @@ Six items were confirmed by ear:
 | Wheel name, read in full | `Alloy wheels "Hudson" 8 J x 19 front, 8.5 J x 19 rear, in black, diamond-turned finish` |
 | Rotation | **"rotated to 40 degrees"** and equivalents |
 | Browser agreement | Safari and Chrome behaved the same |
+| Rotor → Form Controls | **No blank entry, no duplicate, all 18 swatches listed** |
+| Rotor → Landmarks | **`car viewer` present** |
 
 **What each one settles.**
 
@@ -497,9 +499,17 @@ Six items were confirmed by ear:
 - **NVDA 2026.1.1.55980 is still owed.** The protocol names NVDA; VoiceOver is a
   **documented deviation**, not a substitute. A formal BITV / EN 301 549 audit will not
   accept this run for that line item.
-- **Only these six items were explicitly confirmed.** Home/End, panel activation and
-  Escape, `#label-wheel` expansion, the interior materials and the rotor pass were reported
-  as unremarkable but not recorded individually. Treat them as observed, not as evidence.
+- **Seven items are evidenced; the rest are observed only.** Still unrecorded by ear:
+  Home/End, panel activation, **Escape and where focus lands**, **`#label-wheel`'s
+  conditional button role (B14)**, and the interior material names. Treat those as observed,
+  not as evidence.
+
+**The rotor pass is worth more than one line.** Since roving `tabindex` landed, only 2 of the
+18 swatches are Tab stops — the rotor is now the primary random-access route to a specific
+colour, so all 18 being listed and named matters functionally, not cosmetically. And a list
+with no blanks and no duplicates independently confirms the 18-unique-names property **in
+announced output**, which is the guard against **B1** — the defect where five wheel radios
+once shared one name and passed axe, Lighthouse and WAVE alike.
 - **`Material 1`-`Material 5` remains an open content defect** regardless of this run. The
   names are unique and non-empty, so they announce cleanly and sound fine — which is exactly
   why they slipped past. A name that reads smoothly and describes nothing is still wrong.
