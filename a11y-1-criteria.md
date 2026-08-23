@@ -4,9 +4,7 @@
 **Audited:** 2026-08-22 against the live deployment.
 **Scope:** `#visualizer` — `#media` + `#bottombar`. **Out of scope:** page chrome, video, and
 PDFs (brochures, price lists, spec sheets) — PDFs are a separate conformance surface, EN 301 549
-clause 10, checked with PAC rather than anything in this pack. Evidence was gathered page-wide and then
-attributed; where a criterion is satisfied by page chrome rather than the component, the row says so.
-See §0 of `a11y-2-automated-testing.md` for the component-vs-page figures.
+clause 10, checked with PAC rather than anything in this pack.
 **Companion documents:** `a11y-2-automated-testing.md` (what the tools can and cannot prove) ·
 `a11y-3-implementation.md` (what to build).
 
@@ -24,12 +22,10 @@ criteria are not required and are not listed.
 | ✅ Pass | Verified by driving the component — real pointer and key events, or measured pixels |
 | ✅ Pass\* | Verified by code and accessibility-tree inspection, **not** driven |
 | ⚪ N/A | The component has no such content |
-| ⚖️ Decide | Passes, but on an arguable reading — record the decision |
-| ⛔ Out of scope | Outside `#visualizer` — the page template owns it, not tracked here |
 
-**56 criteria assessed. 0 failures and 0 open items in `#visualizer`.** 26 verified · 9 inspected · 16 not applicable · 1 decision to record · 4 out of scope (page-level).
+**52 of the 56 A/AA criteria are in scope for `#visualizer`, and all 52 are closed — 0 failures, 0 open items.** 27 verified · 9 inspected · 16 not applicable. The remaining 4 (2.4.5, 3.2.3, 3.2.4, 3.2.6) are page-level, cannot be judged from one component, and are not assessed here.
 
-> **Scope rule:** only `#visualizer` counts. Errors and failures in page chrome — nav, hero, tiles, footer — are **not findings** and are not tracked here. Where a whole-page number appears it is labelled as context.
+> **Scope rule:** only `#visualizer` counts. Errors and failures in page chrome — nav, hero, tiles, footer — are **not findings** and are not tracked here. Every figure in this pack is a component figure.
 
 ---
 
@@ -69,7 +65,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **1.4.1** | Use of Color | A | Yes | ✅ Pass* | Selection shown by a checkmark badge and `aria-checked`, not colour alone. |
 | **1.4.2** | Audio Control | A | No | ⚪ N/A | No audio. |
-| **1.4.3** | Contrast (Minimum) | AA | Yes | ✅ Pass | All 23 axe *needs-review* nodes resolved on composited pixels: 8.59:1 – 21:1. Four of the eight distinct nodes are page chrome, not the component. |
+| **1.4.3** | Contrast (Minimum) | AA | Yes | ✅ Pass | Every axe *needs-review* node in the component resolved on composited pixels: 8.59:1 – 21:1. Lowest is `.disclaimer-i` at 8.59:1. |
 | **1.4.4** | Resize Text | AA | Yes | ✅ Pass | 400% zoom (320×256 @ dsf 4): 0 violations, no horizontal scroll, nothing clipped. |
 | **1.4.5** | Images of Text | AA | Yes | ✅ Pass* | All text is real text; imagery is photographic. |
 | **1.4.10** | Reflow | AA | Yes | ✅ Pass | No horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom. |
@@ -105,12 +101,11 @@ criteria are not required and are not listed.
 
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
-| **2.4.1** | Bypass Blocks | A | Yes | ✅ Pass* | Skip link present; `role="main"` on the content region. |
-| **2.4.2** | Page Titled | A | Yes | ✅ Pass | axe `document-title` clean. |
+| **2.4.1** | Bypass Blocks | A | Yes | ✅ Pass* | Provided by the host page: skip link, and `role="main"` on the region containing the component. |
+| **2.4.2** | Page Titled | A | Yes | ✅ Pass | Provided by the host page; axe `document-title` clean. |
 | **2.4.3** | Focus Order | A | Yes | ✅ Pass | Open moves focus in; close returns to whoever opened it; Escape from outside moves nothing. |
-| **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | 0 unnamed links, 0 duplicate role+name — 158 nodes in the component subtree, 400 page-wide. |
-| **2.4.5** | Multiple Ways | AA | No | ⛔ Out of scope | *Page-level — belongs to the page-template owner, not this component.* Cannot be judged from one component and is not tracked here. |
-| **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | One `h1`, two `h2`, `heading-order` clean, every control named. |
+| **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | 0 unnamed links, 0 duplicate role+name across the 158 nodes of the component subtree. |
+| **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | `heading-order` clean; every control in the component named. |
 | **2.4.7** | Focus Visible | AA | Yes | ✅ Pass | 34 Tab stops, 0 invisible; ring verified in default, hover and active. |
 | **2.4.11** | Focus Not Obscured (Minimum) | AA | Yes | ✅ Pass | 20/20 controls fully visible after browser scroll-into-view; 0 fixed/sticky occluders. |
 
@@ -120,7 +115,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass | Drag-rotate has button and arrow-key alternatives. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass | Arrows fire on pointer-up; drag-off-then-release aborts. |
-| **2.5.3** | Label in Name | A | Yes | ⚖️ Decide | **Decide:** `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes (a value display is not a label) but a speech user saying "ID.7" would miss it. Prefer `aria-labelledby` on a real visible label. |
+| **2.5.3** | Label in Name | A | Yes | ✅ Pass | **Position recorded.** `#select-model-lg` is named "Select car model"; the adjacent span shows `ID.7`. That span is a **value display, not a label** — the criterion governs labels, so it does not apply. A speech user saying "ID.7" would not match, which is a real limitation but not this failure. **Do not "fix" it with `aria-labelledby` on that span** — see the note below. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | **No target in the component is under 24×24.** `#label-wheel` is 26.4px tall (`line-height: 1.6` + `padding-block: 2px`), so it meets the minimum outright and nothing relies on the spacing exception. Smallest `<button>` is the close button at exactly 24×24. Confirmed both by measuring every control's box and by axe's own `target-size` rule, which **is disabled by default** and had to be switched on: it then passes on 27–29 nodes at 1440 / 390 / 320×256. |
@@ -132,7 +127,7 @@ criteria are not required and are not listed.
 
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
-| **3.1.1** | Language of Page | A | Yes | ✅ Pass | `<html lang="en">`; axe `html-has-lang` clean. |
+| **3.1.1** | Language of Page | A | Yes | ✅ Pass | Provided by the host page: `<html lang="en">`; axe `html-has-lang` clean. |
 | **3.1.2** | Language of Parts | AA | No | ⚪ N/A | **No foreign-language passages.** Every string in the component is English and no `lang` attribute is needed anywhere inside it. The rule still applies if production ever renders a string in a language other than the page — see **A5** in the implementation doc. |
 
 ## 3.2 Predictable
@@ -141,9 +136,6 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **3.2.1** | On Focus | A | Yes | ✅ Pass* | Focus causes no context change; swatch focus only scrolls the strip. |
 | **3.2.2** | On Input | A | Yes | ✅ Pass* | Changing the model select updates in place; no new window, no focus jump. |
-| **3.2.3** | Consistent Navigation | AA | No | ⛔ Out of scope | *Page-level — belongs to the page-template owner, not this component.* Cannot be judged from one component and is not tracked here. |
-| **3.2.4** | Consistent Identification | AA | No | ⛔ Out of scope | *Page-level — belongs to the page-template owner, not this component.* Cannot be judged from one component and is not tracked here. |
-| **3.2.6** | Consistent Help | A | No | ⛔ Out of scope | *Page-level — belongs to the page-template owner, not this component.* Cannot be judged from one component and is not tracked here. |
 
 ## 3.3 Input Assistance
 
@@ -171,22 +163,33 @@ criteria are not required and are not listed.
 
 # What is actually left to do
 
-**No open criteria and no known failures.** Every Level A/AA criterion in scope for `#visualizer` is
-either verified, inspected, not applicable, or out of scope.
+**No open criteria, no known failures, and no decisions left outstanding.** Every Level A/AA
+criterion in scope for `#visualizer` is verified, inspected, or not applicable.
 
-**One decision to record.** It passes; it needs a recorded position, not code:
+**The one decision, now recorded.** SC 2.5.3 on `#select-model-lg` is a pass and stays a pass:
+the visible `ID.7` is the current *value*, and 2.5.3 governs labels.
 
-| SC | Decision |
-|---|---|
-| **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". Passes — a value display is not a label — but a speech user saying "ID.7" would miss it. Safer: `aria-labelledby` on a real visible label. |
+**The tempting fix is wrong, and was tried and reverted.** Pointing `aria-labelledby` at the
+visible span (plus an `.sr-only` purpose span) gives the name `"ID.7 Select car model"` while
+the AX **value** is `"Pro Match Plus"` — measured. Three things break:
+
+1. **It misdescribes the control.** The select chooses between ID.7, ID.Polo and Grand
+   California. A name beginning "ID.7" says the control is *about* ID.7.
+2. **The name mutates with the value** — it becomes `"Grand California Select car model"` on
+   the next selection. Names must be stable; a control that announces differently over time
+   is a moving target in a rotor or elements list.
+3. **It conflates name with value**, which ARIA separates deliberately. `ID.7` is the
+   optgroup label and `Pro Match Plus` the chosen option — two fragments of one selection,
+   one of them wedged into the name.
+
+**The only clean way to close it** is a design change: a visible `Model` label beside the
+control, so visible text and accessible name are the same string by construction. That is a
+design decision, not an implementation one, and nothing is failing without it.
 
 **One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
 names NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the
 browser extension *after scrolling*, and one pass through the axe DevTools 4.131.2 UI. See
 `a11y-2-automated-testing.md`.
-
-**Not this team's work.** 2.4.5, 3.2.3, 3.2.4 and 3.2.6 are page-level and belong to whoever owns the
-page template.
 
 **One optional extra, outside the AA target.** `prefers-reduced-motion` is honoured nowhere in a
 component with 23 CSS transitions, 7 keyframe sets, 5 WAAPI animations and an indefinite
