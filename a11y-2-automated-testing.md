@@ -477,6 +477,11 @@ Six items were confirmed by ear:
 | Escape from inside the disclaimer | **focus returned to `#btn-info`** — correct for a user-opened panel |
 | Interior materials | announced cleanly as *Material 1*…*5* — **mechanically fine, semantically empty** |
 | `#label-wheel` at ~768px | **plain text: skipped by Tab, announced by the VO cursor** — B14 confirmed both ways |
+| `#label-wheel` activated while truncated | **reads the full wheel name** — the expand action works |
+| Colour group on entry | **"Colours, radio group"** then **"1 of 13"** |
+| Arrow within the group | name + **"selected"** + position |
+| Home / End (`Fn`+arrows on macOS) | first and last colour, both announced |
+| Opening the disclaimer | **found a defect** — focus landed on `#btn-close`, *after* the text. Now lands on `#label-group`. See below |
 
 **What each one settles.**
 
@@ -502,9 +507,19 @@ Six items were confirmed by ear:
 - **NVDA 2026.1.1.55980 is still owed.** The protocol names NVDA; VoiceOver is a
   **documented deviation**, not a substitute. A formal BITV / EN 301 549 audit will not
   accept this run for that line item.
-- **Ten items are evidenced; the rest are observed only.** Still unrecorded by ear: Home/End
-  and panel activation. Both are low risk — arrows share Home/End's handler, and activation was
-  exercised in the Escape test.
+- **All fifteen items are now evidenced.** VoiceOver is complete.
+
+**The run found one defect that no tool reports.** Opening `#disclaimer` moved focus to
+`#btn-close`, which sits *after* `#label-group` in DOM order — so a screen-reader user who
+opened the panel to read the disclaimer heard only *"Close Disclaimer, button"* and had to
+navigate **backwards** to reach the text. Not a WCAG failure: nothing was unreachable and
+focus order was coherent. But it defeated the purpose of the disclosure. **Fixed** — focus now
+lands on `#label-group`, which announces *"Disclaimer details, group"* and reads forward into
+the paragraphs. A Playwright test now asserts the focus target.
+
+This is what a screen-reader pass buys that automation cannot: every automated check passed
+both before and after, because both states are conformant. Only listening revealed that one of
+them was useless.
 
 **"Not announced unless you highlight it" is the correct result, not a gap — and the
 distinction is worth internalising.** `Tab` moves only between *focusable* elements; the

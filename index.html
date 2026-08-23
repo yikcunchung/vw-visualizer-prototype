@@ -3053,6 +3053,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 const disclaimerPanel = document.getElementById('disclaimer');
 const btnInfo  = document.getElementById('btn-info');
 const btnClose = document.getElementById('btn-close');
+const disclaimerBody = document.getElementById('label-group');
 // Who opened the panel decides where focus goes when it closes. Returning focus
 // to the trigger is only correct if the trigger opened it — the panel also
 // auto-opens on scroll, and sending focus to #btn-info in that case throws the
@@ -3075,7 +3076,12 @@ function closeDisclaimer() {
 btnInfo.addEventListener('click', () => {
   const isOpen = disclaimerPanel.classList.toggle('is-open');
   btnInfo.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  if (isOpen) { disclaimerOpener = btnInfo; btnClose.focus(); }
+  // Focus the CONTENT, not the close button. #btn-close sits after #label-group in
+  // DOM order, so focusing it dropped the user past the very text they opened the
+  // panel to read — they had to navigate backwards to reach it. #label-group is
+  // already tabindex=0 with role=group, so it announces "Disclaimer details, group"
+  // and reading forward gives the paragraphs, then the close button.
+  if (isOpen) { disclaimerOpener = btnInfo; (disclaimerBody || btnClose).focus(); }
   else disclaimerOpener = null;
 });
 btnClose.addEventListener('click', closeDisclaimer);

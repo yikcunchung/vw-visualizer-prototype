@@ -36,6 +36,17 @@ async function settle(page) {
   await page.evaluate(() =>
     document.getElementById('visualizer').scrollIntoView({ block: 'center' }));
 
+  // Fonts and images must be resolved before any contrast assertion. Half-painted
+  // text lets axe compute a background it otherwise cannot determine, which flips
+  // colour-contrast findings from `incomplete` (needs review — the honest answer
+  // over imagery) into hard `violations`. That produced a red suite with nothing
+  // actually broken. Conditions, not sleeps.
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForFunction(() => {
+    const imgs = [...document.querySelectorAll('#visualizer img')];
+    return imgs.length > 0 && imgs.every((i) => i.complete);
+  }, null, { timeout: 15_000 });
+
   // "Drag to rotate" is 0x0, then visible ~1.5-3s, then gone. While visible it
   // adds AX nodes and puts itself in axe's colour-contrast incomplete bucket —
   // the whole difference between "4 needs review" and "5".

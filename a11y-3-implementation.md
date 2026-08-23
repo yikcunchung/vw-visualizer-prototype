@@ -1019,10 +1019,18 @@ handlers.
 | any swatch | ArrowLeft / ArrowRight | move to the previous / next radio **and select it**, wrapping at both ends (10.9) |
 | any swatch | Home / End | jump to the first / last radio and select it (10.9) |
 | any swatch | Tab | leave the group entirely — a radiogroup is one tab stop (10.4) |
-| `#btn-info` | Enter / Space | toggle `#disclaimer`; on open, focus moves to `#btn-close` |
+| `#btn-info` | Enter / Space | toggle `#disclaimer`; on open, focus moves to **`#label-group`**, the content — see below |
 | `#btn-close` | Enter / Space | closes `#disclaimer` — see the focus note below |
 | `#disclaimer` open | Escape | closes it from anywhere |
 | `#label-wheel` | Enter / Space | `aria-expanded` false→true and the label unwraps to its full name — `scrollWidth` 498→214, height 26.4→71px (**B14**) |
+
+**On open, focus goes to the content, not the close button.** `#btn-close` sits *after*
+`#label-group` in DOM order, so focusing it dropped the user past the very text they opened
+the panel to read — a screen-reader user heard only *"Close Disclaimer, button"* and had to
+navigate **backwards** to reach the disclaimer. Focus now lands on `#label-group`, which is
+already `tabindex="0"` with `role="group" aria-label="Disclaimer details"`, so it announces
+the group and reading forward gives the paragraphs and then the close button. Found by
+VoiceOver, not by any tool.
 
 **Where focus goes when the disclaimer closes depends on who opened it,** and that is
 deliberate rather than a bug. Closed after the *user* opened it via `#btn-info`, focus

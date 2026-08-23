@@ -33,6 +33,23 @@ test.describe('SC 4.1.2 — aria-expanded tracks reality', () => {
     }
   });
 
+  test('opening the disclaimer puts focus on the content, not past it', async ({ page }) => {
+    await settle(page);
+    // Close first so the click below is a genuine open.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    await page.locator('#btn-info').click();
+    await page.waitForTimeout(500);
+
+    const focused = await page.evaluate(() => document.activeElement.id);
+    // #btn-close sits AFTER #label-group in DOM, so landing there strands the user
+    // past the text they opened the panel to read.
+    expect(focused, 'focus must land on the disclaimer content').toBe('label-group');
+    const inside = await page.evaluate(() =>
+      document.getElementById('disclaimer').contains(document.activeElement));
+    expect(inside).toBe(true);
+  });
+
   test('Escape from inside the panel closes it and rehomes focus', async ({ page }) => {
     await settle(page);
     await page.evaluate(() => {
