@@ -720,11 +720,21 @@ containing Level A failures.
 - [ ] **SC 2.5.3** by hand — visible label contained in the accessible name. No tool does this.
 - [ ] **Names are correct**, not merely present and unique — check each against what it describes.
 - [ ] **Screen reader** — one pass with NVDA or VoiceOver. Not optional.
-- [ ] **CI** — `jest-axe` for the structural half, Playwright with real key presses plus
-      `expect(page.locator(':focus'))` for the behavioural half. Both, or regressions return.
+- [x] **CI** — built: `npm test` runs Playwright over four viewports (1440, 768, 390, and
+      320x256 @ dsf 4), on every push and PR via `.github/workflows/a11y.yml`. **88 tests,
+      all passing.**
+      *Deviation, deliberate:* the structural half runs axe **inside Playwright** rather than
+      `jest-axe`. `jest-axe` runs in jsdom, and jsdom cannot run this component at all — init
+      is gated on an `IntersectionObserver`, the interior view is a `<canvas>` panorama, and
+      both `target-size` and the `#label-wheel` truncation rule need real layout. Same rules,
+      a browser that actually built the thing, no false green.
 - [ ] **`target-size` explicitly enabled** in the axe config — it is off by default, so without
       this line CI passes SC 2.5.8 without ever testing it.
-- [ ] **The suite fails when it should** — delete a rule and confirm CI goes red.
+- [x] **The suite fails when it should** — validated by injecting each defect back and
+      confirming the matching test goes red: `aria-expanded` removed from the auto-open path
+      (1 fail), `announceRotation()` removed from `stepRight` (1 fail), `wireRadiogroup()`
+      wiring disabled (ArrowRight 2 fails, Home/End 2 fails), and `alt` truncated at the quote
+      to reproduce **B1** (1 fail). A suite that has never failed proves nothing.
 
 ---
 

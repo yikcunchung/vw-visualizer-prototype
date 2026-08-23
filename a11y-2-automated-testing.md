@@ -278,7 +278,16 @@ Do the same in CI. If deleting a rule does not turn the suite red, the suite is 
 
 ---
 
-# 4. Nine traps that produce a confident false pass
+# 4. Traps that produce a confident false pass
+
+**Scroll the gate, not the thing you measure.** `initVisualizer()` is behind an
+`IntersectionObserver` on **`.intro-vis`** at `threshold: 0` — and `.intro-vis` sits *above*
+the component. Scrolling straight to `#visualizer` works at tall viewports because
+`.intro-vis` happens to stay on screen, but at **320x256** a single programmatic jump lands
+past it without ever rendering a frame where it intersects. The observer never fires, the
+grids stay empty, and `[role=radio]` returns 0 — while `#media` reports 99% visible, so every
+"is it in view?" check says yes. This failed all 22 tests at 400% zoom until the scroll was
+split in two: scroll `.intro-vis`, poll for 18 radios, *then* scroll to what you measure.
 
 Each of these produces a confident wrong answer.
 
