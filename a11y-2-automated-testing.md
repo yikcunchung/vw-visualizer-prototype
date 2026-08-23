@@ -67,7 +67,7 @@ The audit protocol specifies these tools and conditions. Status of each against 
 
 | Required | Status | Detail |
 |---|---|---|
-| **WAVE Evaluation Tool 3.3.1.0** | ◐ **Run — but it cannot see this component** | Real WAVE against the live URL returned **0 errors**. But it analysed the page **before the viewer built** — 0 radios, 0 swatches. Must be run as the **browser extension after scrolling**. See below. |
+| **WAVE Evaluation Tool 3.3.1.0** | ✅ **Done — extension, after scrolling** | **0 errors, 0 contrast errors, 13 alerts and every alert outside `#visualizer`.** Verified WAVE had actually seen the built component before reading any number: ARIA icons were overlaid on the swatches. The earlier *hosted* run is not comparable — it analysed the page before the viewer built (0 radios, 0 swatches) and is the reason the extension is mandatory here. |
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | Exactly this: `320×256 @ deviceScaleFactor 4`. axe 0 violations, no horizontal scroll, nothing clipped. `dsf 1` would be a small screen, not a zoom — see §4 trap 4. |
 | **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, via CDP — with **no `runOnly` filter**, which is what the extension's default scan executes (90 rules). The extension's own build number is not the engine version, so to satisfy the protocol literally, one run with the 4.131.2 extension UI is still worth doing. Expect it to agree. |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent`, not `element.click()`: Tab/Shift+Tab sweep (34 stops, 0 invisible), arrows, Enter, Space, Escape, with `document.activeElement` asserted at each step. |
@@ -560,7 +560,32 @@ once shared one name and passed axe, Lighthouse and WAVE alike.
   the data layer — a null, an empty string or a duplicate in that feed becomes a Level A defect
   the moment it renders, and no scanner will catch it. The precedent is on record: four Grand
   California swatches once carried the wrong colour name while every tool scored clean.
-- **WAVE (extension) and axe DevTools 4.131.2 UI** are still outstanding.
+- **axe DevTools 4.131.2 UI** is the last tool run outstanding. WAVE is done — see §7e.
+
+# 7e. WAVE run — result, 2026-08-23
+
+**WAVE 3.3.1.0 browser extension**, against the live deployment at `f49dc03`, run **after**
+scrolling the component into view and letting it settle.
+
+| Measure | Result |
+|---|---|
+| Errors | **0** |
+| Contrast errors | **0** |
+| Alerts | 13 — **all outside `#visualizer`** |
+| Did WAVE see the component? | **Yes** — ARIA icons overlaid on the swatches |
+
+**The sanity check is the part that matters.** WAVE reports "0 errors" just as happily against
+an empty shell, so the run is worthless until you know the tool saw the built component. The
+overlay is the cheapest proof: icons appearing on the colour swatches mean the grids existed
+when WAVE analysed them. Counting "radio inputs" does **not** work here — the swatches are
+`<button role="radio">`, not `<input type="radio">`, so they never appear as form inputs. They
+show up under ARIA instead.
+
+**0 contrast errors is better than the recorded baseline**, which had 6 from the hosted run.
+Those 6 were page chrome measured on an unbuilt page; they are not a component result and were
+never comparable.
+
+**All 13 alerts fall outside the component**, so under the scope rule none is a finding.
 
 # 7c. Verification checklist
 

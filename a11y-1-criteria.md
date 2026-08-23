@@ -187,9 +187,9 @@ control, so visible text and accessible name are the same string by construction
 design decision, not an implementation one, and nothing is failing without it.
 
 **One thing no automated pass can close:** a screen-reader run. VoiceOver is planned; the protocol
-names NVDA 2026.1.1.55980, so record that as a deviation. Two tool runs also remain — WAVE via the
-browser extension *after scrolling*, and one pass through the axe DevTools 4.131.2 UI. See
-`a11y-2-automated-testing.md`.
+names NVDA 2026.1.1.55980, so record that as a deviation. **VoiceOver is done** (all fifteen
+checks, §7d) and **WAVE is done** (extension, 0 errors, 0 contrast errors, §7e). **One tool run
+remains:** a pass through the axe DevTools 4.131.2 UI. See `a11y-2-automated-testing.md`.
 
 **One optional extra, outside the AA target.** `prefers-reduced-motion` is honoured nowhere in a
 component with 23 CSS transitions, 7 keyframe sets, 5 WAAPI animations and an indefinite
