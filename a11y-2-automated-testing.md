@@ -553,9 +553,13 @@ colour, so all 18 being listed and named matters functionally, not cosmetically.
 with no blanks and no duplicates independently confirms the 18-unique-names property **in
 announced output**, which is the guard against **B1** — the defect where five wheel radios
 once shared one name and passed axe, Lighthouse and WAVE alike.
-- **`Material 1`-`Material 5` remains an open content defect** regardless of this run. The
-  names are unique and non-empty, so they announce cleanly and sound fine — which is exactly
-  why they slipped past. A name that reads smoothly and describes nothing is still wrong.
+- **`Material 1`-`Material 5` is a prototype placeholder, closed as a non-issue.** Production
+  feeds these names from JSON, so the strings do not exist in the component's own source and
+  there is nothing here to fix. **What carries forward is where the risk moves:** the name is
+  now data, so its correctness is a content-governance problem, not a markup one. Validate at
+  the data layer — a null, an empty string or a duplicate in that feed becomes a Level A defect
+  the moment it renders, and no scanner will catch it. The precedent is on record: four Grand
+  California swatches once carried the wrong colour name while every tool scored clean.
 - **WAVE (extension) and axe DevTools 4.131.2 UI** are still outstanding.
 
 # 7c. Verification checklist
@@ -588,8 +592,9 @@ a finding **only if the element is inside `#visualizer`** — the viewer and the
       the first half-second is not a failure.
 - [ ] **Step 12** — the truncated wheel name announced as a **button**, and activating it read
       the **full** name.
-- [ ] **Step 13** — the materials announced as *"Material 1"* … *"Material 5"*. **Expected,
-      and a known content gap** — confirming it is the evidence for getting real names.
+- [ ] **Step 13** — the materials announced as *"Material 1"* … *"Material 5"*. **Expected
+      and closed:** these are prototype placeholders; production supplies the names from JSON.
+      Do not raise it. Do check the equivalent against **real** data once the feed is wired.
 - [ ] **Step 14** — the form-controls list reads as a coherent set of named controls, with no
       entry that is blank or duplicated.
 
@@ -640,4 +645,5 @@ blocks, NBA bar or footer; the *"Material N"* names (already known).
 That is deliberately short of "fully compliant". Conformance is defined **per full page**
 (spec §5.2.2), and this is a component: four page-level criteria are out of scope, three more
 pass on host-page markup this team does not own, and one content defect is open — the interior
-swatches are named `Material 1`-`Material 5`.
+interior swatches are named `Material 1`-`Material 5` in this prototype — a placeholder,
+since production supplies those names from JSON.

@@ -864,7 +864,15 @@ names into one (**B1**).
 - `Alloy wheels "Trondheim" 8.5 J x 20 front, 9.5 J x 20 rear`
 - `Alloy wheels "Montreal" 8.5 J x 20 front, 9.5 J x 20 rear, in black, diamond-turned finish`
 
-**Material — 5, `#grid-material`, interior only:** `Material 1` … `Material 5`.
+**Material — 5, `#grid-material`, interior only:** `Material 1` … `Material 5` — **placeholder
+strings; production supplies these from JSON.**
+
+> **The name being data changes where it can break, not whether it can.** These five are unique
+> and non-empty, so every tool passes them, and they will keep passing whatever the feed sends —
+> including a null, an empty string, or the same label twice. Assert on the data: non-empty,
+> unique within the group, and describing the swatch it is attached to. **A9** and **B1** are
+> both defects of *content* reaching the accessible name, not of markup, and neither had a rule
+> in any engine.
 
 > These five are **placeholders**. They are non-empty and unique, so every tool scores them
 > clean and 4.1.2 passes — but they describe nothing. This is the same class of defect as
