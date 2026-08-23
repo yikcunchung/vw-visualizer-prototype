@@ -635,7 +635,7 @@ Six items were confirmed by ear:
 - **NVDA 2026.1.1.55980 is still owed.** The protocol names NVDA; VoiceOver is a
   **documented deviation**, not a substitute. A formal BITV / EN 301 549 audit will not
   accept this run for that line item.
-- **All fifteen items are now evidenced.** VoiceOver is complete.
+**All fifteen checklist items are evidenced — VoiceOver is complete.**
 
 **The run found one defect that no tool reports.** Opening `#disclaimer` moved focus to
 `#btn-close`, which sits *after* `#label-group` in DOM order — so a screen-reader user who

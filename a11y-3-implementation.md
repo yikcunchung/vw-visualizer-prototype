@@ -937,10 +937,24 @@ tilt buttons appear, and `#label-wheel` goes.
 | 12 | `#select-model-lg` |
 | 13 | `#btn-info` |
 
-**By viewport**, before roving tabindex was added, the collapsed exterior count was 26 at
-1440/768 and 27 at 390/320x256@dsf4 — the extra stop being `#btn-fullscreen`. Roving
-tabindex removes 16 of those (18 radios → 2), so expect **10** at 1440/768 and **11** at
-the narrow widths. **0 stops land on an invisible control.**
+**By viewport, measured** (exterior, `#btn-a11y` collapsed):
+
+| Viewport | Component tab stops | Radiogroup stops |
+|---|---|---|
+| 1440x900 | **10** | 2 |
+| 768x1024 | **10** | 2 |
+| 390x844 | **12** | 2 |
+| 320x256 @ dsf 4 | **12** | 2 |
+
+**0 stops land on an invisible control at any width.** Each radiogroup contributes exactly one
+stop everywhere, which is the roving-`tabindex` contract holding across the range.
+
+**Do not derive this count — measure it.** Before roving `tabindex` the collapsed figures were 26
+at 1440/768 and 27 at the narrow widths, and subtracting the 16 removed radio stops predicts 10
+and 11. The narrow widths actually measure **12**, because two things vary with width and neither
+is in that arithmetic: `#btn-fullscreen` appears, and a `.swatch-arrow` becomes focusable as soon
+as a strip overflows — and it is `disabled`, therefore unfocusable, when it does not (see 10.5).
+The tab-stop count is viewport-dependent by design.
 
 ## 10.5 Controls that appear and disappear
 
