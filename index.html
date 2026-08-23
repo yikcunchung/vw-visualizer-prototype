@@ -1622,13 +1622,7 @@ body.in-fullscreen #img-car { will-change: transform; }
       <div id="select-model" class="select-model-row">
         <div class="select-wrap" id="wrapper-select-model-lg">
           <span class="select-label" id="label-select-model-lg">ID.7</span>
-          <!-- SC 2.5.3 Label in Name: the visible text IS the accessible name's first
-               token, so a speech user saying what they see ("ID.7") matches. The purpose
-               is appended sr-only rather than replacing it, and because aria-labelledby
-               references the visible span by id, the name follows it when the model
-               changes — an aria-label would have gone stale. -->
-          <span class="sr-only" id="purpose-select-model-lg">Select car model</span>
-          <select class="select-native" id="select-model-lg" aria-labelledby="label-select-model-lg purpose-select-model-lg">
+          <select class="select-native" id="select-model-lg" aria-label="Select car model">
             <optgroup label="ID.7">
               <option value="id7" selected>Pro Match Plus</option>
             </optgroup>

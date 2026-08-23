@@ -164,22 +164,6 @@ btn.className = i === selected ? 'selected' : '';
 if a control has a visible text label, the accessible name must **contain** that text —
 otherwise speech-input users cannot activate it by saying what they see.
 
-**As built.** `#select-model-lg` is the live example. Its visible span shows the model
-(`ID.7`), so the name is composed from that span plus an `.sr-only` purpose span:
-
-```html
-<span class="select-label" id="label-select-model-lg">ID.7</span>
-<span class="sr-only" id="purpose-select-model-lg">Select car model</span>
-<select id="select-model-lg"
-        aria-labelledby="label-select-model-lg purpose-select-model-lg">
-```
-
-Name: `"ID.7 Select car model"` — visible text first so speech input matches on it, purpose
-kept so the control still announces what it does. **Reference the visible node by id; do not
-copy its text into `aria-label`.** The span is rewritten when the model changes, and an
-`aria-label` would silently go stale — measured, the name follows to
-`"Grand California Select car model"`.
-
 ```jsx
 // ✗ visible "Innenraum", name "Interieur anzeigen" — no overlap at all
 // ✓
@@ -743,8 +727,11 @@ containing Level A failures.
 **Nothing is failing and nothing is unanswered.** Every Level A/AA criterion in scope for
 `#visualizer` is verified, inspected, or not applicable — see `a11y-1-criteria.md`.
 
-**No decisions left to record.** SC 2.5.3 was the last one and is now closed in code — see
-**A9**.
+**One decision to record.** It passes; it needs a recorded position, not code:
+
+| SC | Decision |
+|---|---|
+| **2.5.3** Label in Name | `#select-model-lg` is named "Select car model" while the adjacent span shows the value "ID.7". A value display is not a label, so it passes — but a speech-input user saying "ID.7" would miss it. Safer: `aria-labelledby` pointing at a real visible label. |
 
 **Two constraints to keep passing.** Both hold today and both are easy to break with a layout
 change, so re-check them after any reflow work:
