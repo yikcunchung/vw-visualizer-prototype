@@ -388,74 +388,211 @@ to record rather than a substitution (§1).
 
 # 7b. Manual testing — what to do
 
-Actions only. Do not judge anything while working through this; record what happened and
-check it against **§7c** afterwards. Judging as you go is how "it seemed fine" becomes
-evidence.
+Actions only, in the order you perform them. **Do not judge anything as you go** — write down
+what happened and grade it against **§7c** afterwards. Judging in the moment is how "it seemed
+fine" becomes evidence.
 
-## Step 0 — before any tool, every time
+Everything below is corrected against the runs recorded in §7d–§7f. Several instructions in the
+first draft of this section were wrong, and each mistake is called out so it is not repeated.
 
-1. Serve the build and open it: `python3 -m http.server 4173` → `http://127.0.0.1:4173/index.html`
-   (or the Pages URL).
-2. Scroll down until the car viewer and the swatch strips are on screen.
-3. Wait about 4 seconds.
-4. Look at the strips and count: colour swatches, wheel swatches.
-5. Watch for the *"Drag to rotate"* hint to appear and disappear.
-6. Write down: browser + version, OS, window size, date, and whether you clicked
-   **#btn-a11y** (the ⓘ-style accessibility button) to reveal the zoom/rotate controls.
+## Step 0 — before any tool, every single run
 
-Step 0 is not optional. The component builds itself only once scrolled to, and the swatches
-are created by JavaScript. Every tool below will happily inspect an empty shell.
+1. Decide **live or local**, and be deliberate:
+   - **Live** — `https://yikcunchung.github.io/vw-visualizer-prototype/`. Use this if the evidence
+     must describe what ships. **Verify it is current first:**
+     `curl -s <url> | grep -c wireRadiogroup` → expect **3**. Pages lags a merge by 1–3 minutes.
+   - **Local** — `python3 -m http.server 4173` → `http://127.0.0.1:4173/index.html`. Use this to
+     test unmerged work. Hosted WAVE cannot reach localhost; the extension can.
+2. **Scroll until the car viewer and the swatches are on screen.**
+   The component builds itself behind an `IntersectionObserver` watching **`.intro-vis`**, which
+   sits *above* the viewer, and the swatches are injected by JS. A single jump straight to the
+   viewer can skip the gate entirely — at 320x256 that made every automated test fail while the
+   viewer reported 99% visible. Scroll through, don't teleport.
+3. **Wait about 4 seconds.**
+4. **Count on screen: 13 colour swatches, 5 wheel swatches.** If you cannot see them, the tool
+   will be looking at an empty shell.
+5. **Watch the *"Drag to rotate"* hint appear and disappear.** While visible it adds a node to the
+   contrast bucket, which is the whole difference between "4 needs review" and "5".
+6. **Write down:** browser + version, OS version, window size, date, live or local, and whether
+   you clicked **`#btn-a11y`** to reveal the zoom/rotate controls.
 
 ## Run 1 — VoiceOver (macOS)
 
-Safari first. Chrome only as a second opinion. `Cmd+F5` toggles VoiceOver.
-`VO` = hold `Ctrl+Option`. Move with `VO+Right` / `VO+Left`, activate with `VO+Space`,
-open the rotor with `VO+U`.
+Safari first, Chrome as a second opinion. `Cmd+F5` toggles VoiceOver. `VO` = `Ctrl+Option`.
+Move `VO+Right` / `VO+Left`, activate `VO+Space`, rotor `VO+U`.
 
-Do Step 0 first, then, **writing down the spoken words after each action**:
+**On a Mac keyboard, Home and End are `Fn+Left` and `Fn+Right`.**
+
+Do Step 0, then — **writing down the spoken words after each action:**
 
 1. `VO+Right` until you are on the car viewer itself.
-2. Continue `VO+Right` until you reach the colour swatches.
+2. Continue until you reach the **row of 13 colour swatches** (the colour chips above the text
+   line reading *"Colours — <name>"* in the bottom bar).
 3. Press **Right arrow** once.
 4. Press **Right arrow** twice more.
-5. Press **Home**.
-6. Press **End**.
-7. Continue to the wheel swatches. Move across **all five**, one at a time.
-8. Reload the page. Do Step 0 again. Now `Tab` until you reach the ⓘ information button
-   (`#btn-info`) — **do not click anything on the way**.
+5. Press **Fn+Right** (End).
+6. Press **Fn+Left** (Home).
+7. Continue to the **5 wheel swatches**. Move across all five, one at a time.
+8. **Reload. Redo Step 0.** Now `Tab` to the ⓘ information button (`#btn-info`, bottom right of
+   the bottom bar) — **without clicking anything on the way.**
 9. Press `Enter` on it.
-10. Press `Escape`.
-11. `Tab` to the car viewer, then press **Right arrow** once and wait two full seconds.
-12. Narrow the window until the wheel name under the strip is visibly cut off. `Tab` to that
-    name and press `Enter`.
-13. Click the interior/exterior toggle to switch to interior. Move across the material
-    swatches.
-14. Press `VO+U`, choose **Form Controls**, and read the list. Then switch the rotor to
-    **Headings**.
+10. `Tab` once, then press `Escape`.
+11. `Tab` to the car viewer, press **Right arrow** once, and wait **two full seconds**.
+12. **Resize the window to about 768px wide.** Navigate to the wheel name under the swatches.
+13. Restore the window to desktop width. Navigate to that wheel name again and activate it.
+14. Switch to interior with the view toggle. Move across the material swatches.
+15. `VO+U` → **Form Controls**, arrow down the whole list. Then switch the rotor to **Landmarks**.
+
+> **Step 12 needs the specific width.** Every wheel name is long enough to truncate at normal
+> desktop sizes, so "narrow it until the text is cut off" is useless advice — it is *always* cut
+> off. The label only *fits* between roughly **640 and 900px**, where the layout gives it full
+> width. Outside that band, above and below, it truncates again. See `a11y-3` §10.5.
 
 ## Run 2 — WAVE 3.3.1.0
 
-Extension only. The hosted service at `wave.webaim.org` cannot see this component.
+**Extension only.** The hosted service at `wave.webaim.org` loads the URL without scrolling, so
+it analyses page chrome and an unbuilt shell — it recorded 0 radios and 0 swatches.
 
-1. Install the WAVE browser extension (Chrome or Firefox).
+1. Install the WAVE extension (Chrome or Firefox).
 2. Load the page. Do **Step 0**.
 3. Click the WAVE toolbar icon.
-4. Open the **Details** panel and find the counts for radio inputs, images with alt text,
-   and structural elements.
-5. Read the **Errors** tab, then **Contrast**, then **Alerts**.
+4. **Confirm WAVE saw the built component before reading a single number.** Two ways:
+   - **Its own overlay** — WAVE draws icons next to what it found. Look at the row of 13 colour
+     chips. Icons on the swatches means it saw them. A bare swatch row while the nav and footer
+     are covered in icons means it ran too early: reload, redo Step 0, run again.
+   - **Details → ARIA** — the total should be around **100**. Single digits means an empty shell.
+5. Read **Errors**, then **Contrast**, then **Alerts**.
 
-## Run 3 — axe DevTools 4.131.2
+> **Do not look for "radio inputs".** The swatches are `<button role="radio">`, not
+> `<input type="radio">`, so WAVE never counts them as form inputs — you will read 0 and think it
+> failed. They appear under **ARIA**. This instruction was wrong in the first draft.
 
-1. Install the axe DevTools extension. Open DevTools → **axe DevTools** tab.
-2. Check the reported version in the panel.
+## Run 3 — axe DevTools
+
+1. Install the axe DevTools extension. DevTools → **axe DevTools** tab.
+2. **Note the version.** The protocol names **4.131.2**. A newer build is fine — rule sets only
+   grow, so a newer version passing is at least as strong — but **record the deviation** rather
+   than leaving a reader to find the mismatch.
 3. Load the page. Do **Step 0**.
-4. In the panel's rule settings, **enable the rules that are off by default** — look for
-   `target-size` specifically, and enable everything else that is unticked.
-5. Click **Scan all of my page**.
-6. If your licence has the element picker, rescan scoped to `#visualizer`.
-7. Read **Issues**, then switch to **Needs review**.
+4. ⚠️ **Set the standard to WCAG 2.2 AA.** The extension may default to **2.1 AA**, which excludes
+   every criterion 2.2 added — including **`target-size`, the SC 2.5.8 rule**. A clean 2.1 result
+   is real and says nothing about the six new criteria. This is the single most important step in
+   this run.
+5. In rule settings, **enable the rules that are off by default**, `target-size` above all. If the
+   UI will not let you confirm which rules ran, record that — do not claim 2.5.8 was covered.
+6. **Scan all of my page.**
+7. Run the **Interactive Elements** guided test, then **Test #16 Target Size**.
 
-# 7d. Screen-reader run — result, 2026-08-23
+> **Guided-test zeros are not passes.** The seven Intelligent Guided Tests are semi-automated and
+> must each be launched by hand. An unrun test reports "Runs: 0, Total issues: 0", and the summary
+> rolls that up as "Guided Issues: 0" — which reads as a clean sheet to anyone skimming an export.
+> Record which ones you actually ran.
+
+# 7c. Verification checklist
+
+Tick only what you observed. **An untested box is not a pass.** A failure is a finding **only if
+the element is inside `#visualizer`** — the car viewer and the bottom bar.
+
+## Run 1 — VoiceOver
+
+- [ ] **1** — the viewer is announced as a **region** named *car viewer*.
+- [ ] **1** — record whether *car 360° viewer* (`aria-roledescription`) is **spoken**, ignored, or
+      **replaces** the word "region". No pass/fail — only what happened. This is the one item axe
+      hands back as needs-review because no engine can judge it.
+- [ ] **2** — announced as a **radio group** named *Colours*, with a position such as **"1 of 13"**.
+- [ ] **3** — focus **moved**, the new colour's **name was spoken**, and it announced as
+      **selected**. In a radiogroup, moving *is* choosing — without "selected" the user hears
+      where they landed but not that the car repainted.
+- [ ] **5–6** — Fn+Right reached the last colour, Fn+Left the first, both announced.
+- [ ] **7** — all five wheel names were **distinguishable from each other**.
+- [ ] **7** — record one quoted name **verbatim**, e.g. `Alloy wheels "Hudson" 8 J x 19 front,
+      8.5 J x 19 rear, in black, diamond-turned finish`. Did the quotes and the accented character
+      survive? Was `8 J x 19` intelligible, or noise? Unique and correct on paper can still be
+      unusable aloud.
+- [ ] **8** — ⚠️ **highest value.** `#btn-info` announced as **expanded** on a first visit with the
+      panel open. **"Collapsed" is a Level A regression (SC 4.1.2)** and means the fix in `37cdf4d`
+      has come undone. Note that *collapsed* also sounds perfectly unremarkable — you have to be
+      listening for it.
+- [ ] **9** — activating it moved focus **into** the panel, onto the **disclaimer text**, and the
+      text is what gets read. Landing on the close button instead means the fix in `ff88b87` has
+      regressed — that put focus *after* the content, so the user heard only "Close Disclaimer".
+- [ ] **10** — Escape closed the panel and focus went somewhere real — **never silence with focus
+      lost to `<body>`**. Focus returning to `#btn-info` is correct when *you* opened it; had it
+      auto-opened on scroll, focus should stay on `#media` instead.
+- [ ] **11** — *"Rotated to N degrees"* was spoken. Debounced 600ms, so silence in the first
+      half-second is not a failure.
+- [ ] **12** — at ~768px the wheel name is **plain text**: skipped by Tab, and announced only when
+      the VO cursor lands on it. **That is correct, not a gap** — see the note below.
+- [ ] **13** — at desktop width the same label announces as a **button**, and activating it reads
+      the **full** name.
+- [ ] **14** — materials announce as *"Material 1"*…*"Material 5"*. **Expected and closed** —
+      placeholders; production supplies these from JSON. Do not raise it.
+- [ ] **15** — rotor **Form Controls**: no blank entry, no duplicate, **all 18 swatch names
+      present**. Rotor **Landmarks**: **`car viewer`** listed.
+
+> **"Not announced unless you highlight it" is the correct result for plain text, not a finding.**
+> `Tab` moves between *focusable* elements; the VoiceOver cursor moves through *all* content,
+> static text included. At ~768px the wheel label has `tabIndex -1` and no role, so Tab skips it
+> while the cursor still reads it. Nothing is hidden — the name is on screen, reachable by the
+> cursor, and announced via `#wheel-live` on selection. **Check whether an element is focusable
+> before treating Tab skipping it as a defect.**
+
+> **Why the rotor sweep earns its place:** since roving `tabindex` landed, only 2 of the 18
+> swatches are Tab stops, so the rotor is the primary random-access route to a specific colour. A
+> list with no blanks and no duplicates also confirms the 18-unique-names property **in announced
+> output** — the guard against **B1**, where five wheel radios once shared one name and passed
+> axe, Lighthouse and WAVE alike.
+
+**Not a finding:** announcement order and verbosity; anything in the nav, subnav, hero, `.usp-*`,
+tiles, NBA bar or footer; the *"Material N"* names.
+
+## Run 2 — WAVE
+
+- [ ] **Sanity first — read nothing until this passes.** WAVE icons appear on the colour swatches,
+      or Details → ARIA totals around 100. **Not** "radio inputs" — those are always 0 here.
+- [ ] **Errors: 0.**
+- [ ] Contrast count recorded.
+- [ ] Alerts count recorded, each triaged as inside or outside `#visualizer`.
+
+**Not a finding, already dismissed:** duplicate `alt="VW ID.7"` on three tiles; contrast on `h1`,
+`.label-subline`, `.btn-secondary`, `.usp-4`.
+
+## Run 3 — axe DevTools
+
+- [ ] Version recorded, and any deviation from **4.131.2** stated.
+- [ ] ⚠️ **Standard set to WCAG 2.2 AA, not 2.1.** A 2.1 scan cannot test SC 2.5.8.
+- [ ] **Violations inside `#visualizer`: 0.**
+- [ ] Each page-wide violation triaged. `p-as-heading` on the `.highlight` card titles is **page
+      chrome** — those cards sit after `</div><!-- /visualizer -->`.
+- [ ] Needs-review recorded: expect `aria-roledescription` ×1 and colour-contrast ×4–5. **If the
+      panel never surfaces a needs-review bucket, say so** — a BITV tester must resolve it by hand.
+- [ ] **Test #16 Target Size** run, and its verdict recorded.
+- [ ] Which guided tests were run, and which were not, stated explicitly.
+
+> **Expect two AI role suggestions, and reject both.** The advisor flags `#media` and
+> `#label-group` as *"role missing or incorrect"* and recommends `button` for each. Both are wrong
+> and both rationales assert visual facts that are false — it described the 1440x662 car stage as
+> having a *"circular shape, icon and placement"*, and attributed a *"clickable icon"* to a
+> two-paragraph text block whose icon is an `aria-hidden` sibling. `#label-group`'s `tabindex="0"`
+> exists **to satisfy** ACT rule 0ssw9k / SC 2.1.1 — a scrollable region must be
+> keyboard-scrollable — so the suggestion would break the fix it was added for. **`tabindex="0"`
+> does not imply "button".** Full reasoning in §7f.
+
+> **A 13 x 13 target reading is an artifact.** Controls measured while the `#btn-a11y` group
+> animates open report 13 x 13. Wait for the box to stop changing before believing it.
+
+## Sign-off
+
+- [ ] All three runs done, each with tool version, browser, OS, viewport, date and live-or-local.
+- [ ] Every failure triaged as in-scope or page chrome.
+- [ ] **VoiceOver recorded as a deviation from NVDA 2026.1.1.55980**, not a substitute — a formal
+      BITV / EN 301 549 audit naming NVDA will not accept it, so an NVDA pass is still owed.
+- [ ] Only once all of the above holds may §8 drop *"pending screen-reader verification"* — and
+      **"fully compliant" remains unavailable regardless**: conformance is defined per full page
+      (spec §5.2.2) and this is a component, four page-level criteria are out of scope, and three
+      more pass on host-page markup this team does not own.
+
+# 7d. Screen-reader run — result, 2026-08-24
 
 **VoiceOver, macOS 26.5.2 (25F84), Safari 26.5.2 and Chrome 151.0.7922.174, against the
 live deployment** (`yikcunchung.github.io/vw-visualizer-prototype`) at commit `39fc0c8`.
@@ -563,7 +700,7 @@ once shared one name and passed axe, Lighthouse and WAVE alike.
 - **Every tool run is done.** VoiceOver §7d, WAVE §7e, axe DevTools §7f. **NVDA remains the
   only outstanding instrument**, recorded as a deviation rather than a plan.
 
-# 7e. WAVE run — result, 2026-08-23
+# 7e. WAVE run — result, 2026-08-24
 
 **WAVE 3.3.1.0 browser extension**, against the live deployment at `f49dc03`, run **after**
 scrolling the component into view and letting it settle.
@@ -588,7 +725,7 @@ never comparable.
 
 **All 13 alerts fall outside the component**, so under the scope rule none is a finding.
 
-# 7f. axe DevTools run — result, 2026-08-23
+# 7f. axe DevTools run — result, 2026-08-24
 
 **axe DevTools extension v4.134.1**, live deployment. **Version deviation:** the protocol names
 **4.131.2**; 4.134.1 is newer, and the rule set only grows between builds, so a newer version
@@ -697,76 +834,6 @@ the focusable region is an additional affordance rather than the only route.
 If `region` on `#media` were ever revisited, `role="group"` fits a focusable interactive cluster
 better. `button` does not. Leaving it as `region` keeps the landmark entry point, which the
 VoiceOver rotor confirmed working.
-
-# 7c. Verification checklist
-
-Tick only what you actually observed. An untested box is not a pass. Anything that fails is
-a finding **only if the element is inside `#visualizer`** — the viewer and the bottom bar.
-
-## Run 1 — VoiceOver
-
-- [ ] **Step 1** — the viewer is announced as a **region** named *car viewer*.
-- [ ] **Step 1** — note whether *car 360° viewer* (`aria-roledescription`) is spoken,
-      silently ignored, or **replaces** the word "region". All three are acceptable; which
-      one happens is the thing to record. This is the item axe hands back as needs-review.
-- [ ] **Step 2** — the group is announced as a **radio group** named *Colours*, and the
-      current swatch as *selected*, with a position such as **"1 of 13"**.
-- [ ] **Step 3** — focus **moved** to the next colour.
-- [ ] **Step 3** — the new colour's **name was spoken** and it was announced as **selected**.
-- [ ] **Steps 5–6** — Home reached the first colour, End reached the last, both announced.
-- [ ] **Step 7** — all five wheel names were **distinguishable from each other**.
-- [ ] **Step 7** — record verbatim how one quoted name is read, e.g.
-      `Alloy wheels "Mataró" 8.5 J x 21 front, 9 J x 21 rear`. Did the quotes and the
-      accented *ó* survive? Was `8.5 J x 21` intelligible, or noise?
-- [ ] **Step 8** — ⚠️ **highest value.** `#btn-info` was announced as **expanded**, not
-      collapsed, on a first visit with the panel open. If it says *collapsed*, that is a
-      **Level A regression** (SC 4.1.2) and the fix in `37cdf4d` has come undone.
-- [ ] **Step 9** — activating it announced the change, and focus went **into** the panel.
-- [ ] **Step 10** — Escape closed the panel and focus went somewhere sensible — **never
-      silence with focus lost to the page body**.
-- [ ] **Step 11** — *"Rotated to N degrees"* was spoken. It is debounced 600ms, so nothing in
-      the first half-second is not a failure.
-- [ ] **Step 12** — the truncated wheel name announced as a **button**, and activating it read
-      the **full** name.
-- [ ] **Step 13** — the materials announced as *"Material 1"* … *"Material 5"*. **Expected
-      and closed:** these are prototype placeholders; production supplies the names from JSON.
-      Do not raise it. Do check the equivalent against **real** data once the feed is wired.
-- [ ] **Step 14** — the form-controls list reads as a coherent set of named controls, with no
-      entry that is blank or duplicated.
-
-**Not a finding:** announcement order and verbosity; anything in the nav, hero, tiles, USP
-blocks, NBA bar or footer; the *"Material N"* names (already known).
-
-## Run 2 — WAVE
-
-- [ ] **Sanity first — do not read any result until this passes.** WAVE reports about
-      **13 colour radios**, **18 swatches**, and **25 images with alt**. If radios show
-      **0**, WAVE ran before the component built: reload, redo Step 0, run it again.
-- [ ] **Errors: 0.**
-- [ ] Contrast items recorded with a count.
-- [ ] Alerts recorded with a count.
-
-**Not a finding, already dismissed:** duplicate `alt="VW ID.7"` on three tiles; contrast on
-`h1`, `.label-subline`, `.btn-secondary`, `.usp-4`.
-
-## Run 3 — axe DevTools
-
-- [ ] Version reads **4.131.2** (record it if it does not — the protocol names this one).
-- [ ] **`target-size` was enabled and appears in the results.** If it is absent, SC 2.5.8
-      was **not tested** — say so plainly rather than implying coverage.
-- [ ] **Violations inside `#visualizer`: 0.**
-- [ ] Needs-review contains `aria-roledescription` ×1.
-- [ ] Needs-review contains colour-contrast ×4 at 1440x900 (the count moves with width).
-
-## Sign-off
-
-- [ ] All three runs done, each with tool version, browser, OS, viewport and date recorded.
-- [ ] Every failure triaged as in-scope or page chrome.
-- [ ] **VoiceOver recorded as a deviation from NVDA 2026.1.1.55980**, not as a substitute — a
-      formal BITV / EN 301 549 audit naming NVDA will not accept it, so an NVDA pass is still
-      owed before sign-off.
-- [ ] Only once all of the above is true, the closing sentence of §8 may drop
-      *"pending screen-reader verification."*
 
 # 8. The claim this evidence supports
 
