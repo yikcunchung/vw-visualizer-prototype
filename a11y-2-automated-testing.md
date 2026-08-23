@@ -69,7 +69,7 @@ The audit protocol specifies these tools and conditions. Status of each against 
 |---|---|---|
 | **WAVE Evaluation Tool 3.3.1.0** | ✅ **Done — extension, after scrolling** | **0 errors, 0 contrast errors, 13 alerts and every alert outside `#visualizer`.** Verified WAVE had actually seen the built component before reading any number: ARIA icons were overlaid on the swatches. The earlier *hosted* run is not comparable — it analysed the page before the viewer built (0 radios, 0 swatches) and is the reason the extension is mandatory here. |
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | Exactly this: `320×256 @ deviceScaleFactor 4`. axe 0 violations, no horizontal scroll, nothing clipped. `dsf 1` would be a small screen, not a zoom — see §4 trap 4. |
-| **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, via CDP — with **no `runOnly` filter**, which is what the extension's default scan executes (90 rules). The extension's own build number is not the engine version, so to satisfy the protocol literally, one run with the 4.131.2 extension UI is still worth doing. Expect it to agree. |
+| **axe DevTools 4.131.2** | ✅ **Done — v4.134.1, version deviation recorded** | This audit ran **axe-core 4.13.0**, the library the extension embeds, via CDP — with **no `runOnly` filter**, which is what the extension's default scan executes (90 rules). The extension's own build number is not the engine version, so to satisfy the protocol literally, one run with the 4.131.2 extension UI is still worth doing. Expect it to agree. |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent`, not `element.click()`: Tab/Shift+Tab sweep (34 stops, 0 invisible), arrows, Enter, Space, Escape, with `document.activeElement` asserted at each step. |
 | **NVDA 2026.1.1.55980** | ◐ **Deviation — VoiceOver run instead** | A screen reader *has* now been run: **VoiceOver**, macOS 26.5.2, Safari + Chrome, against live — see **§7d**. NVDA itself is still not done, and the protocol names NVDA, so this is recorded as a **deviation, not a substitute**. |
 | **PAC 26.1.0.0** | ⚪ **Not applicable** | PAC validates **PDF/UA-1 (ISO 14289-1)** inside PDF files; it cannot open an HTML page. There is **no PDF in this component or repo** (`*.pdf` count: 0). See below. |
@@ -560,7 +560,8 @@ once shared one name and passed axe, Lighthouse and WAVE alike.
   the data layer — a null, an empty string or a duplicate in that feed becomes a Level A defect
   the moment it renders, and no scanner will catch it. The precedent is on record: four Grand
   California swatches once carried the wrong colour name while every tool scored clean.
-- **axe DevTools 4.131.2 UI** is the last tool run outstanding. WAVE is done — see §7e.
+- **Every tool run is done.** VoiceOver §7d, WAVE §7e, axe DevTools §7f. **NVDA remains the
+  only outstanding instrument**, recorded as a deviation rather than a plan.
 
 # 7e. WAVE run — result, 2026-08-23
 
@@ -596,8 +597,20 @@ passing is at least as strong as the named one passing. Recorded rather than hid
 | Scan | Result |
 |---|---|
 | Automatic, **WCAG 2.1 AA**, whole page | **0 issues** — 0 critical / serious / moderate / minor |
-| Automatic, **WCAG 2.2 AA** | ⬜ *run but total not recorded — outstanding* |
+| Automatic, **WCAG 2.2 AA**, whole page | **1 issue — page chrome, 0 inside `#visualizer`** |
 | Intelligent Guided Tests | **0 of 7 run** |
+
+**The single 2.2 issue is out of scope.** `p-as-heading` on
+`.highlight:nth-child(2) > .highlight-header > p` — `<p>Ambient lighting</p>`, a card title
+styled as a heading but marked up as a paragraph (78% confidence). Those `.highlight` cards live
+in `#noise-2 > .section-highlight`, which begins **after** `</div><!-- /visualizer -->`, so under
+the scope rule it is not a finding for this team. It is a fair observation for whoever owns the
+page template — the section already has a real `<h2>`, and the card titles below it should be
+headings too.
+
+**Component result: 0 issues at WCAG 2.2 AA.** And usefully, the scan finding *something*
+page-wide is evidence it was not a no-op — a 2.2 run that returned a flat zero everywhere would
+be indistinguishable from a misconfigured one.
 
 **The 2.1 AA scan does not cover SC 2.5.8.** `target-size` carries the `wcag22aa` tag, so a 2.1
 rule set excludes it along with every other criterion 2.2 added. A clean 2.1 result is real but
