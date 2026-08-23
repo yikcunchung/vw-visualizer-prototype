@@ -1,6 +1,6 @@
 # A11y 2 of 3 — What the automated tests cover, and what they cannot
 
-**Component:** VW Visualizer. **Audited:** 2026-08-22, re-verified and extended 2026-08-23 against the live deployment, headless Chrome
+**Component:** VW Visualizer. **Audited:** 2026-08-22, re-verified and extended 2026-08-23/24 against the live deployment, headless Chrome
 151.0.7922.174, axe-core 4.13.0 (`axe.version` read from the engine, not the bundle filename).
 **Companions:** `a11y-1-criteria.md` (every criterion) · `a11y-3-implementation.md` (what to build).
 
@@ -583,7 +583,7 @@ tiles, NBA bar or footer; the *"Material N"* names.
 
 # 9. Manual run results
 
-## 9.1 Screen reader — VoiceOver, 2026-08-23
+## 9.1 Screen reader — VoiceOver, 2026-08-24
 
 **VoiceOver, macOS 26.5.2 (25F84), Safari 26.5.2 and Chrome 151.0.7922.174, against the
 live deployment** (`yikcunchung.github.io/vw-visualizer-prototype`) at commit `39fc0c8`.
@@ -691,7 +691,7 @@ once shared one name and passed axe, Lighthouse and WAVE alike.
 - **Every tool run is done.** VoiceOver §9.1, WAVE §9.2, axe DevTools §9.3. **NVDA remains the
   only outstanding instrument**, recorded as a deviation rather than a plan.
 
-## 9.2 WAVE, 2026-08-23
+## 9.2 WAVE, 2026-08-24
 
 **WAVE 3.3.1.0 browser extension**, against the live deployment at `f49dc03`, run **after**
 scrolling the component into view and letting it settle.
@@ -716,7 +716,7 @@ never comparable.
 
 **All 13 alerts fall outside the component**, so under the scope rule none is a finding.
 
-## 9.3 axe DevTools, 2026-08-23
+## 9.3 axe DevTools, 2026-08-24
 
 **axe DevTools extension v4.134.1**, live deployment. **Version deviation:** the protocol names
 **4.131.2**; 4.134.1 is newer, and the rule set only grows between builds, so a newer version
