@@ -71,7 +71,7 @@ The audit protocol specifies these tools and conditions. Status of each against 
 | **Zoom 400% and 320 × 256 px** | ✅ **Done** | Exactly this: `320×256 @ deviceScaleFactor 4`. axe 0 violations, no horizontal scroll, nothing clipped. `dsf 1` would be a small screen, not a zoom — see §4 trap 4. |
 | **axe DevTools 4.131.2** | ◐ **Equivalent, not identical** | This audit ran **axe-core 4.13.0**, the library the extension embeds, via CDP — with **no `runOnly` filter**, which is what the extension's default scan executes (90 rules). The extension's own build number is not the engine version, so to satisfy the protocol literally, one run with the 4.131.2 extension UI is still worth doing. Expect it to agree. |
 | **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent`, not `element.click()`: Tab/Shift+Tab sweep (34 stops, 0 invisible), arrows, Enter, Space, Escape, with `document.activeElement` asserted at each step. |
-| **NVDA 2026.1.1.55980** | ❌ **Not done** | The one real gap. **VoiceOver is planned instead** — see the deviation note below. |
+| **NVDA 2026.1.1.55980** | ◐ **Deviation — VoiceOver run instead** | A screen reader *has* now been run: **VoiceOver**, macOS 26.5.2, Safari + Chrome, against live — see **§7d**. NVDA itself is still not done, and the protocol names NVDA, so this is recorded as a **deviation, not a substitute**. |
 | **PAC 26.1.0.0** | ⚪ **Not applicable** | PAC validates **PDF/UA-1 (ISO 14289-1)** inside PDF files; it cannot open an HTML page. There is **no PDF in this component or repo** (`*.pdf` count: 0). See below. |
 
 **Both remaining items need a human at a browser** — neither can be automated from here.
@@ -455,6 +455,56 @@ Extension only. The hosted service at `wave.webaim.org` cannot see this componen
 6. If your licence has the element picker, rescan scoped to `#visualizer`.
 7. Read **Issues**, then switch to **Needs review**.
 
+# 7d. Screen-reader run — result, 2026-08-23
+
+**VoiceOver, macOS 26.5.2 (25F84), Safari 26.5.2 and Chrome 151.0.7922.174, against the
+live deployment** (`yikcunchung.github.io/vw-visualizer-prototype`) at commit `39fc0c8`.
+Window size not recorded; both browsers agreed.
+
+This is the pack's **first evidence of announced output** rather than exposed structure.
+Six items were confirmed by ear:
+
+| Item | Heard |
+|---|---|
+| `#btn-info` on an untouched first visit | **"expanded"** — SC 4.1.2 confirmed in speech, not just in the tree |
+| Swatch position | **"1 of 13"**, **"2 of 13"** — the radiogroup contract lands |
+| `aria-roledescription` on `#media` | **"car 360° viewer" is announced** |
+| Wheel name, read in full | `Alloy wheels "Hudson" 8 J x 19 front, 8.5 J x 19 rear, in black, diamond-turned finish` |
+| Rotation | **"rotated to 40 degrees"** and equivalents |
+| Browser agreement | Safari and Chrome behaved the same |
+
+**What each one settles.**
+
+- **SC 4.1.2.** The Level A defect was that `#btn-info` advertised "collapsed" over an
+  open panel. VoiceOver now says *expanded* on a first visit with no interaction, which is
+  the only way to observe the bug. Fixed, and confirmed by the only instrument that counts.
+- **The radiogroup.** *"1 of 13"* proves the group semantics reach the user, and since the
+  arrow keys now work, the announcement no longer promises something absent. Before the fix
+  this same announcement was a lie.
+- **`aria-roledescription`.** axe reports this as *needs review* because no engine can judge
+  it. It is **announced**, so the discretionary decision to use it is now evidence-backed
+  rather than an argument. Whether it replaces or supplements the word "region" was not
+  recorded — worth noting on the next pass.
+- **B1, closed in speech.** The historic Level A defect truncated `alt` at the embedded
+  quote and collapsed five wheel radios into one shared name. The full string is now read
+  aloud, quotes, diacritic and all — the regression test guards the markup, this confirms
+  the output.
+- **Rotation.** Previously silent while zoom announced. Now spoken, and the 600ms debounce
+  does not swallow it.
+
+## What this does NOT close
+
+- **NVDA 2026.1.1.55980 is still owed.** The protocol names NVDA; VoiceOver is a
+  **documented deviation**, not a substitute. A formal BITV / EN 301 549 audit will not
+  accept this run for that line item.
+- **Only these six items were explicitly confirmed.** Home/End, panel activation and
+  Escape, `#label-wheel` expansion, the interior materials and the rotor pass were reported
+  as unremarkable but not recorded individually. Treat them as observed, not as evidence.
+- **`Material 1`-`Material 5` remains an open content defect** regardless of this run. The
+  names are unique and non-empty, so they announce cleanly and sound fine — which is exactly
+  why they slipped past. A name that reads smoothly and describes nothing is still wrong.
+- **WAVE (extension) and axe DevTools 4.131.2 UI** are still outstanding.
+
 # 7c. Verification checklist
 
 Tick only what you actually observed. An untested box is not a pass. Anything that fails is
@@ -528,7 +578,13 @@ blocks, NBA bar or footer; the *"Material N"* names (already known).
 
 > Every WCAG 2.2 Level A/AA requirement that can be verified by static analysis, by the
 > accessibility tree, or by driving real pointer and keyboard events is verified and passing on
-> `#visualizer` — with detectors proven against injected defects. One conformance point rests on a
-> documented judgement call (SC 2.5.3), and screen-reader announcement remains unverified.
+> `#visualizer` — with detectors proven against injected defects, and with a regression suite of
+> 88 tests holding them in place. One conformance point rests on a documented judgement call
+> (SC 2.5.3). Screen-reader announcement has been **verified with VoiceOver** on macOS 26.5.2 in
+> Safari and Chrome (see §7d); **NVDA 2026.1.1.55980, which the protocol names, has not been run
+> and is recorded as a deviation.**
 
-That is deliberately short of "fully compliant", which no automated pass can establish.
+That is deliberately short of "fully compliant". Conformance is defined **per full page**
+(spec §5.2.2), and this is a component: four page-level criteria are out of scope, three more
+pass on host-page markup this team does not own, and one content defect is open — the interior
+swatches are named `Material 1`-`Material 5`.
