@@ -1,24 +1,29 @@
-# A11y 2 of 3 — What the automated tests cover, and what they cannot
+# A11y 2 of 3 — What the tools prove, and what they cannot
 
-**Component:** VW Visualizer. **Audited:** 2026-08-22, re-verified and extended 2026-08-24 against the live deployment, headless Chrome
-151.0.7922.174, axe-core 4.13.0 (`axe.version` read from the engine, not the bundle filename).
+**Component:** VW Visualizer. **Audited:** 2026-08-22, re-verified and extended 2026-08-24 against
+the live deployment, headless Chrome 151.0.7922.174, axe-core 4.13.0 (`axe.version` read from the
+engine, not the bundle filename).
 **Companions:** `a11y-1-criteria.md` (every criterion) · `a11y-3-implementation.md` (what to build).
 
-The single most important sentence in this pack:
+**BLUF:** `#visualizer` is at **0 axe violations** across five viewports including literal 400% zoom,
+with all nine default-disabled rules force-enabled. Every contrast *needs-review* node was resolved
+by hand. The behaviour no scanner reaches was driven with real events, and every detector was proven
+against an injected defect. All three manual tool runs are done. **NVDA is the only instrument still
+owed.**
 
-> **The reference build passed axe, Lighthouse, WAVE and Nu while containing genuine Level A
-> failures.** Automated tooling is necessary and nowhere near sufficient. Roughly half this
-> component's accessibility lives in JavaScript behaviour that no scanner executes.
+> **The one sentence that matters:** the reference build passed axe, Lighthouse, WAVE and Nu **while
+> containing genuine Level A failures.** Tooling is necessary and nowhere near sufficient — roughly
+> half this component's accessibility lives in JavaScript behaviour no scanner executes.
+
+**How to read this:** §1–§5 explain what the tools can and cannot establish. §6–§8 are procedure —
+follow them. §9 is the evidence record. §10 is the claim the evidence supports.
 
 ---
 
----
+# 1. Scope — read before quoting a number
 
-# 0. Scope of this evidence — read before quoting a number
-
-The audit ran `axe.run(document)` and then attributed every result. **Only `#visualizer` is reported
-here** — page chrome is not this team's surface and is not tracked. Scoping axe to `#visualizer`
-alone gives the same answer: **0 violations**. Measured at 1440×900:
+**Only `#visualizer` is reported here.** Page chrome is not this team's surface. Scoping axe to
+`#visualizer` alone gives the same answer as the page-wide run: **0 violations**. At 1440×900:
 
 | Measure | `#visualizer` |
 |---|---|
@@ -32,133 +37,91 @@ alone gives the same answer: **0 violations**. Measured at 1440×900:
 | Radios | 18 |
 | Targets under 24×24 | **0** |
 
-Taken with the `#btn-a11y` control group **open** (the larger surface) and after the *"Drag to
-rotate"* hint has collapsed. **Node and contrast counts wobble by a couple if you measure while that
-hint is on screen** — it is 0×0, then visible from roughly 1.5s to 3s, then gone, and while visible
-it adds itself to the contrast bucket as a fifth component node. Let it settle before quoting a
-number.
+Taken with `#btn-a11y` **open** (the larger surface) and after the *"Drag to rotate"* hint has
+collapsed. That hint is 0×0, visible ~1.5–3s, then gone; while visible it adds itself to the contrast
+bucket as a fifth node. **Let it settle before quoting any count.**
 
-> **Scope rule: only `#visualizer` counts.** Errors and failures in page chrome — nav, subnav, hero,
-> tiles, footer, skip link — are **not findings** and are not tracked in this pack.
+The four contrast nodes are `.disclaimer-i`, both `#label-group` paragraphs and `#select-model-lg`,
+all resolved in §3.
 
-The four nodes in the contrast *needs-review* bucket are `.disclaimer-i`, both `#label-group`
-paragraphs and `#select-model-lg`. All four are resolved by hand in §2.
-
-Everything in `a11y-3-implementation.md` **is** component-scoped: all 16 elements named by the 30
-invariants sit inside `#visualizer`, verified by `contains()`.
+> **Scope rule:** errors in page chrome — nav, subnav, hero, tiles, footer, skip link — are **not
+> findings** and are not tracked. Everything in `a11y-3-implementation.md` is component-scoped: all
+> 16 elements named by the 30 invariants sit inside `#visualizer`, verified by `contains()`.
 
 ---
 
-# 1. Tool coverage at a glance
+# 2. Tool coverage
 
-| Tool | What it genuinely proves | Blind spots that bit this project |
+| Tool | What it genuinely proves | Blind spot that bit this project |
 |---|---|---|
-| **axe-core 4.13.0** | Structural ARIA, names, roles, contrast on solid backgrounds, ~90 rules | **No `label-in-name` rule at all** (SC 2.5.3). Cannot see behaviour. Punts on contrast over gradients/images. **`target-size` is disabled by default**, so a bare run never tests SC 2.5.8 — see trap 9. `duplicate-id` still ships but is `deprecated` and disabled; `duplicate-id-aria` is the one that runs |
+| **axe-core 4.13.0** | Structural ARIA, names, roles, contrast on solid backgrounds, ~90 rules | **No `label-in-name` rule at all** (SC 2.5.3). Cannot see behaviour. Punts on contrast over gradients. **`target-size` disabled by default** — trap 8 |
 | **Lighthouse** | A subset of axe, plus perf/SEO | Scored **100** on a build with a Level A naming failure |
-| **WAVE** | Empty labels, redundant `title`, sr-only contrast — things axe ignores | Needs a **public URL**. Reports `.sr-only` contrast as an error even when clipped to 1×1 |
-| **Nu HTML validator** | Parse errors, invalid ARIA nesting | Says nothing about behaviour or contrast |
+| **WAVE** | Empty labels, redundant `title`, sr-only contrast — things axe ignores | The **hosted** service cannot see this component at all; extension only |
+| **Nu HTML validator** | Parse errors, invalid ARIA nesting | Silent on behaviour and contrast |
 | **CDP `Accessibility.getFullAXTree`** | The real exposed tree: unnamed nodes, duplicate role+name | Shows what is *exposed*, never what is *announced* |
-| **CDP `Input.dispatch*Event`** | Real keyboard and pointer behaviour — the half nothing else reaches | Synthetic keys do not fire native page scroll (see §4) |
-| **Composited-pixel screenshots** | True contrast over gradients and imagery | Clip coordinates and anti-aliasing will lie to you (see §4) |
+| **CDP `Input.dispatch*Event`** | Real keyboard and pointer behaviour — the half nothing else reaches | Synthetic keys do not fire native default actions — trap 9 |
+| **Composited-pixel screenshots** | True contrast over gradients and imagery | Clip coordinates and anti-aliasing will lie — traps 5–7 |
 
-## Required toolchain — coverage against it
-
-The audit protocol specifies these tools and conditions. Status of each against the Visualizer:
+## Required toolchain — status against the protocol
 
 | Required | Status | Detail |
 |---|---|---|
-| **WAVE Evaluation Tool 3.3.1.0** | ✅ **Done — extension, after scrolling** | **0 errors, 0 contrast errors, 13 alerts and every alert outside `#visualizer`.** Verified WAVE had actually seen the built component before reading any number: ARIA icons were overlaid on the swatches. The earlier *hosted* run is not comparable — it analysed the page before the viewer built (0 radios, 0 swatches) and is the reason the extension is mandatory here. |
-| **Zoom 400% and 320 × 256 px** | ✅ **Done** | Exactly this: `320×256 @ deviceScaleFactor 4`. axe 0 violations, no horizontal scroll, nothing clipped. `dsf 1` would be a small screen, not a zoom — see §4 trap 4. |
-| **axe DevTools 4.131.2** | ✅ **Done — v4.134.1, version deviation recorded** | This audit ran **axe-core 4.13.0**, the library the extension embeds, via CDP — with **no `runOnly` filter**, which is what the extension's default scan executes (90 rules). The extension's own build number is not the engine version, so to satisfy the protocol literally, one run with the 4.131.2 extension UI is still worth doing. Expect it to agree. |
-| **Operated via the keyboard** | ✅ **Done** | Driven with real `Input.dispatchKeyEvent`, not `element.click()`: Tab/Shift+Tab sweep (34 stops, 0 invisible), arrows, Enter, Space, Escape, with `document.activeElement` asserted at each step. |
-| **NVDA 2026.1.1.55980** | ◐ **Deviation — VoiceOver run instead** | A screen reader *has* now been run: **VoiceOver**, macOS 26.5.2, Safari + Chrome, against live — see **§9.1**. NVDA itself is still not done, and the protocol names NVDA, so this is recorded as a **deviation, not a substitute**. |
-| **PAC 26.1.0.0** | ⚪ **Not applicable** | PAC validates **PDF/UA-1 (ISO 14289-1)** inside PDF files; it cannot open an HTML page. There is **no PDF in this component or repo** (`*.pdf` count: 0). See below. |
+| **WAVE Evaluation Tool 3.3.1.0** | ✅ **Done** | Extension, after scrolling: **0 errors, 0 contrast errors, 13 alerts, every alert outside `#visualizer`** — §9.2 |
+| **axe DevTools 4.131.2** | ✅ **Done** | v4.134.1, version deviation recorded. **0 issues in the component at WCAG 2.2 AA**, plus Test #16 Target Size — §9.3 |
+| **Zoom 400% and 320×256 px** | ✅ **Done** | `320×256 @ deviceScaleFactor 4`. 0 violations, no horizontal scroll, nothing clipped. `dsf 1` would be a small screen, not a zoom — trap 4 |
+| **Operated via the keyboard** | ✅ **Done** | Real `Input.dispatchKeyEvent`, not `element.click()`: Tab/Shift+Tab sweep, arrows, Enter, Space, Escape, `document.activeElement` asserted at each step |
+| **NVDA 2026.1.1.55980** | ◐ **Deviation** | VoiceOver run instead — §9.1. **The one instrument still owed** |
+| **PAC 26.1.0.0** | ⚪ **N/A** | PAC validates PDF/UA-1 inside PDFs; it cannot open an HTML page, and the repo has **0** PDFs |
 
-**Both remaining items need a human at a browser** — neither can be automated from here.
+### Why the hosted WAVE service cannot audit this component
 
-### WAVE: the hosted service cannot audit this component
+Against the live URL it reports 0 errors — but it saw **0 colour radios and 0 swatches**, where a
+scrolled browser sees **13 and 18**. The component builds behind an `IntersectionObserver`; the
+hosted service loads the URL without scrolling, so it measured the static shell. **This cannot be
+fixed by adding a scroll step — the service is not scriptable.** Use the extension, and confirm it
+saw the swatches before reading any number.
 
-Run against the live URL, the real WAVE engine reports **0 errors**.
+### Why VoiceOver does not close the NVDA line
 
-**0 errors is real and good** — the five sibling prototypes had 10 empty-form-label errors between
-them. But the result is **not** a clearance for the Visualizer, because of what WAVE analysed:
-
-| | hosted WAVE saw | a scrolled browser sees |
-|---|---|---|
-| colour radios | **0** | 13 |
-| swatches | **0** | 18 |
-
-The component builds behind an `IntersectionObserver`. The hosted service loads the URL and analyses
-it **without scrolling**, so it measured the static viewer shell and nothing else. This is the same
-lazy-init trap as §4 trap 1, except it **cannot be fixed by adding a scroll step** — the service is
-not scriptable.
-
-> **How to actually satisfy this line of the protocol:** use **WAVE 3.3.1.0 as the browser
-> extension**, which analyses the live DOM. Load the page, **scroll the viewer into view, confirm
-> the swatches have rendered, then run WAVE.** Running it on page load produces a clean report of
-> almost nothing.
-
-### NVDA vs VoiceOver — a deviation to record
-
-The protocol names **NVDA 2026.1.1.55980**. **VoiceOver was run instead** — see §9.1.
-
-It surfaced real problems — the disclaimer opening past its own content, among them. But it stands
-as a deviation rather than a substitution, because the two disagree in ways that matter here:
-
-- **Different engines, different announcements.** `aria-roledescription`, a non-modal
-  `role="dialog"`, and a `<canvas role="img">` whose view changes as you pan are exactly the
-  constructs where NVDA and VoiceOver diverge. A VoiceOver pass cannot predict the NVDA result for
-  those three.
-- **Different browser pairing.** NVDA is normally tested with Firefox or Chrome, VoiceOver with
-  Safari. Safari's accessibility mapping differs independently of the screen reader.
-- **A formal BITV / EN 301 549 audit that names NVDA will not accept VoiceOver evidence** for that
-  line item.
-
-**Practical read:** run VoiceOver now — it will catch genuine issues, and it is far better than no
-screen-reader pass. Budget an NVDA pass before any formal sign-off.
+It surfaced real problems, including the disclaimer opening past its own content. It remains a
+deviation because: the two engines diverge on exactly the constructs used here
+(`aria-roledescription`, a non-modal `role="dialog"`, a `<canvas role="img">` whose view changes);
+NVDA pairs with Firefox/Chrome and VoiceOver with Safari, whose mapping differs independently; and
+**a formal BITV / EN 301 549 audit naming NVDA will not accept VoiceOver evidence.** Budget an NVDA
+pass before sign-off.
 
 ### If PDFs are in scope elsewhere
 
-This audit covers the **Visualizer component only**. **PDFs — brochures, price lists, spec sheets —
-are out of scope here.** That is a boundary, not a clean bill of health:
+Out of scope here — a boundary, not a clean bill of health. Under **EN 301 549** non-web documents
+fall under **clause 10**, separately from clause 9. WCAG conformance is defined per full page *and
+per complete process*, so a spec sheet inside a purchase journey is part of that process. **That is
+where PAC belongs.** Nothing in this pack speaks to it.
 
-- Under **EN 301 549**, non-web documents fall under **clause 10**, separately from clause 9 (Web).
-- WCAG conformance is defined **per full page** and **per complete process**, so a downloadable spec
-  sheet inside a purchase journey is part of that process.
-- **That is where PAC 26.1.0.0 belongs.** If VW ships PDFs, run PAC against them and track the
-  result as a separate line item — nothing in this pack speaks to it.
+### Tools deliberately not used
 
-### Other tools, and why they are absent
+**ARC Toolkit · IBM Equal Access · Siteimprove · Tenon** — same class as axe. A second scanner raises
+the rule count, not the confidence: the failures this project shipped were behavioural or semantic.
+**Colour Contrast Analyser** — superseded by composited-pixel measurement; CCA needs a human to pick
+two colours, and over a gradient that choice *is* the question. **Formal BITV-Test** — an audit
+method, not a tool; it consumes evidence like this pack.
 
-| Tool | Why not used |
-|---|---|
-| **ARC Toolkit · IBM Equal Access · Siteimprove · Tenon** | Same class as axe — rule engines over the DOM. A second scanner raises the rule count, not the confidence: the failures this project actually shipped were behavioural or semantic, which no DOM scanner detects. |
-| **Colour Contrast Analyser (CCA)** | Superseded here by composited-pixel measurement. CCA needs a human to pick two colours; over a gradient or a photograph that choice is the whole question. |
-| **Formal BITV-Test procedure** | A conformance *audit method*, not a tool. It consumes evidence like this pack; it does not replace it. |
+## How much is machine-decidable at all
 
----
-
-## Which criteria are machine-decidable at all
-
-Of the 52 Level A/AA criteria in scope:
-
-- **~23** can be verified by driving the component (axe + AX tree + real events + pixels).
-- **~9** are settled by reading the code and the tree, not by a tool.
-- **1** — SC 2.5.3 Label in Name — has **no rule in any tool used here**.
-- The rest no scanner can close at all — see §5.
-
-W3C's own ACT Rules cover only **32 of 56** A/AA criteria. The rest are either too new
-(2.4.11, 2.5.7, 2.5.8, 3.3.7, 3.3.8) or not machine-decidable. That is the structural
-reason a green CI run is not conformance.
+Of the 52 A/AA criteria in scope: **~23** verifiable by driving the component, **~9** settled by
+reading the code and tree, **1** (SC 2.5.3) with no rule in any tool used here, and the rest closable
+by no scanner — see §5. W3C's own ACT Rules cover **32 of 56** A/AA criteria; the remainder are
+either too new (2.4.11, 2.5.7, 2.5.8, 3.3.7, 3.3.8) or not machine-decidable. **That is the
+structural reason a green CI run is not conformance.**
 
 ---
 
-# 2. Results
+# 3. Results
 
-## axe-core — 0 violations
+## axe — 0 violations
 
-Bare `axe.run(document)`, **no tag filter**, both `violations` and `incomplete` read, at five
-viewports in default and all-disclosures-expanded state.
+Bare `axe.run(document)`, **no tag filter**, both `violations` and `incomplete` read, five viewports
+in default and all-disclosures-expanded state. **90 rules, 0 JS exceptions.** The `incomplete` bucket
+is contrast only.
 
 | Viewport | Violations |
 |---|---|
@@ -168,13 +131,7 @@ viewports in default and all-disclosures-expanded state.
 | 768×1024 | 0 |
 | 1440×900 | 0 |
 
-90 rules executed, 0 JS exceptions. The `incomplete` (needs-review) bucket is contrast only, and is
-resolved node by node below.
-
-### With the default-disabled rules force-enabled
-
-A default run leaves 9 rules switched off, including **`target-size`** — the SC 2.5.8 rule. Enabling
-all nine raises the count to **98 rules** and the component is still clean:
+**With all nine default-disabled rules force-enabled — 98 rules, still clean:**
 
 | Viewport | Rules | Violations | `target-size` | Needs review |
 |---|---|---|---|---|
@@ -182,25 +139,26 @@ all nine raises the count to **98 rules** and the component is still clean:
 | 390×844 | 98 | **0** | **passes, 29 nodes** | `aria-roledescription` ×1, contrast ×3 |
 | 320×256 @ dsf 4 | 98 | **0** | **passes, 28 nodes** | `aria-roledescription` ×1, contrast ×1 |
 
-So 2.5.8 is confirmed by the engine, not only by measuring boxes by hand. The lone
-`aria-roledescription` *needs-review* is the discretionary decision already recorded in
-`a11y-1-criteria.md` — axe cannot judge it, and asks a human to.
+So **SC 2.5.8 is confirmed by the engine**, not only by measuring boxes. The lone
+`aria-roledescription` needs-review is the discretionary decision recorded in `a11y-1-criteria.md` —
+axe cannot judge it and asks a human to. **No target is under 24×24**; `#label-wheel`, the only one
+that ever was, is 26.4px, so nothing relies on the spacing exception.
 
 ## Accessibility tree
 
-`#visualizer` subtree: **158 nodes, 61 named, 0 unnamed, 0 duplicate role+name**. 18 radios with **18 unique names**, the embedded `"` in the wheel names intact.
+**158 nodes, 61 named, 0 unnamed, 0 duplicate role+name.** 18 radios with **18 unique names**, the
+embedded `"` in the wheel names intact.
 
-## Contrast — the `incomplete` bucket resolved by hand
+## Contrast — the needs-review bucket resolved by hand
 
-axe punts whenever the background is a gradient, an image, or overlapped. Those are not passes;
-a BITV tester must resolve every one. Every node in the component's bucket — the four named in §0 —
-was measured on composited pixels at every viewport: **8.59:1 – 21:1**, all passing. The lowest is
-`.disclaimer-i` at 8.59:1.
+axe punts whenever the background is a gradient, an image, or overlapped. Those are not passes; a
+BITV tester must resolve every one. All four component nodes measured on composited pixels at every
+viewport: **8.59:1 – 21:1**, all passing, lowest `.disclaimer-i` at 8.59:1.
 
 ## Behaviour — driven with real events
 
-Seven invariants that no scanner reaches, each driven with `Input.dispatchMouseEvent` /
-`dispatchKeyEvent` rather than `element.click()`:
+Seven invariants no scanner reaches, each driven with `Input.dispatchMouseEvent` / `dispatchKeyEvent`
+rather than `element.click()`:
 
 | Check | Result |
 |---|---|
@@ -214,13 +172,12 @@ Seven invariants that no scanner reaches, each driven with `Input.dispatchMouseE
 
 ## Orientation and text spacing
 
-**SC 1.3.4 Orientation — pass.** Portrait *and* landscape at 390×844 / 844×390 / 320×640 /
-640×320, in normal and fullscreen mode. There is **no `@media (orientation:)` rule anywhere** in the
-stylesheet. In all eight combinations: viewer and bottombar visible, 18 radios and 18 swatches
-present, no horizontal scroll, and the fullscreen exit control visible **and inside the viewport**.
-The `rotate(90deg)` is a user-invoked, reversible fullscreen mode — not an orientation lock.
+**SC 1.3.4 — pass.** Portrait *and* landscape at 390×844 / 844×390 / 320×640 / 640×320, normal and
+fullscreen. **No `@media (orientation:)` rule anywhere.** In all eight combinations: viewer and
+bottombar visible, 18 radios and 18 swatches present, no horizontal scroll, fullscreen exit visible
+and inside the viewport. The `rotate(90deg)` is user-invoked and reversible — not an orientation lock.
 
-**SC 1.4.12 Text Spacing — pass.** All four overrides applied together:
+**SC 1.4.12 — pass.** All four overrides applied together:
 
 ```css
 *, *::before, *::after {
@@ -231,38 +188,26 @@ The `rotate(90deg)` is a user-invoked, reversible fullscreen mode — not an ori
 p { margin-bottom: 2em !important; }
 ```
 
-At 1440 / 390 / 320: **nothing clipped that was not already clipped, no control lost, no horizontal
-scroll.** Compare the clipped set by element identity, not by string — the dimensions in a label
-change even when the set does not:
+At 1440 / 390 / 320: nothing clipped that was not already clipped, no control lost, no horizontal
+scroll. **Compare the clipped set by element identity, not by string** — dimensions inside a label
+change even when the set does not.
 
 | Element | Why it is not a loss |
 |---|---|
-| `#media-help` | The intentional 1×1 `.sr-only` clip. Nothing is rendered to lose. |
-| `#label-wheel` | Truncates by design, and still **expands to fully visible** under the overrides — all 86 characters, at every width. |
+| `#media-help` | The intentional 1×1 `.sr-only` clip. Nothing rendered to lose |
+| `#label-wheel` | Truncates by design, and still **expands to fully visible** under the overrides — all 86 characters, at every width |
 
-**Trap: measure after the reveal animation settles.** `revealSwatches()` animates swatches in from
-`translateY(12px)` over ~0.45s with staggered delays. Measuring before it settles put the swatches
-~9px low, which manufactures a target-size failure that does not exist. Poll until the label→swatch
-distance stops changing before trusting any geometry here.
-
-**Detector validated.** A deliberately clipped canary (`60px` box, `overflow:hidden`, a sentence far
-too long) was injected and *was* detected. Without that, "no new clipping" would be an untested
-claim — which is the same discipline as §3.
+**Measure after the reveal animation settles.** `revealSwatches()` animates swatches from
+`translateY(12px)` over ~0.45s with staggered delays. Measuring early put them ~9px low, which
+manufactures a target-size failure that does not exist. Poll until the label→swatch distance stops
+changing.
 
 ---
 
-## Target size and reflow
+# 4. Validate the harness before trusting a zero
 
-**No target is under 24×24.** `#label-wheel` — the only one that ever was — is 26.4px via
-`line-height: 1.6` + `padding-block: 2px`, so nothing relies on the spacing exception. No horizontal
-scroll at 320 / 390 / 768 / 1440 or at 400% zoom.
-
----
-
-# 3. Validate the harness before trusting a zero
-
-**Every check above was re-run against a copy with that specific defect injected.** A detector
-that cannot fail is not evidence. All seven fired:
+**Every check above was re-run against a copy with that specific defect injected.** A detector that
+cannot fail is not evidence. All seven fired:
 
 | Injected defect | Detector output |
 |---|---|
@@ -274,104 +219,107 @@ that cannot fail is not evidence. All seven fired:
 | Hover/active ring rule deleted | **2.04:1** — exactly the predicted figure |
 | `scroll-padding` zeroed + a fixed bar added | `FIXED-OCCLUDER` on every control |
 
-Do the same in CI. If deleting a rule does not turn the suite red, the suite is decorative.
+A clipped canary (60px box, `overflow:hidden`, an over-long sentence) was also injected for 1.4.12
+and *was* detected. Without it, "no new clipping" would be an untested claim.
+
+**Do the same in CI. If deleting a rule does not turn the suite red, the suite is decorative.**
 
 ---
 
-# 4. Traps that produce a confident false pass
+# 5. Nine traps that produce a confident false pass
 
-**Scroll the gate, not the thing you measure.** `initVisualizer()` is behind an
-`IntersectionObserver` on **`.intro-vis`** at `threshold: 0` — and `.intro-vis` sits *above*
-the component. Scrolling straight to `#visualizer` works at tall viewports because
-`.intro-vis` happens to stay on screen, but at **320x256** a single programmatic jump lands
-past it without ever rendering a frame where it intersects. The observer never fires, the
-grids stay empty, and `[role=radio]` returns 0 — while `#media` reports 99% visible, so every
-"is it in view?" check says yes. This failed all 22 tests at 400% zoom until the scroll was
-split in two: scroll `.intro-vis`, poll for 18 radios, *then* scroll to what you measure.
+**1 · Scroll the *gate*, not the thing you measure.** `initVisualizer()` sits behind an
+`IntersectionObserver` on **`.intro-vis`** at `threshold: 0`, and `.intro-vis` is *above* the
+component. Jumping straight to `#visualizer` works at tall viewports because `.intro-vis` stays on
+screen, but at **320×256** a single programmatic jump lands past it without ever rendering an
+intersecting frame. The observer never fires, the grids stay empty, `[role=radio]` returns **0** —
+while `#media` reports 99% visible, so every "is it in view?" check says yes. This failed all 22
+tests at 400% zoom. Scroll `.intro-vis`, **poll** until
+`document.querySelectorAll('#grid-colour [role=radio]').length > 0`, *then* scroll to what you
+measure. **Never a fixed sleep.**
 
-Each of these produces a confident wrong answer.
+**2 · `runOnly: {type:'tag'}` is not "all rules".** A tag filter silently skips every rule without
+one of those tags. Bare `axe.run(document)` is what the DevTools extension runs — but see trap 8.
 
-**1 · The component does not exist until you scroll.** `initVisualizer()` is behind an
-`IntersectionObserver`. Audit before it fires and axe returns **0 violations on an empty
-container**. Scroll `.intro-vis` into view and **poll** until
-`document.querySelectorAll('#grid-colour [role=radio]').length > 0`. Never use a fixed sleep.
+**3 · `violations` is not the whole result.** `incomplete` is the needs-review bucket a BITV tester
+must resolve. Suppress it and "axe 0" means far less than it sounds.
 
-**2 · `runOnly: {type:'tag'}` is not "all rules".** A tag filter silently skips every rule
-without one of those tags. Bare `axe.run(document)` is what the DevTools extension runs — but see
-trap 9: even that is not every rule.
+**4 · 400% zoom is `deviceScaleFactor: 4`.** `320×256 @ dsf 1` is a small screen — a different test,
+and not the one 1.4.4 asks for.
 
-**3 · `violations` is not the whole result.** `incomplete` is the "needs review" bucket. Suppress
-it and "axe 0" means far less than it sounds.
-
-**4 · 400% zoom is `deviceScaleFactor: 4`.** `320×256 @ dsf 1` is a small screen — a different
-test, and not the one 1.4.4 asks for.
-
-**5 · `captureScreenshot` clip is document-absolute.** `getBoundingClientRect()` is
-viewport-relative. Mixing them produced six false `1.00:1` contrast failures — the crops were
-blank. Add `scrollX`/`scrollY`, or screenshot the viewport and crop in the image.
+**5 · `captureScreenshot` clip is document-absolute**, `getBoundingClientRect()` is viewport-relative.
+Mixing them produced six false `1.00:1` contrast failures on blank crops. Add `scrollX`/`scrollY`, or
+screenshot the viewport and crop in the image.
 
 **6 · Anti-aliasing is not the background.** Taking the *worst* minority colour in a text crop
-reported white-on-black text as 2.12:1 — it had found the button's white **border**. Use the
-dominant background, and look at the crop before believing a failure.
+reported white-on-black as 2.12:1 — it had found the button's white **border**. Use the dominant
+background, and look at the crop before believing a failure.
 
-**7 · A circle's bounding-box corners are outside the circle.** Sampling bbox corners reported
-every 32px round button as occluded by the image behind it. Sample inside the shape.
+**7 · A circle's bounding-box corners are outside the circle.** Sampling bbox corners reported every
+32px round button as occluded by the image behind it. Sample inside the shape.
 
-**9 · Bare `axe.run()` is not every rule either.** Nine rules are `enabled: false` by default in
-4.13.0 — `target-size`, `aria-roledescription`, `color-contrast-enhanced`, `duplicate-id`,
+**8 · Bare `axe.run()` is not every rule either.** Nine rules are `enabled: false` in 4.13.0 —
+`target-size`, `aria-roledescription`, `color-contrast-enhanced`, `duplicate-id`,
 `duplicate-id-active`, `identical-links-same-purpose`, `landmark-complementary-is-top-level`,
 `meta-refresh-no-exceptions`, `audio-caption`. **`target-size` is SC 2.5.8**, so a default run
-reports "0 violations" without ever having tested target size. Pass
-`{rules:{'target-size':{enabled:true}, …}}` and confirm the rule appears in `passes`, or verify it
-outside axe. Check `axe._audit.rules.filter(r => !r.enabled)` before believing a rule ran.
+reports "0 violations" without ever testing target size. Pass
+`{rules:{'target-size':{enabled:true}, …}}` and **confirm the rule appears in `passes`**. Check
+`axe._audit.rules.filter(r => !r.enabled)` before believing a rule ran.
 
-**8 · Disabled controls cannot take focus.** `el.focus()` on a `disabled` button is a no-op, so
-the page never scrolls and the control reads as "off-viewport". Enable it, or skip it.
+**9 · Synthetic keys do not perform native default actions.** `rawKeyDown` fires no `keypress`, so a
+native `<button>` never activates and Enter looks completely dead while Space works. Send the `char`
+event too. Arrow keys are unaffected — which is the useful control: if arrows drive one widget but
+not another in the same run, the second really has no handler. Likewise page scroll is not performed,
+so verify any "scroll was swallowed" finding against an unmodified build.
 
-Two more worth knowing: a **reused renderer stops firing the IntersectionObserver** after heavy
-use — kill Chrome and start fresh if `initialised: false` appears twice. And **synthetic
-`rawKeyDown` does not perform native default actions** such as page scroll; verify any
-"page scroll was swallowed" finding against an unmodified build before reporting it.
+**Also:** `el.focus()` on a `disabled` button is a no-op, so the page never scrolls and the control
+reads as "off-viewport" — enable it or skip it. And a **reused renderer stops firing the
+IntersectionObserver** after heavy use; kill Chrome and start fresh if `initialised: false` appears
+twice.
 
 ---
 
-# 5. What automation will never close
+# 6. What automation will never close
 
 | Gap | Why no tool reaches it |
 |---|---|
-| **Screen-reader output** | The AX tree shows what is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. **Closed by listening, not by tooling** — VoiceOver run, §9.1. **NVDA 2026.1.1.55980** is named in the protocol and remains owed |
+| **Screen-reader output** | The AX tree shows what is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. **Closed by listening, not tooling** — VoiceOver run, §9.1; **NVDA remains owed** |
 | **SC 2.5.3 Label in Name** | No rule exists in axe. A sibling VW prototype shipped a real Level A failure here that axe, Lighthouse **and** WAVE all passed |
-| **Whether a name is *correct*** | Tools check that names are present and unique, never that they are true. Four Grand California swatches carried the wrong colour name while scoring clean |
+| **Whether a name is *correct*** | Tools check names are present and unique, never that they are true. Four Grand California swatches carried the wrong colour name while scoring clean |
 | **Judgement calls** | 2.5.3 and 2.5.8 pass on arguable readings. A tool cannot weigh an exception |
-| **Discretionary ARIA** | `aria-roledescription` on the viewer, the non-modal `role="dialog"` panel, and a `<canvas role="img">` whose view changes as you pan. axe hands the first back as *needs review* precisely because it cannot judge it — only listening settles these |
+| **Discretionary ARIA** | `aria-roledescription` on the viewer, the non-modal `role="dialog"`, a `<canvas role="img">` whose view changes as you pan. axe hands the first back as needs-review precisely because it cannot judge it |
 
 ---
 
-# 6. Re-running the suite
+## Re-running the automated suite
+
+`npm test` runs the committed Playwright suite — **92 tests over four viewports**, green in CI. That
+is the maintained path. The CDP recipe below is what the original audit ran, kept because it explains
+the *order* the steps must happen in:
 
 ```bash
 # 1. serve the build, then drive a real browser over CDP
 python3 -m http.server 7802 --bind 127.0.0.1
 chrome --headless=new --remote-debugging-port=9714 --disable-gpu
 
-# 2. STEP 0 — force the component to exist, and assert that it did
+# 2. STEP 0 — force the component to exist, and ASSERT that it did
 #    scrollIntoView('.intro-vis'), then poll:
 #      document.querySelectorAll('#grid-colour [role=radio]').length > 0
 #    ABORT the run if it never becomes > 0
-
-# 3. axe: bare axe.run(document) — no runOnly. Read violations AND incomplete
+#
+# 3. axe: bare axe.run(document), no runOnly, PLUS the nine disabled rules.
+#    Read violations AND incomplete
 # 4. AX tree: Accessibility.getFullAXTree -> assert 0 unnamed, 0 duplicate role+name
 # 5. Real keys: Input.dispatchKeyEvent, assert document.activeElement after each
 # 6. Reflow: Emulation.setDeviceMetricsOverride 320x256 @ dsf 4  (= 400% zoom)
-# 7. Contrast: screenshot the VIEWPORT, crop in PIL, compare against the dominant bg
+# 7. Contrast: screenshot the VIEWPORT, crop, compare against the dominant bg
 # 8. Re-run the whole suite against a deliberately broken copy. Every detector must fire.
 ```
 
-**For CI:** `jest-axe` covers the structural half; Playwright with real key presses plus
-`expect(page.locator(':focus'))` covers the behavioural half. Both are needed — the structural
-half alone is what scored 100 on a build with a Level A failure.
-
----
+**Why the suite does not use `jest-axe`:** it runs in jsdom, and jsdom cannot run this component at
+all — init is gated on an `IntersectionObserver`, the interior view is a `<canvas>` panorama, and both
+`target-size` and the `#label-wheel` truncation rule need real layout. axe runs **inside Playwright**
+instead: same rules, a browser that actually built the thing, no false green.
 
 ---
 
