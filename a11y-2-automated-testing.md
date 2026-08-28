@@ -779,8 +779,7 @@ VoiceOver rotor confirmed working.
 > Every WCAG 2.2 Level A/AA requirement that can be verified by static analysis, by the
 > accessibility tree, or by driving real pointer and keyboard events is verified and passing on
 > `#visualizer` — with detectors proven against injected defects, and with a regression suite of
-> 92 tests holding them in place, green in CI. One conformance point rests on a documented judgement call
-> (SC 2.5.3). Screen-reader announcement has been **verified with VoiceOver** on macOS 26.5.2 in
+> 92 tests holding them in place, green in CI. Screen-reader announcement has been **verified with VoiceOver** on macOS 26.5.2 in
 > Safari and Chrome (see §9.1); **NVDA 2026.1.1.55980, which the protocol names, has not been run
 > and is recorded as a deviation.**
 

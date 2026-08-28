@@ -115,7 +115,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass | Drag-rotate has button and arrow-key alternatives. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass | Arrows fire on pointer-up; drag-off-then-release aborts. |
-| **2.5.3** | Label in Name | A | Yes | ✅ Pass | **Position recorded.** `#select-model-lg` is named "Select car model"; the adjacent span shows `ID.7`. That span is a **value display, not a label** — the criterion governs labels, so it does not apply. A speech user saying "ID.7" would not match, which is a real limitation but not this failure. **Do not "fix" it with `aria-labelledby` on that span** — see the note below. |
+| **2.5.3** | Label in Name | A | Yes | ✅ Pass | `#select-model-lg` is named via `aria-labelledby` pointing at `#q-model-static`, a static "Model / Trim" span placed above the control. The name and the visible label are the same string by construction; the adjacent `ID.7`/etc. span is a separate value display, not part of the name. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | **No target in the component is under 24×24.** `#label-wheel` is 26.4px tall (`line-height: 1.6` + `padding-block: 2px`), so it meets the minimum outright and nothing relies on the spacing exception. Smallest `<button>` is the close button at exactly 24×24. Confirmed both by measuring every control's box and by axe's own `target-size` rule, which **is disabled by default** and had to be switched on: it then passes on 27–29 nodes at 1440 / 390 / 320×256. |
@@ -166,25 +166,17 @@ criteria are not required and are not listed.
 **No open criteria, no known failures, and no decisions left outstanding.** Every Level A/AA
 criterion in scope for `#visualizer` is verified, inspected, or not applicable.
 
-**The one decision, now recorded.** SC 2.5.3 on `#select-model-lg` is a pass and stays a pass:
-the visible `ID.7` is the current *value*, and 2.5.3 governs labels.
+**SC 2.5.3 on `#select-model-lg` is a plain pass.** A static "Model / Trim" label
+(`#q-model-static`) sits above the control and is the sole target of its `aria-labelledby`.
+"Model / Trim", not just "Model", because every option combines both — the same two-concept
+pattern already used by the neighbouring "Motor / Battery Capacity" select. The label never
+changes, so the name is stable and matches the visible text by construction: no judgement
+call, no fallback needed.
 
-**The tempting fix is wrong, and was tried and reverted.** Pointing `aria-labelledby` at the
-visible span (plus an `.sr-only` purpose span) gives the name `"ID.7 Select car model"` while
-the AX **value** is `"Pro Match Plus"` — measured. Three things break:
-
-1. **It misdescribes the control.** The select chooses between ID.7, ID.Polo and Grand
-   California. A name beginning "ID.7" says the control is *about* ID.7.
-2. **The name mutates with the value** — it becomes `"Grand California Select car model"` on
-   the next selection. Names must be stable; a control that announces differently over time
-   is a moving target in a rotor or elements list.
-3. **It conflates name with value**, which ARIA separates deliberately. `ID.7` is the
-   optgroup label and `Pro Match Plus` the chosen option — two fragments of one selection,
-   one of them wedged into the name.
-
-**The only clean way to close it** is a design change: a visible `Model` label beside the
-control, so visible text and accessible name are the same string by construction. That is a
-design decision, not an implementation one, and nothing is failing without it.
+Pointing the name at the *value* span instead (`ID.7`/`ID.Polo`/`Grand California`, whichever
+is selected) would have been the wrong move: the name would mutate with the value, misdescribe
+a control that also selects the other two models, and conflate name with value, which ARIA
+separates deliberately. The static label above the control avoids all three.
 
 **All three tool runs are done.** VoiceOver, all fifteen checks (§9.1); WAVE extension, 0 errors
 and 0 contrast errors (§9.2); axe DevTools v4.134.1, 0 issues inside the component at WCAG 2.2 AA
