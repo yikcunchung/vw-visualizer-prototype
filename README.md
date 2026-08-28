@@ -60,18 +60,24 @@ threw, nothing looked wrong on screen — it just never spoke. `2.1.1`/`4.1.2` b
 before this fix, so nothing here is caught by rule engines. It only surfaces by using the control
 with a screen reader running.
 
-### 4. A select's neighbouring text is its **value**, not its label — give it a real one
+### 4. A select's neighbouring text is its **value**, not its label — split the two, don't drop either
 
 ```html
-<span class="select-model-static-label" id="q-model-static">Model / Trim</span>
-<select id="select-model-lg" aria-labelledby="q-model-static">…</select>
+<span class="select-label">
+  <span id="model-static-label">Model: </span><span id="label-select-model-lg">ID.7</span>
+</span>
+<select id="select-model-lg" aria-labelledby="model-static-label label-select-model-lg">…</select>
 ```
 
 **Why:** the control had `aria-label="Select car model"` — accurate, but invisible, so a sighted
-user had no on-screen purpose description (the visible `ID.7` beside it is the current value, which
-changes; a label must not). Adding a static, always-present label and pointing `aria-labelledby` at
-it satisfies SC 2.5.3 without conflating name and value. **Do not** point this at the mutating
-family-name span instead — that was tried, and rejected, for exactly that reason.
+user had no on-screen purpose description. The fix isn't "point the name at a static label
+*instead of* the value" — it's both, in separate elements: a static "Model:" prefix nothing ever
+rewrites, plus the existing family-value span. The name legitimately updates when the family does
+("Model: ID.7" -> "Model: Grand California"); what must never happen is the *static* half moving
+too, which is what a single JS-rewritten string would risk. **Known trade-off:** the longest family
+name ("Grand California") fills the fixed-width box with no room to spare, so adding any prefix
+truncates it visually — the accessible name is unaffected, but it's a real visual limitation, not
+just a documentation footnote.
 
 ### 5. Selection state must not be color alone
 

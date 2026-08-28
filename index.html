@@ -786,11 +786,6 @@ body.in-fullscreen #img-car { will-change: transform; }
 .select-wrap:hover .select-native { border-color: rgba(153,127,103,1); color: rgba(115,62,1,1); }
 .select-wrap:hover .select-label { color: rgba(115,62,1,1); }
 .select-wrap:hover .select-chevron-icon svg path { fill: rgba(115,62,1,1); }
-.select-model-header { display: flex; flex-direction: column; gap: 8px; align-self: center; }
-.select-model-static-label {
-  font-family: 'VW Head', 'Inter', sans-serif;
-  font-weight: 700; font-size: 18px; line-height: 1.2; color: #1b2236; flex-shrink: 0;
-}
 .select-model-row { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .select-model-row .select-wrap { flex: 1; }
 .btn-info {
@@ -1273,7 +1268,6 @@ body.in-fullscreen #img-car { will-change: transform; }
   #selector-group { display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
   #selector-material { margin-bottom: 16px; }
   body:not(.in-fullscreen) .bb-section { flex-shrink: 0; width: auto !important; }
-  .select-model-header { align-self: flex-start; }
   #select-model { align-self: flex-start; }
   #select-model .select-wrap { width: 230px; }
   #btn-toggle-view { bottom: 12px; left: 12px; }
@@ -1631,12 +1625,10 @@ body.in-fullscreen #img-car { will-change: transform; }
       </div><!-- /selector-group -->
 
       <!-- Model selector -->
-      <div class="select-model-header">
-        <span class="select-model-static-label" id="q-model-static">Model / Trim</span>
-        <div id="select-model" class="select-model-row">
+      <div id="select-model" class="select-model-row">
         <div class="select-wrap" id="wrapper-select-model-lg">
-          <span class="select-label" id="label-select-model-lg">ID.7</span>
-          <select class="select-native" id="select-model-lg" aria-labelledby="q-model-static">
+          <span class="select-label"><span id="model-static-label">Model: </span><span id="label-select-model-lg">ID.7</span></span>
+          <select class="select-native" id="select-model-lg" aria-labelledby="model-static-label label-select-model-lg">
             <optgroup label="ID.7">
               <option value="id7" selected>Pro Match Plus</option>
             </optgroup>
@@ -1660,7 +1652,6 @@ body.in-fullscreen #img-car { will-change: transform; }
             </svg>
           </span>
         </button>
-      </div>
       </div>
       </div><!-- /wrapper-selector -->
 

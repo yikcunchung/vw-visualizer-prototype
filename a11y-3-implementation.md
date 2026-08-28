@@ -124,7 +124,7 @@ If a control has a visible text label, its accessible name contains that text. N
 </button>
 ```
 
-Do **not** fold dynamic values into the control's name — a name like `ID.7 Select car model` that mutates as the selection changes conflates name with value. `#select-model-lg` avoids this: its name comes from a static "Model / Trim" label, never from the selected value.
+Do **not** let a value-mutation drag the purpose-describing part of a name along with it — a name like `ID.7 Select car model`, rewritten wholesale on every change, conflates name with value in one unstable string. `#select-model-lg`'s name legitimately includes the current family ("Model: ID.7" -> "Model: Grand California"), but the purpose-describing "Model:" half lives in its own element that nothing ever rewrites, so only the value half moves.
 
 ### A5 — Passages in another language carry `lang`
 
@@ -491,8 +491,8 @@ containing Level A failures.
 - [x] **Contrast** measured on **composited** pixels wherever text sits over imagery or a
       gradient — 8.59:1 to 21:1, every `incomplete` node resolved by hand.
 - [x] **SC 2.5.3** by hand — no tool does this. `#select-model-lg` is named via
-      `aria-labelledby` from a static "Model / Trim" label above it; the visible `ID.7`/etc.
-      span is a separate value display, outside the name. See `a11y-1-criteria.md`.
+      `aria-labelledby` from two spans inside its own floating-label slot: a static "Model:"
+      prefix and the pre-existing family value span. See `a11y-1-criteria.md`.
 - [x] **Names are correct**, not merely present and unique — all 18 swatch names read aloud and
       checked against the thing they describe, quotes and diacritics intact.
       ⚠️ **Carries forward:** the interior materials are placeholders fed from JSON in
@@ -524,10 +524,12 @@ containing Level A failures.
 **Nothing is failing and nothing is unanswered.** Every Level A/AA criterion in scope for
 `#visualizer` is verified, inspected, or not applicable — see `a11y-1-criteria.md`.
 
-**SC 2.5.3 on `#select-model-lg` is a plain pass.** It is named via `aria-labelledby` from a
-static "Model / Trim" label placed above it — the visible `ID.7`/etc. span stays a separate
-value display, outside the name. See `a11y-1-criteria.md` for why naming the control after the
-value instead would be wrong: the name would mutate with the value and misdescribe a control
+**SC 2.5.3 on `#select-model-lg` is a plain pass.** It is named via `aria-labelledby` from two
+spans sharing its floating-label slot: a static "Model:" prefix that never changes, and the
+pre-existing family value span (`ID.7`/`ID.Polo`/`Grand California`) — separate elements, so the
+static half can't drift with the value. See `a11y-1-criteria.md` for the known visual trade-off
+(the longest family name truncates in the 167px box) and why naming the control after the value
+alone would be wrong regardless: the name would mutate with the value and misdescribe a control
 that also selects ID.Polo and Grand California.
 
 **Two constraints to keep passing.** Both hold today and both are easy to break with a layout
@@ -580,7 +582,7 @@ Representative structure:
 
 - Colour, wheel, material selectors: each `group` → `radiogroup` → `radio` buttons with names from nested `<img alt>`.  
 - Wheel label: becomes button while truncated, plain text when fully visible (see B14).  
-- Model select: `#select-model-lg` named via `aria-labelledby` from a static "Model / Trim" label above it.  
+- Model select: `#select-model-lg` named via `aria-labelledby` from a static "Model:" prefix span sharing its floating-label slot with the pre-existing family value span.  
 - Info button: `#btn-info` toggles the disclaimer `dialog`.
 
 ## 10.3 Swatch names

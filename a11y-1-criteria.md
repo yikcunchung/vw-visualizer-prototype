@@ -115,7 +115,7 @@ criteria are not required and are not listed.
 |---|---|---|---|---|---|
 | **2.5.1** | Pointer Gestures | A | Yes | ✅ Pass | Drag-rotate has button and arrow-key alternatives. |
 | **2.5.2** | Pointer Cancellation | A | Yes | ✅ Pass | Arrows fire on pointer-up; drag-off-then-release aborts. |
-| **2.5.3** | Label in Name | A | Yes | ✅ Pass | `#select-model-lg` is named via `aria-labelledby` pointing at `#q-model-static`, a static "Model / Trim" span placed above the control. The name and the visible label are the same string by construction; the adjacent `ID.7`/etc. span is a separate value display, not part of the name. |
+| **2.5.3** | Label in Name | A | Yes | ✅ Pass | `#select-model-lg` is named via `aria-labelledby` pointing at two spans inside its own floating-label slot: a static "Model:" prefix that JS never touches, and the existing value span (`ID.7`/`ID.Polo`/`Grand California`) that already displayed the family. The name is the visible label, concatenated in place, not a separate element positioned elsewhere. |
 | **2.5.4** | Motion Actuation | A | No | ⚪ N/A | No device-motion actuation. |
 | **2.5.7** | Dragging Movements | AA | Yes | ✅ Pass | Rotation and panning reachable without dragging. |
 | **2.5.8** | Target Size (Minimum) | AA | Yes | ✅ Pass | **No target in the component is under 24×24.** `#label-wheel` is 26.4px tall (`line-height: 1.6` + `padding-block: 2px`), so it meets the minimum outright and nothing relies on the spacing exception. Smallest `<button>` is the close button at exactly 24×24. Confirmed both by measuring every control's box and by axe's own `target-size` rule, which **is disabled by default** and had to be switched on: it then passes on 27–29 nodes at 1440 / 390 / 320×256. |
@@ -166,17 +166,28 @@ criteria are not required and are not listed.
 **No open criteria, no known failures, and no decisions left outstanding.** Every Level A/AA
 criterion in scope for `#visualizer` is verified, inspected, or not applicable.
 
-**SC 2.5.3 on `#select-model-lg` is a plain pass.** A static "Model / Trim" label
-(`#q-model-static`) sits above the control and is the sole target of its `aria-labelledby`.
-"Model / Trim", not just "Model", because every option combines both — the same two-concept
-pattern already used by the neighbouring "Motor / Battery Capacity" select. The label never
-changes, so the name is stable and matches the visible text by construction: no judgement
-call, no fallback needed.
+**SC 2.5.3 on `#select-model-lg` is a plain pass.** A static "Model:" prefix (`#model-static-label`)
+sits inside the select's own floating-label slot, alongside the pre-existing family value span
+(`#label-select-model-lg`) — the two are separate elements, concatenated by a two-id
+`aria-labelledby`. "Model:" alone, not "Model / Trim:", because the family value that follows it
+already carries the trim information (the option text itself, e.g. "Pro Match Plus" under
+optgroup "ID.7") and the floating-label box is too narrow to hold a longer prefix without
+truncating the longest family name (`Grand California`, `#select-model .select-wrap` is a fixed
+167px) — verified by rendering both states. The static half never changes, so the name is stable
+by construction: no judgement call, no fallback needed.
 
-Pointing the name at the *value* span instead (`ID.7`/`ID.Polo`/`Grand California`, whichever
-is selected) would have been the wrong move: the name would mutate with the value, misdescribe
-a control that also selects the other two models, and conflate name with value, which ARIA
-separates deliberately. The static label above the control avoids all three.
+A single element holding the whole string, rewritten wholesale on every model change, would have
+been the wrong move: the static prefix would drift along with the value, with nothing protecting
+it from the same `textContent` assignment. Splitting the static and dynamic halves into separate
+spans is what keeps the name correct, not avoiding `aria-labelledby`.
+
+**Known trade-off, not a defect:** `Grand California` alone already filled the 167px box with no
+spare width before this fix; any prefix at all now causes the *visible* text to truncate with an
+ellipsis for that one family (the other two, `ID.7` and `ID. Polo`, fit without truncation). The
+*accessible* name is unaffected — CSS truncation is a paint-time effect, not a DOM change, so
+`aria-labelledby` still resolves to the full, untruncated string. This is a real visual limitation
+worth a design decision (widen the box, or accept the ellipsis for the one longest name), not an
+accessibility failure.
 
 **All three tool runs are done.** VoiceOver, all fifteen checks (§9.1); WAVE extension, 0 errors
 and 0 contrast errors (§9.2); axe DevTools v4.134.1, 0 issues inside the component at WCAG 2.2 AA
