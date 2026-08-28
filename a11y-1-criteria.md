@@ -210,11 +210,14 @@ external audit challenges this component, expect it to be on one of these.
 (`"VW ID.7, Grenadilla Black Metallic, exterior view"`). Whether that accurately describes every
 rotation frame is a **content** judgement that cannot be verified programmatically.
 
-**What has not been tested at all:** real screen-reader output. The accessibility tree confirms what
-is *exposed*; NVDA, JAWS and VoiceOver differ in what they *announce*. The defensible claim is:
+**What is still owed: the formally-named screen reader.** The accessibility tree confirms what is
+*exposed*; NVDA, JAWS and VoiceOver can differ in what they *announce*. VoiceOver has verified that
+translation (§9.1); NVDA — the protocol's named instrument — has not, and a formal BITV / EN 301 549
+audit will not accept VoiceOver evidence in its place. The defensible claim is:
 
-> *"This component meets WCAG 2.2 A/AA on every automated and runtime check available, with five
-> documented discretionary decisions, pending screen-reader verification."*
+> *"This component meets WCAG 2.2 A/AA on every automated and runtime check available, verified with
+> VoiceOver, with five documented discretionary decisions, pending NVDA verification for formal
+> sign-off."*
 
 That is stronger than a tool-clean claim, and unlike a tool-clean claim it is true.
 
