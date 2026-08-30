@@ -487,7 +487,8 @@ containing Level A failures.
       `document.activeElement` at each step. Focus never lands on an invisible control and is
       never lost to `<body>` when a panel closes.
 - [x] **Reflow** at 320×256 CSS px (`deviceScaleFactor 4` = literal 400% zoom) — 0 violations,
-      no horizontal scroll, 27 tab stops with 0 landing on an invisible control.
+      no horizontal scroll, 12 tab stops (exterior, `#btn-a11y` collapsed — see §10.4) with 0
+      landing on an invisible control.
 - [x] **Contrast** measured on **composited** pixels wherever text sits over imagery or a
       gradient — 8.59:1 to 21:1, every `incomplete` node resolved by hand.
 - [x] **SC 2.5.3** by hand — no tool does this. `#select-model-lg` is named via
@@ -527,10 +528,11 @@ containing Level A failures.
 **SC 2.5.3 on `#select-model-lg` is a plain pass.** It is named via `aria-labelledby` from two
 spans sharing its floating-label slot: a static "Model:" prefix that never changes, and the
 pre-existing family value span (`ID.7`/`ID.Polo`/`Grand California`) — separate elements, so the
-static half can't drift with the value. See `a11y-1-criteria.md` for the known visual trade-off
-(the longest family name truncates in the 167px box) and why naming the control after the value
-alone would be wrong regardless: the name would mutate with the value and misdescribe a control
-that also selects ID.Polo and Grand California.
+static half can't drift with the value. The old fixed-167px box that truncated the longest family
+name is gone: `.select-wrap` is now `display: grid` with the label and the native `<select>`
+sharing one cell, so the box's intrinsic width tracks whichever is wider. Naming the control after
+the value alone would still be wrong regardless of the width fix: the name would mutate with the
+value and misdescribe a control that also selects ID.Polo and Grand California.
 
 **Two constraints to keep passing.** Both hold today and both are easy to break with a layout
 change, so re-check them after any reflow work:

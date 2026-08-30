@@ -74,10 +74,9 @@ user had no on-screen purpose description. The fix isn't "point the name at a st
 *instead of* the value" — it's both, in separate elements: a static "Model:" prefix nothing ever
 rewrites, plus the existing family-value span. The name legitimately updates when the family does
 ("Model: ID.7" -> "Model: Grand California"); what must never happen is the *static* half moving
-too, which is what a single JS-rewritten string would risk. **Known trade-off:** the longest family
-name ("Grand California") fills the fixed-width box with no room to spare, so adding any prefix
-truncates it visually — the accessible name is unaffected, but it's a real visual limitation, not
-just a documentation footnote.
+too, which is what a single JS-rewritten string would risk. The box itself is grid-stacked
+(`.select-wrap { display: grid }`, label and native `<select>` sharing one cell) so its width tracks
+whichever is wider — no family name truncates, even with the prefix added.
 
 ### 5. Selection state must not be color alone
 

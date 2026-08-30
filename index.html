@@ -641,7 +641,6 @@ body.in-fullscreen #selector-wheel,
 body.in-fullscreen #selector-material { margin-bottom: 0; }
 body.in-fullscreen .bb-section { flex: none; }
 body.in-fullscreen #select-model { align-self: center; }
-body.in-fullscreen #select-model .select-wrap { width: 167px; }
 body.in-fullscreen #bottombar .swatch-fade { background: none; }
 body.in-fullscreen #img-car { will-change: transform; }
 
@@ -752,9 +751,11 @@ body.in-fullscreen #img-car { will-change: transform; }
 
 .select-wrap {
   position: relative; height: 50px; flex-shrink: 0;
+  display: grid;
 }
 .select-native {
   appearance: none; -webkit-appearance: none;
+  grid-area: 1 / 1;
   width: 100%; height: 100%;
   padding: 20px 48px 0 16px;
   background: transparent;
@@ -769,11 +770,12 @@ body.in-fullscreen #img-car { will-change: transform; }
 .select-native:focus { border-color: #293043; outline: none; }
 .select-native option { background: #fff; color: #293043; font-size: 16px; }
 .select-label {
-  position: absolute; left: 16px; top: 6px; right: 52px;
+  display: block; grid-area: 1 / 1; align-self: start; position: relative; z-index: 1;
+  padding: 6px 52px 0 16px;
   font-family: 'VW Text', 'Inter', sans-serif;
   font-size: 12px; line-height: 1.5; color: #293043;
-  pointer-events: none; z-index: 1;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  pointer-events: none;
+  white-space: nowrap;
   transition: color 0.15s;
 }
 .select-chevron-icon {
@@ -787,7 +789,7 @@ body.in-fullscreen #img-car { will-change: transform; }
 .select-wrap:hover .select-label { color: rgba(115,62,1,1); }
 .select-wrap:hover .select-chevron-icon svg path { fill: rgba(115,62,1,1); }
 .select-model-row { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.select-model-row .select-wrap { flex: 1; }
+.select-model-row .select-wrap { flex: none; }
 .btn-info {
   flex-shrink: 0; width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
@@ -1244,7 +1246,6 @@ body.in-fullscreen #img-car { will-change: transform; }
 #select-model {
   display: flex; align-items: flex-start; gap: 8px; flex-shrink: 0; align-self: center;
 }
-#select-model .select-wrap { width: 167px; }
 @media (max-width: 959px) {
   #bottombar {
     position: static;
@@ -1269,7 +1270,6 @@ body.in-fullscreen #img-car { will-change: transform; }
   #selector-material { margin-bottom: 16px; }
   body:not(.in-fullscreen) .bb-section { flex-shrink: 0; width: auto !important; }
   #select-model { align-self: flex-start; }
-  #select-model .select-wrap { width: 230px; }
   #btn-toggle-view { bottom: 12px; left: 12px; }
   #btn-a11y { top: 12px; right: 12px; }
   #btn-fullscreen { top: auto; bottom: 12px; right: 12px; }
@@ -2582,7 +2582,7 @@ document.getElementById('btn-fullscreen').addEventListener('click', () => {
   requestAnimationFrame(() => { if (window.updateBBArrows) window.updateBBArrows(); });
 });
 
-window.addEventListener('resize', () => { if (interiorMode) pano.draw(); updateBBConstraint(); });
+window.addEventListener('resize', () => { if (interiorMode) pano.draw(); updateBBConstraint(); pinSelectModel(); });
 
 // ── Staged preload ──
 // Stage 1: swatch thumbnails — stored in module-level array to prevent GC of decoded refs
@@ -2599,6 +2599,20 @@ const _swatchRefs = [
 
 // ── Init ──
 let _visualizerReady = false;
+function pinSelectModel() {
+  if (window.innerWidth < 960) return;
+  const sm = document.getElementById('select-model');
+  const ws = document.getElementById('wrapper-selector');
+  if (!sm || !ws) return;
+  sm.style.alignSelf = '';
+  sm.style.marginTop = '';
+  requestAnimationFrame(() => {
+    const mt = Math.round(sm.getBoundingClientRect().top - ws.getBoundingClientRect().top);
+    sm.style.alignSelf = 'flex-start';
+    sm.style.marginTop = mt + 'px';
+  });
+}
+
 function initVisualizer() {
   if (_visualizerReady) return;
   _visualizerReady = true;
@@ -2618,6 +2632,7 @@ function initVisualizer() {
   wheelName.textContent = currentWheels()[0]?.name ?? '';
   requestAnimationFrame(updateBBConstraint);
   requestAnimationFrame(() => { if (window.updateBBArrows) window.updateBBArrows(); });
+  pinSelectModel();
 }
 
 // Defer visualizer until user scrolls near the explore CTA

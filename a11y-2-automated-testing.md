@@ -28,7 +28,7 @@ follow them. §9 is the evidence record. §10 is the claim the evidence supports
 | Measure | `#visualizer` |
 |---|---|
 | axe violations | **0** |
-| axe *needs review* (contrast) | 4 |
+| axe *needs review* (contrast) | 3 |
 | Accessibility-tree nodes | 158 |
 | Named interactive / graphic nodes | 61 |
 | Unnamed interactive nodes | **0** |
@@ -41,8 +41,10 @@ Taken with `#btn-a11y` **open** (the larger surface) and after the *"Drag to rot
 collapsed. That hint is 0×0, visible ~1.5–3s, then gone; while visible it adds itself to the contrast
 bucket as a fifth node. **Let it settle before quoting any count.**
 
-The four contrast nodes are `.disclaimer-i`, both `#label-group` paragraphs and `#select-model-lg`,
-all resolved in §3.
+The three contrast nodes are `.disclaimer-i` and both `#label-group` paragraphs, all resolved in
+§3. `#select-model-lg` no longer lands in this bucket — the grid-stacked `.select-wrap` (see
+`a11y-1-criteria.md` SC 1.4.12) gives axe an unambiguous background to resolve on its own; its
+contrast is unaffected and still measures 12.05:1 on composited pixels.
 
 > **Scope rule:** errors in page chrome — nav, subnav, hero, tiles, footer, skip link — are **not
 > findings** and are not tracked. Everything in `a11y-3-implementation.md` is component-scoped: all
@@ -152,8 +154,10 @@ embedded `"` in the wheel names intact.
 ## Contrast — the needs-review bucket resolved by hand
 
 axe punts whenever the background is a gradient, an image, or overlapped. Those are not passes; a
-BITV tester must resolve every one. All four component nodes measured on composited pixels at every
-viewport: **8.59:1 – 21:1**, all passing, lowest `.disclaimer-i` at 8.59:1.
+BITV tester must resolve every one. All three component nodes measured on composited pixels at every
+viewport: **8.59:1 – 21:1**, all passing, lowest `.disclaimer-i` at 8.59:1. (`#select-model-lg` was
+a fourth node here before the select-width fix; it no longer lands in the needs-review bucket at
+all — see §1 — and its own contrast measures 12.05:1.)
 
 ## Behaviour — driven with real events
 
@@ -349,7 +353,7 @@ first draft of this section were wrong, and each mistake is called out so it is 
 4. **Count on screen: 13 colour swatches, 5 wheel swatches.** If you cannot see them, the tool
    will be looking at an empty shell.
 5. **Watch the *"Drag to rotate"* hint appear and disappear.** While visible it adds a node to the
-   contrast bucket, which is the whole difference between "4 needs review" and "5".
+   contrast bucket, which is the whole difference between "3 needs review" and "4".
 6. **Write down:** browser + version, OS version, window size, date, live or local, and whether
    you clicked **`#btn-a11y`** to reveal the zoom/rotate controls.
 
@@ -718,9 +722,9 @@ Equivalent nor Spacing exception was needed.
 
 **Nothing in the component is under 24 x 24 at any viewport.** Smallest is `#btn-close` at exactly
 **24 x 24**; scroll arrows 28 (32 at mobile), most controls 32, `#btn-toggle-view` 46, swatches 48,
-`#label-wheel` 214.2 x **26.4**, `#select-model-lg` 167 x 50. **The Spacing exception is therefore
-not load-bearing** — worth stating plainly, because a claim resting on spacing breaks with any
-layout change.
+`#label-wheel` 214.2 x **26.4**, `#select-model-lg` content-driven width (no longer a fixed 167px) x
+50. **The Spacing exception is therefore not load-bearing** — worth stating plainly, because a claim
+resting on spacing breaks with any layout change.
 
 `#label-wheel`'s 26.4px deserves its note: it is a `<span>`, not a `<button>`, so a survey of
 button sizes misses it, and its height comes from `padding-block: 2px` plus `line-height: 1.6` —

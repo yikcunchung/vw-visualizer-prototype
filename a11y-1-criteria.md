@@ -54,7 +54,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **1.3.1** | Info and Relationships | A | Yes | ✅ Pass | axe 0 violations on all structure rules; `role="radiogroup"` + 18 radios correct in the AX tree. |
-| **1.3.2** | Meaningful Sequence | A | Yes | ✅ Pass* | DOM order matches visual order; 34 coherent Tab stops at 390 and 320. |
+| **1.3.2** | Meaningful Sequence | A | Yes | ✅ Pass* | DOM order matches visual order; 12 coherent Tab stops at 390 and 320 (exterior, `#btn-a11y` collapsed). |
 | **1.3.3** | Sensory Characteristics | A | Yes | ✅ Pass* | Instructions are textual ("Use the left and right arrow keys…"), not shape or position. |
 | **1.3.4** | Orientation | AA | Yes | ✅ Pass | Tested portrait **and** landscape at 390×844 / 844×390 / 320×640 / 640×320, in normal **and** fullscreen. No `@media (orientation:)` rule exists anywhere. Viewer and bottombar visible, 18 radios / 18 swatches present, no horizontal scroll, and the fullscreen exit control visible and inside the viewport in every case. The `rotate(90deg)` is a user-invoked fullscreen mode, reversible, and does not lock orientation. |
 | **1.3.5** | Identify Input Purpose | AA | No | ⚪ N/A | No fields collecting user information. |
@@ -70,7 +70,7 @@ criteria are not required and are not listed.
 | **1.4.5** | Images of Text | AA | Yes | ✅ Pass* | All text is real text; imagery is photographic. |
 | **1.4.10** | Reflow | AA | Yes | ✅ Pass | No horizontal scroll at 320 / 390 / 768 / 1440 or at 400% zoom. |
 | **1.4.11** | Non-text Contrast | AA | Yes | ✅ Pass | Focus ring under real hover: navy on tan = 8.61:1 hover and active. |
-| **1.4.12** | Text Spacing | AA | Yes | ✅ Pass | All four overrides applied (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em) at 1440 / 390 / 320. **No newly clipped element, no control lost, no horizontal scroll.** The two elements clipped afterwards were already clipped before: `#media-help` (intentional 1×1 `.sr-only`) and `#label-wheel` (truncates by design) — and `#label-wheel` **expands to fully visible** under the overrides, all 86 characters, at every width. Detector validated with a deliberately clipped canary. |
+| **1.4.12** | Text Spacing | AA | Yes | ✅ Pass | All four overrides applied (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em) at 1440 / 390 / 320. **No newly clipped element, no control lost, no horizontal scroll.** The two elements clipped afterwards were already clipped before: `#media-help` (intentional 1×1 `.sr-only`) and `#label-wheel` (truncates by design) — and `#label-wheel` **expands to fully visible** under the overrides, all 86 characters, at every width. Detector validated with a deliberately clipped canary. `#select-model-lg`'s floating label ("Model: Grand California") no longer has a fixed-width box: `.select-wrap` is grid-stacked so both the label and the native `<select>` drive its intrinsic width, sized to whichever is wider. No truncation at any breakpoint. |
 | **1.4.13** | Content on Hover or Focus | AA | Yes | ✅ Pass* | Hover/focus changes are background and outline only — no popups to dismiss. |
 
 # 2. Operable
@@ -81,7 +81,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **2.1.1** | Keyboard | A | Yes | ✅ Pass | Driven: rotate, pan/tilt, zoom (Enter and Space), open/close panel, stop auto-rotation. |
-| **2.1.2** | No Keyboard Trap | A | Yes | ✅ Pass | 34 Tab stops reached and exited; Escape closes from anywhere. No trap. |
+| **2.1.2** | No Keyboard Trap | A | Yes | ✅ Pass | All tab stops reached and exited (10–13 depending on viewport/state, see `a11y-3` §10.4); Escape closes from anywhere. No trap. |
 | **2.1.4** | Character Key Shortcuts | A | No | ⚪ N/A | No single-character shortcuts; bindings are arrows, Enter, Space, Escape on a focused widget. |
 
 ## 2.2 Enough Time
@@ -106,7 +106,7 @@ criteria are not required and are not listed.
 | **2.4.3** | Focus Order | A | Yes | ✅ Pass | Open moves focus in; close returns to whoever opened it; Escape from outside moves nothing. |
 | **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | 0 unnamed links, 0 duplicate role+name across the 158 nodes of the component subtree. |
 | **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | `heading-order` clean; every control in the component named. |
-| **2.4.7** | Focus Visible | AA | Yes | ✅ Pass | 34 Tab stops, 0 invisible; ring verified in default, hover and active. |
+| **2.4.7** | Focus Visible | AA | Yes | ✅ Pass | 0 invisible tab stops at any measured viewport/state (10–13 stops depending on which, see `a11y-3` §10.4); ring verified in default, hover and active. |
 | **2.4.11** | Focus Not Obscured (Minimum) | AA | Yes | ✅ Pass | 20/20 controls fully visible after browser scroll-into-view; 0 fixed/sticky occluders. |
 
 ## 2.5 Input Modalities
@@ -171,23 +171,19 @@ sits inside the select's own floating-label slot, alongside the pre-existing fam
 (`#label-select-model-lg`) — the two are separate elements, concatenated by a two-id
 `aria-labelledby`. "Model:" alone, not "Model / Trim:", because the family value that follows it
 already carries the trim information (the option text itself, e.g. "Pro Match Plus" under
-optgroup "ID.7") and the floating-label box is too narrow to hold a longer prefix without
-truncating the longest family name (`Grand California`, `#select-model .select-wrap` is a fixed
-167px) — verified by rendering both states. The static half never changes, so the name is stable
-by construction: no judgement call, no fallback needed.
+optgroup "ID.7") — verified by rendering both states. The static half never changes, so the name is
+stable by construction: no judgement call, no fallback needed.
 
 A single element holding the whole string, rewritten wholesale on every model change, would have
 been the wrong move: the static prefix would drift along with the value, with nothing protecting
 it from the same `textContent` assignment. Splitting the static and dynamic halves into separate
 spans is what keeps the name correct, not avoiding `aria-labelledby`.
 
-**Known trade-off, not a defect:** `Grand California` alone already filled the 167px box with no
-spare width before this fix; any prefix at all now causes the *visible* text to truncate with an
-ellipsis for that one family (the other two, `ID.7` and `ID. Polo`, fit without truncation). The
-*accessible* name is unaffected — CSS truncation is a paint-time effect, not a DOM change, so
-`aria-labelledby` still resolves to the full, untruncated string. This is a real visual limitation
-worth a design decision (widen the box, or accept the ellipsis for the one longest name), not an
-accessibility failure.
+**No longer a trade-off.** `.select-wrap` was a fixed 167px box, which truncated `Grand California`
+the moment any prefix was added. It is now grid-stacked (`display: grid`) with `.select-label` and
+`.select-native` sharing one cell, so the box's intrinsic width is `max()` of the label's and the
+native select's content — whichever family name (or "Model: " + name) is longest sets the width.
+No family name truncates at any breakpoint; the fixed-width limitation is resolved, not accepted.
 
 **All three tool runs are done.** VoiceOver, all fifteen checks (§9.1); WAVE extension, 0 errors
 and 0 contrast errors (§9.2); axe DevTools v4.134.1, 0 issues inside the component at WCAG 2.2 AA
