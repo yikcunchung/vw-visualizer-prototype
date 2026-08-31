@@ -122,8 +122,10 @@ You do not need these to build. They exist so an auditor can verify the claim.
 | [`a11y-2-automated-testing.md`](a11y-2-automated-testing.md) | What the tools prove and what they cannot, the manual test procedure, and the recorded results. |
 | [`a11y-1-criteria.md`](a11y-1-criteria.md) | All 56 WCAG A/AA criteria, one row each, pass/fail. For the auditor. Look up a criterion; do not read it through. |
 
-## One known failure, not yours to fix
+## A deliberate departure from the core component
 
-The `<select>` border is `rgb(161,164,172)` / `#a1a4ac` — **2.29:1** against the page, where WCAG
-needs 3:1. It comes from the core component library, so it is being raised upstream. Do not darken
-it locally. (`#8b8e96` is the nearest passing shade if anyone asks.)
+The real core Select border, `rgb(161,164,172)`, is **2.29:1** against the page — below the
+3:1 SC 1.4.11 floor. This build uses `rgb(110,116,126)` (**4.32:1**) instead: darker than the
+core value on purpose, so the prototype demonstrates full outright compliance rather than
+reproducing a known upstream contrast bug. Do not "correct" it back toward `rgb(161,164,172)`
+— that direction was tried and reverted.
