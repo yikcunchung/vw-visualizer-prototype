@@ -9,7 +9,7 @@ specification, not source to copy.** Most of what matters here lives in JavaScri
 
 ## If you are the developer porting this — read this section only
 
-You need **six things**. Everything else in this repo is evidence for auditors.
+You need **seven things**. Everything else in this repo is evidence for auditors.
 
 ### 1. `aria-expanded` must be set wherever the panel opens, not just on click
 
@@ -94,6 +94,23 @@ The five interior material swatches are still named `Material 1`–`Material 5` 
 `makeSwatchBtn()`. Every scanner passes this (a name is present), but it describes nothing. This is
 real content the visible design needs before it ships — not a code fix.
 
+### 7. The colour and wheel selectors must never let their combined width push the panel past the viewport
+
+```js
+// Give every section its natural width first. Only if that's too much to fit,
+// allocate smallest-natural-width first: each section gets min(its own need, an
+// equal share of what's left). The larger selector absorbs any shortfall.
+const order = [...sections].sort((a, b) => a.naturalWidth - b.naturalWidth);
+```
+
+**Why:** SC 1.4.10. The two selectors sit side by side in one panel that must never force
+page-level horizontal scroll. An equal 50/50 split would starve whichever selector has fewer
+swatches even though it has room to spare, while the selector with more swatches could still
+overflow the panel anyway. Allocating the smaller selector's full natural width first, then
+giving the larger one whatever's left, guarantees the panel itself always fits — only the
+larger selector's own swatch strip scrolls internally (`overflow-x: auto`) when there isn't
+enough room, never the whole panel.
+
 ---
 
 ## How you know you are done
@@ -105,7 +122,8 @@ npm test
 
 **92 tests over 4 viewports** (1440/768/390/320×256 @ dsf4). They encode items 1–3 and 5 above, plus
 the scanner checks. Green means you have it — item 4 and item 6 are structural/content decisions
-the tests don't and can't fully encode.
+the tests don't and can't fully encode, and item 7's cross-selector width allocation has no
+automated test at all yet.
 
 > **Items 1–3 exist because axe returned 0 violations while each was wrong.** A clean scanner run
 > does not tell you this component works — pressing keys and listening to a screen reader does.

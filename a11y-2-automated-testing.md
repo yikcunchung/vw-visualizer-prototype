@@ -326,6 +326,13 @@ all — init is gated on an `IntersectionObserver`, the interior view is a `<can
 `target-size` and the `#label-wheel` truncation rule need real layout. axe runs **inside Playwright**
 instead: same rules, a browser that actually built the thing, no false green.
 
+**Reflow at step 6 also has to confirm the two-selector width allocation, not just the absence of
+page-level horizontal scroll.** `updateBBConstraint()` gives the smaller selector its full natural
+width first and lets only the larger one absorb any shortfall as internal scroll — verify by
+measuring `#bottombar`'s own width never exceeds `#media`'s `clientWidth` at each viewport, and that
+the strip which ends up scrollable is the one with more swatches, not the one with fewer. No test
+in `tests/` currently asserts this — manual measurement only.
+
 ---
 
 # 7. Manual testing — what to do

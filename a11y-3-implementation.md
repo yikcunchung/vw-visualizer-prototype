@@ -374,6 +374,16 @@ At 320×256 CSS px (e.g. 400% zoom on small device), content reflows without cau
 
 Use flex/grid + media queries to adapt layout; avoid fixed positioning that traps content off‑screen.
 
+**Two selectors sharing one row need an explicit width-allocation rule, not just flex-wrap.**
+`updateBBConstraint()` measures each section's natural width (swatch content vs. header minimum,
+whichever is larger), then — only if both together exceed the panel's available width — allocates
+smallest-natural-width first: each section gets `min(its own natural width, an equal share of
+what's left)`. Processed in that order, the smaller selector reliably gets its full natural width,
+and the larger selector absorbs any shortfall by scrolling its own swatch strip (`overflow-x: auto`)
+instead of the whole panel spilling past the viewport. This is what keeps the page-level guarantee —
+no panel ever exceeds `media.clientWidth` — true even when the two selectors have very different
+swatch counts. No automated test covers this allocation logic yet.
+
 ### SC 2.1.1 — Scrollable regions keyboard reachable
 
 Scrollable regions (e.g. disclaimer text block) are keyboard reachable.
