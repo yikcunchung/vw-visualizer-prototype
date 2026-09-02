@@ -118,7 +118,7 @@ You do not need these to build. They exist so an auditor can verify the claim.
 
 | File | Who it is for |
 |---|---|
-| [`a11y-3-implementation.md`](a11y-3-implementation.md) | The full version of the six rules, plus the rest of the 30 invariants (A1–A9, B1–B14, C1–C7). Read it if you want the reasoning. |
+| [`a11y-3-implementation.md`](a11y-3-implementation.md) | The full version of the six rules, plus the remaining requirements, organized by WCAG success criterion. Read it if you want the reasoning. |
 | [`a11y-2-automated-testing.md`](a11y-2-automated-testing.md) | What the tools prove and what they cannot, the manual test procedure, and the recorded results. |
 | [`a11y-1-criteria.md`](a11y-1-criteria.md) | All 56 WCAG A/AA criteria, one row each, pass/fail. For the auditor. Look up a criterion; do not read it through. |
 

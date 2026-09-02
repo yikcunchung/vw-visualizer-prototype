@@ -128,7 +128,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **3.1.1** | Language of Page | A | Yes | ✅ Pass | Provided by the host page: `<html lang="en">`; axe `html-has-lang` clean. |
-| **3.1.2** | Language of Parts | AA | No | ⚪ N/A | **No foreign-language passages.** Every string in the component is English and no `lang` attribute is needed anywhere inside it. The rule still applies if production ever renders a string in a language other than the page — see **A5** in the implementation doc. |
+| **3.1.2** | Language of Parts | AA | No | ⚪ N/A | **No foreign-language passages.** Every string in the component is English and no `lang` attribute is needed anywhere inside it. The rule still applies if production ever renders a string in a language other than the page — see SC 3.1.2 in the implementation doc. |
 
 ## 3.2 Predictable
 
@@ -156,7 +156,7 @@ criteria are not required and are not listed.
 | SC | Name | Lvl | Relevant | Status | Evidence / what to do |
 |---|---|---|---|---|---|
 | **4.1.1** | Parsing (obsolete — removed from WCAG 2.2) | A | Yes | ✅ Pass | **Obsolete in WCAG 2.2 — but still required if EN 301 549 is ever the formal target.** EN 301 549 V3.2.1 (2021-03) references **WCAG 2.1**, where 4.1.1 is normative, and lists it as clause 9.4.1.1. Already fixed in the reference (commit `d2245d8`, two validity errors); keep the Nu validator clean and it stays closed. |
-| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: **158 AX nodes, 61 named, 0 unnamed, 0 duplicate role+name**; 18 radios / 18 unique names with embedded `"` intact. `#label-wheel` exposes `role="button"` **only while its text is truncated** — see **B14**. |
+| **4.1.2** | Name, Role, Value | A | Yes | ✅ Pass | `#visualizer` subtree: **158 AX nodes, 61 named, 0 unnamed, 0 duplicate role+name**; 18 radios / 18 unique names with embedded `"` intact. `#label-wheel` exposes `role="button"` **only while its text is truncated** — see "Expand control exists only when there is something to expand" (SC 4.1.2) in the implementation doc. |
 | **4.1.3** | Status Messages | AA | Yes | ✅ Pass | `#media-status` announces on all 8 zoom paths; `disabled` derived from state. |
 
 ---

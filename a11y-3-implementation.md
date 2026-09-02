@@ -20,10 +20,10 @@ Each of these was a real defect; **no tool** (axe, Lighthouse, WAVE) caught any 
 
 | Rule | What went wrong | Cost if missed |
 |---|---|---|
-| **B7** | `mousedown preventDefault()` to stop image drag also suppressed focus, so `activeElement` stayed `<body>` and all `active === viewer` guards failed. | Two shipped bugs: pointer users could not rotate; tap zoomed in while Enter/Space could not zoom out. |
-| **B1** | Product names containing `"` built as `alt="${name}"` truncated at the quote; five wheel radios shared one accessible name. | Level A failure, passed axe, Lighthouse and WAVE because names existed and were unique syntactically. |
-| **A9** | Visible label text did not appear in the accessible name. | Level A failure; axe has no rule for it. A sibling VW project shipped this. |
-| **B6 / B13** | Panel unmounted while focus was inside; focus fell back to `<body>` instead of returning to content or trigger. | Silent focus loss in React via wrong effect dependency; screen‑reader users get “nowhere” when the panel closes. |
+| **SC 2.1.1** | `mousedown preventDefault()` to stop image drag also suppressed focus, so `activeElement` stayed `<body>` and all `active === viewer` guards failed. | Two shipped bugs: pointer users could not rotate; tap zoomed in while Enter/Space could not zoom out. |
+| **SC 4.1.2, 1.1.1** | Product names containing `"` built as `alt="${name}"` truncated at the quote; five wheel radios shared one accessible name. | Level A failure, passed axe, Lighthouse and WAVE because names existed and were unique syntactically. |
+| **SC 2.5.3** | Visible label text did not appear in the accessible name. | Level A failure; axe has no rule for it. A sibling VW project shipped this. |
+| **SC 2.4.3** | Panel unmounted while focus was inside; focus fell back to `<body>` instead of returning to content or trigger. | Silent focus loss in React via wrong effect dependency; screen‑reader users get “nowhere” when the panel closes. |
 
 Habit worth keeping: **a name being present and unique does not make it correct.** Check swatch names against the actual colour or material; no engine has a rule for “wrong but non‑empty” names.
 
@@ -33,19 +33,7 @@ Habit worth keeping: **a name being present and unique does not make it correct.
 
 What assistive tech is told the interface *is*. If roles/names are wrong, the description diverges from what’s on screen.
 
-| Rule | Requirement | SC |
-|---|---|---|
-| A1 | Viewer container is a focusable `region` with `aria-label` and `aria-roledescription`, not an interactive role. | 4.1.2 |
-| A3 | Each swatch group is a `radiogroup` labelled by its visible title; each swatch is a `radio` with `aria-checked`. | 1.3.1, 4.1.2 |
-| A4 | Spec/disclaimer panel is a `dialog` with an accessible name; `aria-modal` reflects true modality. | 4.1.2 |
-| B1 | Alt text is set via props/properties, never interpolated into markup strings. | 4.1.2, 1.1.1 |
-| B2 | Selection state (`aria-checked`, `aria-expanded`, `aria-pressed`) is derived from component state, not set imperatively. | 4.1.2 |
-| A9 | If a control has visible text, its accessible name contains that text; visible values are not labels. | 2.5.3 |
-| A5 | Any passage in a different language carries `lang` matching its content locale. | 3.1.2 |
-| A2 | Decorative icons/SVGs are `aria-hidden="true"` so no unnamed graphics remain in the a11y tree. | 1.1.1 |
-| A6 | Icon‑only buttons have `aria-label` and no redundant `title` with the same text. | — |
-
-### A1 — Viewer container is a region
+### SC 4.1.2 — Viewer container is a region
 
 The viewer container is `role="region"` with `aria-label` and `aria-roledescription="car 360° viewer"`, and is focusable (`tabIndex={0}`) for arrow‑key rotation and zoom.
 
@@ -60,7 +48,7 @@ The viewer container is `role="region"` with `aria-label` and `aria-roledescript
 
 Avoid wrapping multiple buttons in a `button` role — that polluted the accessible name and created nested interactive controls in the reference.
 
-### A3 — Swatch groups are radiogroups
+### SC 1.3.1, 4.1.2 — Swatch groups are radiogroups
 
 Each swatch group owns its radios and exposes them as a single `radiogroup` labelled by its visible title.
 
@@ -81,7 +69,7 @@ Each swatch group owns its radios and exposes them as a single `radiogroup` labe
 
 AEM risk: authoring wrappers (`EditableComponent`) must not break the radiogroup’s ownership of its radios; keep the group as one component or wire `aria-owns`.
 
-### A4 — Spec panel is a named dialog
+### SC 4.1.2 — Spec panel is a named dialog
 
 The spec/disclaimer panel is `role="dialog"` with an accessible name; use `aria-modal="false"` for non‑modal, and do not set `aria-modal="true"` without a focus trap.
 
@@ -89,7 +77,7 @@ The spec/disclaimer panel is `role="dialog"` with an accessible name; use `aria-
 <div role="dialog" aria-labelledby="spec-title" aria-modal="false">
 ```
 
-### B1 — Never interpolate alt text into markup
+### SC 4.1.2, 1.1.1 — Never interpolate alt text into markup
 
 Alt text is set as a property/prop, not interpolated into HTML strings.
 
@@ -104,7 +92,7 @@ img.alt = name;
 
 The reference once truncated wheel names at embedded `"` and collapsed five distinct radios into one accessible name.
 
-### B2 — Selection state derives from state
+### SC 4.1.2 — Selection state derives from state
 
 Selection ARIA attributes derive directly from component state, so they cannot desync from visuals.
 
@@ -114,7 +102,7 @@ Selection ARIA attributes derive directly from component state, so they cannot d
 
 Avoid imperative class toggles without matching ARIA updates.
 
-### A9 — Visible label sits inside the accessible name
+### SC 2.5.3 — Visible label sits inside the accessible name
 
 If a control has a visible text label, its accessible name contains that text. Names describe **purpose** and stay stable; values describe **state** and change.
 
@@ -126,7 +114,7 @@ If a control has a visible text label, its accessible name contains that text. N
 
 Do **not** let a value-mutation drag the purpose-describing part of a name along with it — a name like `ID.7 Select car model`, rewritten wholesale on every change, conflates name with value in one unstable string. `#select-model-lg`'s name legitimately includes the current family ("Model: ID.7" -> "Model: Grand California"), but the purpose-describing "Model:" half lives in its own element that nothing ever rewrites, so only the value half moves.
 
-### A5 — Passages in another language carry `lang`
+### SC 3.1.2 — Passages in another language carry `lang`
 
 Any text not in the page language carries `lang` so screen readers switch pronunciation correctly.
 
@@ -136,7 +124,7 @@ Any text not in the page language carries `lang` so screen readers switch pronun
 
 Drive `lang` from content locale, not hardcoded strings. Keep long, realistic fixture strings — several bugs surfaced only because names were long and awkward.
 
-### A2 — Decorative icons are aria-hidden
+### SC 1.1.1 — Decorative icons are aria-hidden
 
 Decorative icons and SVGs are hidden from the accessibility tree.
 
@@ -146,7 +134,7 @@ Decorative icons and SVGs are hidden from the accessibility tree.
 
 Set `aria-hidden="true"` inside the icon component so all consumers inherit it.
 
-### A6 — Icon-only buttons: aria-label, no duplicate title
+### SC 4.1.2 — Icon-only buttons: aria-label, no duplicate title
 
 Icon‑only buttons expose a meaningful `aria-label` and omit redundant `title` with the same text (WAVE reports this as noise).
 
@@ -162,20 +150,7 @@ Icon‑only buttons expose a meaningful `aria-label` and omit redundant `title` 
 
 Roughly half of this component’s accessibility; most of it is invisible to scanners.
 
-| Rule | Requirement | SC |
-|---|---|---|
-| B7 | Arrow keys have two scopes: horizontal acts when viewer or nothing is focused; vertical acts only when viewer is focused. | 2.1.1 |
-| B6 | Opening the panel moves focus into it. | 2.4.3 |
-| B13 | Closing the panel returns focus to whoever opened it (content vs trigger). | 2.4.3 |
-| B8 | Hidden/non‑functional controls leave the tab order. | 2.4.7 |
-| B9 | Inactive groups are inert to AT, not just visually hidden. | 4.1.2 |
-| B4 | Auto‑rotation is stoppable by keyboard, not only by mouse. | 2.2.2 |
-| B14 | Expand control exists only when there is something to expand; state is derived from actual truncation. | 4.1.2 |
-| B11 | List `key`s are stable across filtering, preserving focus. | 2.4.3 |
-| B12 | Keyboard description stays truthful when bindings change. | 1.3.1 |
-| A8 | Viewer describes its own keyboard operation via `aria-describedby`. | 1.3.1 |
-
-### B7 — Arrow keys have two scopes
+### SC 2.1.1 — Arrow keys have two scopes
 
 Left/Right act when the viewer has focus **or when nothing does** (`media`, `document.body`, `null`); Up/Down act **only** when the viewer itself has focus.
 
@@ -188,7 +163,7 @@ onPointerDown={e => {
 
 This lets pointer users rotate without explicit focus while keeping page‑scroll keys (Up/Down, Space) for the page when nothing is focused.
 
-### B6/B13 — Panel opening and closing manage focus
+### SC 2.4.3 — Panel opening and closing manage focus
 
 Opening the spec panel moves focus into the content region; closing returns focus to the correct place:
 
@@ -199,7 +174,7 @@ Guard on `panel.contains(document.activeElement)` before moving focus so `Escape
 
 In React, prefer keeping the panel mounted and hidden rather than conditionally rendering it; unmounting a focused node drops focus to `<body>`.
 
-### B8 — Hidden controls leave the tab order
+### SC 2.4.7 — Hidden controls leave the tab order
 
 Hidden or non‑functional controls are removed from the tab order (`disabled`) instead of merely visually hidden.
 
@@ -211,7 +186,7 @@ Hidden or non‑functional controls are removed from the tab order (`disabled`) 
 
 Avoid `opacity:0` / `pointer-events:none` on focusable elements; they produce invisible, dead tab stops.
 
-### B9 — Inactive groups are inert, not just hidden
+### SC 4.1.2 — Inactive groups are inert, not just hidden
 
 Inactive control groups are inert to AT as well as visually hidden (browser support via `inert`, polyfilled where necessary).
 
@@ -223,7 +198,7 @@ Inactive control groups are inert to AT as well as visually hidden (browser supp
 
 Use refs if pinned React does not support `inert` as a prop yet.
 
-### B4 — Auto-rotation stoppable by keyboard
+### SC 2.2.2 — Auto-rotation stoppable by keyboard
 
 Auto‑rotation (interior panorama) stops on keyboard interaction, not just mouse.
 
@@ -243,7 +218,7 @@ onKeyDown={e => {
 
 Bind `stopAutoRotate()` to arrow keys and any rotate/tilt control; keyboard users must be able to stop motion that was started on their behalf.
 
-### B14 — Expand control exists only when there is something to expand
+### SC 4.1.2 — Expand control exists only when there is something to expand
 
 Wheel label is a button **only while text is actually truncated**. Derive role, `tabIndex` and `aria-expanded` from measured overflow.
 
@@ -273,7 +248,7 @@ useLayoutEffect(() => {
 
 At widths where the name fits, the label has **no role**, is **not tabbable**, and does nothing when clicked.
 
-### B11 — List keys stable across filtering
+### SC 2.4.3 — List keys stable across filtering
 
 List `key`s remain stable across filtering so React does not remount swatches and throw focus to `<body>` mid keyboard navigation.
 
@@ -285,7 +260,7 @@ List `key`s remain stable across filtering so React does not remount swatches an
 
 Avoid index‑based keys on filtered lists.
 
-### B12/A8 — Keyboard description accurate and present
+### SC 1.3.1 — Keyboard description accurate and present
 
 The viewer carries `aria-describedby` pointing at a visually hidden element that describes keyboard operation, and that description is kept in sync with actual bindings.
 
@@ -315,13 +290,7 @@ Do not rely on transient, visually‑only hints like “Drag to rotate” that a
 
 Touch, mouse and assistive pointing devices.
 
-| Rule | Requirement | SC |
-|---|---|---|
-| B3 | Pointer actions fire on the up‑event. | 2.5.2 |
-| B10 | Drag has a non‑drag alternative. | 2.5.7 |
-| C4 | Every target ≥ 24×24 CSS px, or justified via spacing exceptions and measured. | 2.5.8 |
-
-### B3 — Pointer actions fire on the up-event
+### SC 2.5.2 — Pointer actions fire on the up-event
 
 Single‑pointer actions (clicks, taps) fire on **up‑event**, not down‑event, so users can abort by dragging away.
 
@@ -333,7 +302,7 @@ Single‑pointer actions (clicks, taps) fire on **up‑event**, not down‑event
 
 Only controls that emulate a keyboard key press are allowed to use down‑event.
 
-### B10 — Drag has a non-drag alternative
+### SC 2.5.7 — Drag has a non-drag alternative
 
 Drag‑to‑rotate has a single‑pointer, non‑drag alternative: rotate/tilt buttons and arrow keys.
 
@@ -344,7 +313,7 @@ Drag‑to‑rotate has a single‑pointer, non‑drag alternative: rotate/tilt b
 
 Reaching a view angle is endpoint‑based, so no drag‑only exemption applies.
 
-### C4 — Every target ≥24×24 CSS px
+### SC 2.5.8 — Every target ≥24×24 CSS px
 
 Targets are at least 24×24 CSS px. If one must be smaller, spacing exceptions are applied and recorded against real measurements.
 
@@ -362,30 +331,21 @@ Enable axe’s `target-size` rule explicitly; it is off by default and will othe
 
 Contrast, focus indication, and layout under constrained viewports.
 
-| Rule | Requirement | SC |
-|---|---|---|
-| C1 | Focus indicator contrast ≥3:1 in every state. | 1.4.11, 2.4.7 |
-| C2 | Text and icon contrast ≥4.5:1 (≥3:1 for large text), measured on composited pixels. | 1.4.3 |
-| C3 | Selected‑state indicators ≥3:1. | 1.4.11 |
-| C6 | Focused control not obscured by fixed bars, or by a swatch strip's floating scroll arrows. | 2.4.11 |
-| C5 | No content loss or horizontal scroll at 320×256. | 1.4.10 |
-| C7 | Scrollable regions are keyboard reachable (`tabIndex=0`). | 2.1.1 |
-
-### C1 — Focus indicator ≥3:1
+### SC 1.4.11, 2.4.7 — Focus indicator ≥3:1
 
 Every interactive control has a focus indicator with ≥3:1 contrast against adjacent background in all states (rest, hover, active).
 
 Use component‑level styles (props) instead of ID‑specific CSS so styled‑components can express state reliably.
 
-### C2 — Text and icon contrast ≥4.5:1
+### SC 1.4.3 — Text and icon contrast ≥4.5:1
 
 Text and icons have ≥4.5:1 contrast (≥3:1 for large text). Measure against **composited** backgrounds (e.g. text over `rgba(0,0,0,0.7)` on photography) rather than declared colours.
 
-### C3 — Selected-state indicators ≥3:1
+### SC 1.4.11 — Selected-state indicators ≥3:1
 
 Selected swatch indicators (e.g. borders) have ≥3:1 contrast against surroundings.
 
-### C6 — Focused control not behind fixed bars
+### SC 2.4.11 — Focused control not behind fixed bars
 
 No focused viewer control ends up behind fixed page headers/footers; use `scroll-padding-top` / `scroll-padding-bottom` on the scroll container to reserve clearance.
 
@@ -408,13 +368,13 @@ btn.addEventListener('focus', () => scrollSwatchIntoView(btn.parentElement, idx)
 
 Verify by tabbing to an off-screen swatch and confirming it lands centered, not pinned under the arrow — clicking to select was never the gap, only keyboard focus was.
 
-### C5 — No content loss at 320×256
+### SC 1.4.10 — No content loss at 320×256
 
 At 320×256 CSS px (e.g. 400% zoom on small device), content reflows without causing horizontal scroll or clipping.
 
 Use flex/grid + media queries to adapt layout; avoid fixed positioning that traps content off‑screen.
 
-### C7 — Scrollable regions keyboard reachable
+### SC 2.1.1 — Scrollable regions keyboard reachable
 
 Scrollable regions (e.g. disclaimer text block) are keyboard reachable.
 
@@ -432,12 +392,7 @@ Making a region scrollable to satisfy reflow criteria also creates this keyboard
 
 State changes that are not focus changes.
 
-| Rule | Requirement | SC |
-|---|---|---|
-| A7 | A visually hidden `aria-live="polite"` region exists for status. | 4.1.3 |
-| B5 | Zoom state announces and controls stay in sync on all paths. | 4.1.3 |
-
-### A7 — Visually hidden polite live region
+### SC 4.1.3 — Visually hidden polite live region
 
 A visually hidden `aria-live="polite"` region exists for status announcements.
 
@@ -449,7 +404,7 @@ A visually hidden `aria-live="polite"` region exists for status announcements.
 
 Use `.sr-only` clipping (1×1 px, off‑screen), **not** `display:none`.
 
-### B5 — Zoom announces and syncs on every path
+### SC 4.1.3 — Zoom announces and syncs on every path
 
 Zoom state announces and keeps dependent controls (zoom in/out buttons) in sync on all paths: pointer tap, keyboard, accessibility buttons.
 
@@ -475,13 +430,13 @@ Derive `disabled` and announcements from state, not from individual event handle
 
 # 6. React, styled-components and AEM — seven traps to watch
 
-1. **Authoring wrappers vs `radiogroup` ownership** — AEM’s `EditableComponent` cannot break radiogroup → radio ownership (see A3).  
+1. **Authoring wrappers vs `radiogroup` ownership** — AEM’s `EditableComponent` cannot break radiogroup → radio ownership (see SC 1.3.1, 4.1.2 above).  
 2. **ID‑specific CSS focus styles** — rewrite focus/selection styles as component props; styled‑components cannot rely on IDs.  
 3. **Global `:focus-visible` conflicts** — a global rule may not beat component styles; scope focus styles per component.  
-4. **Conditional rendering vs focus** — unmounting panels while focused drops focus to `<body>` (see B6/B13).  
-5. **rAF cleanup** — cancel requestAnimationFrame on unmount and on interaction (see B4).  
-6. **`dangerouslySetInnerHTML`** — only route back to B1; avoid string‑built HTML with interpolated alt text.  
-7. **Unstable keys** — index keys on filtered lists remount swatches and throw focus away (see B11).
+4. **Conditional rendering vs focus** — unmounting panels while focused drops focus to `<body>` (see SC 2.4.3 above).  
+5. **rAF cleanup** — cancel requestAnimationFrame on unmount and on interaction (see SC 2.2.2 above).  
+6. **`dangerouslySetInnerHTML`** — only route back to SC 4.1.2, 1.1.1 above; avoid string‑built HTML with interpolated alt text.  
+7. **Unstable keys** — index keys on filtered lists remount swatches and throw focus away (see SC 2.4.3 above).
 
 ---
 
@@ -526,7 +481,7 @@ containing Level A failures.
       confirming the matching test goes red: `aria-expanded` removed from the auto-open path
       (1 fail), `announceRotation()` removed from `stepRight` (1 fail), `wireRadiogroup()`
       wiring disabled (ArrowRight 2 fails, Home/End 2 fails), and `alt` truncated at the quote
-      to reproduce **B1** (1 fail). A suite that has never failed proves nothing.
+      to reproduce the alt-text defect (SC 4.1.2, 1.1.1; 1 fail). A suite that has never failed proves nothing.
 
 ---
 
@@ -567,9 +522,9 @@ record rather than a substitution.
 
 | Observed | Maps to |
 |---|---|
-| Visible labels “Farben”, “Innenraum” with mismatched accessible names (“Farbauswahl anzeigen”, “Interieur anzeigen”). | A9 |
-| 6 colour swatches as ungrouped buttons using `aria-current` instead of `radiogroup` + `aria-checked`. | A3, B2 |
-| `aria-label="Active color: Pythongelb Metallic"` on `<html lang="de">`. | A5 |
+| Visible labels “Farben”, “Innenraum” with mismatched accessible names (“Farbauswahl anzeigen”, “Interieur anzeigen”). | SC 2.5.3 |
+| 6 colour swatches as ungrouped buttons using `aria-current` instead of `radiogroup` + `aria-checked`. | SC 1.3.1, 4.1.2 |
+| `aria-label="Active color: Pythongelb Metallic"` on `<html lang="de">`. | SC 3.1.2 |
 
 Already correct and worth keeping: zoom controls are real buttons with localised labels; `Zoom_Out` correctly carries `disabled` at minimum zoom.
 
@@ -593,7 +548,7 @@ Representative elements:
 Representative structure:
 
 - Colour, wheel, material selectors: each `group` → `radiogroup` → `radio` buttons with names from nested `<img alt>`.  
-- Wheel label: becomes button while truncated, plain text when fully visible (see B14).  
+- Wheel label: becomes button while truncated, plain text when fully visible (see SC 4.1.2 above).  
 - Model select: `#select-model-lg` named via `aria-labelledby` from a static "Model:" prefix span sharing its floating-label slot with the pre-existing family value span.  
 - Info button: `#btn-info` toggles the disclaimer `dialog`.
 
@@ -641,7 +596,7 @@ the tab order — but it means *"count the tab stops once"* is not a valid test.
 |---|---|---|
 | `.swatch-arrow` x6 | the strip can scroll **that way** | `disabled` + `pointer-events: none`; a disabled button is not focusable |
 | `#btn-zoom-out` | zoom > 1 | `syncZoomBtns()` |
-| `#label-wheel` | its text is truncated | `role`/`tabindex`/`aria-expanded` derived from measured overflow (**B14**) |
+| `#label-wheel` | its text is truncated | `role`/`tabindex`/`aria-expanded` derived from measured overflow (SC 4.1.2, see above) |
 | `#btn-fullscreen` | narrow viewports | CSS |
 
 **`#label-wheel` flips twice across the range, which is the useful test.** Measured, window width

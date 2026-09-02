@@ -482,7 +482,7 @@ the element is inside `#visualizer`** — the car viewer and the bottom bar.
 > **Why the rotor sweep earns its place:** since roving `tabindex` landed, only 2 of the 18
 > swatches are Tab stops, so the rotor is the primary random-access route to a specific colour. A
 > list with no blanks and no duplicates also confirms the 18-unique-names property **in announced
-> output** — the guard against **B1**, where five wheel radios once shared one name and passed
+> output** — the guard against the alt-text interpolation defect ("Never interpolate alt text into markup", SC 4.1.2, 1.1.1), where five wheel radios once shared one name and passed
 > axe, Lighthouse and WAVE alike.
 
 **Not a finding:** announcement order and verbosity; anything in the nav, subnav, hero, `.usp-*`,
@@ -557,7 +557,7 @@ Six items were confirmed by ear:
 | Rotor → Landmarks | **`car viewer` present** |
 | Escape from inside the disclaimer | **focus returned to `#btn-info`** — correct for a user-opened panel |
 | Interior materials | announced cleanly as *Material 1*…*5* — **mechanically fine, semantically empty** |
-| `#label-wheel` at ~768px | **plain text: skipped by Tab, announced by the VO cursor** — B14 confirmed both ways |
+| `#label-wheel` at ~768px | **plain text: skipped by Tab, announced by the VO cursor** — the truncation-derived-state check (SC 4.1.2) confirmed both ways |
 | `#label-wheel` activated while truncated | **reads the full wheel name** — the expand action works |
 | Colour group on entry | **"Colours, radio group"** then **"1 of 13"** |
 | Arrow within the group | name + **"selected"** + position |
@@ -576,7 +576,7 @@ Six items were confirmed by ear:
   it. It is **announced**, so the discretionary decision to use it is now evidence-backed
   rather than an argument. Whether it replaces or supplements the word "region" was not
   recorded — worth noting on the next pass.
-- **B1, closed in speech.** The historic Level A defect truncated `alt` at the embedded
+- **SC 4.1.2, 1.1.1, closed in speech.** The historic Level A defect truncated `alt` at the embedded
   quote and collapsed five wheel radios into one shared name. The full string is now read
   aloud, quotes, diacritic and all — the regression test guards the markup, this confirms
   the output.
@@ -610,7 +610,7 @@ it. Nothing is hidden: the full name is on screen, readable by the cursor, and a
 via `#wheel-live` whenever a wheel is selected. It is simply not a tab stop, because with the
 text already fitting there is no expand action to perform. **A control that does nothing must
 not be in the tab order** — the inverse, a label announcing *"button, collapsed"* over a name
-already fully visible, is the defect **B14** exists to prevent.
+already fully visible, is the defect the truncation-derived-state check (SC 4.1.2) exists to prevent.
 
 Expect this to be misread in future audits: *"the label is not announced"* looks like a finding
 and is not one. Check whether the element is *focusable* before treating Tab skipping it as a
@@ -632,7 +632,7 @@ still unverified by ear.
 18 swatches are Tab stops — the rotor is now the primary random-access route to a specific
 colour, so all 18 being listed and named matters functionally, not cosmetically. And a list
 with no blanks and no duplicates independently confirms the 18-unique-names property **in
-announced output**, which is the guard against **B1** — the defect where five wheel radios
+announced output**, which is the guard against the alt-text interpolation defect (SC 4.1.2, 1.1.1) — the defect where five wheel radios
 once shared one name and passed axe, Lighthouse and WAVE alike.
 - **`Material 1`-`Material 5` is a prototype placeholder, closed as a non-issue.** Production
   feeds these names from JSON, so the strings do not exist in the component's own source and
@@ -768,7 +768,7 @@ focusable for reasons that are not "this is a widget":
 
 - `#label-group` — a **scrollable region must be keyboard-scrollable** (SC 2.1.1 / ACT 0ssw9k)
 - `#media` — a **custom interaction surface needs focus** so arrow keys can rotate, which is the
-  **B7** fix; pointer users could not rotate at all while `mousedown preventDefault()` suppressed
+  SC 2.1.1 fix; pointer users could not rotate at all while `mousedown preventDefault()` suppressed
   focus and left `activeElement` on `<body>`
 
 Neither is a failure. Rotation is also available from `#btn-rot-left` / `#btn-rot-right`, real
