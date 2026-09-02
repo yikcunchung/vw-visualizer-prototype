@@ -91,8 +91,14 @@ border-*width* change (not just colour) mean the state doesn't depend on colour 
 ### 6. Swatch names must be the real variant name — not a numbered placeholder
 
 The five interior material swatches are still named `Material 1`–`Material 5` in the data feeding
-`makeSwatchBtn()`. Every scanner passes this (a name is present), but it describes nothing. This is
-real content the visible design needs before it ships — not a code fix.
+`makeSwatchBtn()`. Every scanner passes this (a name is present), but it describes nothing.
+
+**Why this isn't solved by production sourcing names from JSON/translation keys:** the risk doesn't
+disappear, it moves. A translation key can be null, empty, or duplicated just as easily as this
+placeholder is wrong — and no scanner catches either case. Four Grand California swatches once
+carried the wrong colour name while every tool scored clean. Validate the data layer itself —
+assert non-empty, unique, and actually descriptive — rather than assuming a working data pipeline
+is enough.
 
 ### 7. The colour and wheel selectors must never let their combined width push the panel past the viewport
 
