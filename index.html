@@ -2513,6 +2513,27 @@ function animateBBWidth(fn) {
   }
 }
 
+// Interior/exterior toggle applies the layout change instantly — no width
+// transition — while still compensating #select-model's vertical shift so it
+// doesn't visibly jump. Model switching keeps the full animateBBWidth() above.
+function applyBBLayoutInstant(fn) {
+  const sm   = document.getElementById('select-model');
+  const smY0 = sm.getBoundingClientRect().top;
+
+  fn();
+  updateBBConstraint();
+
+  const smY1     = sm.getBoundingClientRect().top;
+  const smDeltaY = smY0 - smY1;
+  if (smDeltaY !== 0 && !document.body.classList.contains('in-fullscreen')) {
+    sm.animate(
+      [{ transform: `translateY(${smDeltaY}px)` }, { transform: 'translateY(0)' }],
+      { duration: 550, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'none' }
+    );
+  }
+  updateBBArrows();
+}
+
 // ── Interior auto-rotation ──
 let autoRotRaf = null;
 function startAutoRotate() {
@@ -2539,9 +2560,9 @@ function setMediaHelp() {
 }
 
 function enterInterior() {
-  animateBBWidth(() => {
+  applyBBLayoutInstant(() => {
     interiorMode = true;
-    setMediaHelp();   // inside the callback: animateBBWidth defers, so the flag is only true here
+    setMediaHelp();   // inside the callback: applyBBLayoutInstant defers, so the flag is only true here
     media.classList.add('interior-mode');
     media.parentElement.classList.add('interior-mode');
     document.getElementById('bottombar').classList.add('interior-mode');
@@ -2556,7 +2577,7 @@ function enterInterior() {
 
 function exitInterior() {
   stopAutoRotate();
-  animateBBWidth(() => {
+  applyBBLayoutInstant(() => {
     interiorMode = false;
     setMediaHelp();
     updateCarImage();
