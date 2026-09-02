@@ -107,7 +107,7 @@ criteria are not required and are not listed.
 | **2.4.4** | Link Purpose (In Context) | A | Yes | ✅ Pass | 0 unnamed links, 0 duplicate role+name across the 158 nodes of the component subtree. |
 | **2.4.6** | Headings and Labels | AA | Yes | ✅ Pass | `heading-order` clean; every control in the component named. |
 | **2.4.7** | Focus Visible | AA | Yes | ✅ Pass | 0 invisible tab stops at any measured viewport/state (10–13 stops depending on which, see `a11y-3` §10.4); ring verified in default, hover and active. |
-| **2.4.11** | Focus Not Obscured (Minimum) | AA | Yes | ✅ Pass | 20/20 controls fully visible after browser scroll-into-view; 0 fixed/sticky occluders. |
+| **2.4.11** | Focus Not Obscured (Minimum) | AA | Yes | ✅ Pass | 20/20 controls fully visible; 0 fixed/sticky occluders. Two mechanisms, not one: `scroll-padding` clears fixed bars for ordinary controls, and swatches specifically need `scrollSwatchIntoView` fired on `focus` (not just click) — the browser's own default scroll-into-view only does a minimal scroll, parking a Tab-focused swatch right under the strip's floating scroll-arrow overlay. |
 
 ## 2.5 Input Modalities
 

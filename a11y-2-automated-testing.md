@@ -173,6 +173,7 @@ rather than `element.click()`:
 | Escape from outside the panel moves no focus | Pass |
 | Focus ring ≥3:1 in default, hover **and** active | Pass — 8.61:1 on the tan fill |
 | Focused control never behind a fixed bar | Pass — 20/20 controls, 0 occluders |
+| Tabbing to an off-screen swatch centers it, not just scrolls it minimally into view | **Not covered by an automated test** — verified manually only. `scrollSwatchIntoView` fires on `focus`, but no test in `tests/` asserts this; the mutation table in §4 has no injected-defect row for it either |
 
 ## Orientation and text spacing
 

@@ -367,7 +367,7 @@ Contrast, focus indication, and layout under constrained viewports.
 | C1 | Focus indicator contrast ≥3:1 in every state. | 1.4.11, 2.4.7 |
 | C2 | Text and icon contrast ≥4.5:1 (≥3:1 for large text), measured on composited pixels. | 1.4.3 |
 | C3 | Selected‑state indicators ≥3:1. | 1.4.11 |
-| C6 | Focused control not obscured by fixed bars. | 2.4.11 |
+| C6 | Focused control not obscured by fixed bars, or by a swatch strip's floating scroll arrows. | 2.4.11 |
 | C5 | No content loss or horizontal scroll at 320×256. | 1.4.10 |
 | C7 | Scrollable regions are keyboard reachable (`tabIndex=0`). | 2.1.1 |
 
@@ -397,6 +397,16 @@ No focused viewer control ends up behind fixed page headers/footers; use `scroll
 ```
 
 Track actual bar heights per breakpoint; verify with tabbing and `document.activeElement`.
+
+**Swatch strips need a second, separate mechanism** — `scroll-padding` doesn't help here, because the occluder isn't a fixed page bar, it's the strip's own floating scroll-arrow overlay at the edge of a horizontally-scrolling container. The browser's default focus scroll-into-view only scrolls the minimum distance needed, which parks a Tab-focused swatch right at that edge, under the arrow. Fix: explicitly re-center the focused swatch instead of relying on the default.
+
+```js
+btn.addEventListener('focus', () => scrollSwatchIntoView(btn.parentElement, idx));
+// scrollSwatchIntoView centers the target swatch in the visible strip;
+// already fires on click for the selected swatch — wire it to focus too.
+```
+
+Verify by tabbing to an off-screen swatch and confirming it lands centered, not pinned under the arrow — clicking to select was never the gap, only keyboard focus was.
 
 ### C5 — No content loss at 320×256
 
