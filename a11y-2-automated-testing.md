@@ -749,11 +749,15 @@ do not claim this tool tested 2.5.8. The engine-level proof is stronger anyway: 
 force-enables all nine default-disabled rules **and asserts the rule appears in the results**,
 so it cannot silently skip.
 
-### Two AI suggestions, both rejected
+### Three AI suggestions + one Keyboard IGT finding, all rejected
 
-The extension's AI advisor flagged two elements as "role missing or incorrect" and recommended
-`button` for both. **Both recommendations are wrong, and both rationales assert visual facts
-that are false.** Recorded here because the next person to run this tool will see them again.
+The extension's AI advisor produced three suggestions across two runs; the Keyboard IGT (step 5)
+raised the same `#media` role question a fourth time. **All four are wrong.** Recorded here
+because the next person to run this tool will see them again.
+
+A 2026-09-02 re-run at iPhone SE (375 × 667, axe-core 4.12.1) produced the third AI suggestion
+and completed the Keyboard IGT; the first two AI suggestions were from the 2026-08-24 desktop run.
+Component result is unchanged: **0 real issues inside `#visualizer` at WCAG 2.2 AA** across both runs.
 
 **1. `#media` — role `region`, name *car viewer*. Suggested: `button`.**
 The rationale cites a *"circular shape, icon, and placement"*. `#media` is the **1440x662** car
@@ -769,6 +773,18 @@ decorative element to a two-paragraph text block. Worse, `tabindex="0"` here exi
 an accessibility rule**, as the source comment states: *"this block scrolls (SC 1.4.10 fix), and
 a scrollable region must be keyboard-scrollable — ACT rule 0ssw9k / SC 2.1.1."* Converting it to
 a button would break the fix it was added for and announce a control that performs no action.
+
+**3. `#label-colour` — role `none` (live region), name *Grenadilla Black Metallic*. Suggested: heading.**
+The AI rule "headings must use heading markup" fires at 74% confidence (non-deterministic). `#label-colour` is
+`<span class="bb-sec-value" aria-live="polite">` — a 14px normal-weight live region that announces the currently
+selected colour name and updates on every selection. It has no visual heading treatment and no structural heading
+function. The section relationship is conveyed by `role="group" aria-labelledby="title-colour"` on the parent —
+heading markup is not required and would be wrong. Same pattern as suggestions 1 and 2: the AI misreads context.
+
+**Keyboard IGT — step 5. Issue: "element's role is missing or not appropriate for its function." Element: `#media`.**
+This is the third time the same question is raised (AI panel raised it as suggestion 1 above; headless axe never
+flags it; VoiceOver confirmed the landmark). The keyboard tester sees `tabindex="0"` on a `role="region"` and
+infers an interactive role is needed. The full reasoning for rejecting this is in suggestion 1 above.
 
 **The generalisable error: `tabindex="0"` does not imply "button".** Both flagged elements are
 focusable for reasons that are not "this is a widget":
