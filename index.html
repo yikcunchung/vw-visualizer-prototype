@@ -734,11 +734,11 @@ body.in-fullscreen #img-car { will-change: transform; }
 }
 .btn-swatch.selected { outline: none; }
 .stroke       { position: absolute; inset: 1px; border-radius: 100%; border: 1px solid #949494; overflow: hidden; }
-.btn-swatch:hover .stroke { inset: 0px; border: 2px solid #997f67; }
+.btn-swatch:not(.selected):hover .stroke { inset: 0px; border: 2px solid #997f67; }
 .btn-swatch.selected .stroke { inset: -1px; border: 3px solid #997f67; }
 .img-swatch { position: absolute; inset: 1px; border-radius: 100%; overflow: hidden; }
 .img-swatch       { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-.btn-swatch:hover { box-shadow: 0 2px 4px 0 var(--shadow-small, rgba(49, 25, 2, 0.60)); border-radius: 50%; }
+.btn-swatch:not(.selected):hover { box-shadow: 0 2px 4px 0 var(--shadow-small, rgba(49, 25, 2, 0.60)); border-radius: 50%; }
 .stroke-inset    { display: none; }
 .checkmark { position: absolute; z-index: 20; pointer-events: none; top: -12.5%; right: -12.5%; bottom: 62.5%; left: 62.5%; display: none; }
 .btn-swatch.selected .checkmark { display: block; }
