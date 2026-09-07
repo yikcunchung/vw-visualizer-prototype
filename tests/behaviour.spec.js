@@ -214,6 +214,93 @@ test.describe('SC 4.1.3 — view changes are announced', () => {
   });
 });
 
+test.describe('fullscreen controls — position and drag visibility', () => {
+  // #btn-fullscreen only renders below 960px (see the min-width:960px media query),
+  // so this whole block is a no-op on the desktop-1440 project.
+  async function enterFullscreen(page) {
+    const fsBtn = page.locator('#btn-fullscreen');
+    test.skip(!(await fsBtn.isVisible()), 'no #btn-fullscreen at this viewport');
+    // The disclaimer auto-opens on scroll and sits on top of #btn-fullscreen —
+    // close it first or the click lands on its subtree instead.
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    await fsBtn.click();
+    await page.waitForTimeout(300);
+    return fsBtn;
+  }
+
+  test('#btn-a11y keeps its default-view corner in fullscreen', async ({ page }) => {
+    await settle(page);
+    // Only compare top/right: they're the two sides the CSS actually authors.
+    // bottom/left are left at "auto", and Chromium's resolved value for an
+    // "auto" inset on a laid-out absolute box is a computed pixel offset (not
+    // literally "auto"), which differs with #media's rotated geometry — that's
+    // a measurement artifact, not a real difference, so don't assert on it.
+    const cornerOf = (id) => page.evaluate((elId) => {
+      const s = getComputedStyle(document.getElementById(elId));
+      return { top: s.top, right: s.right };
+    }, id);
+
+    const before = await cornerOf('btn-a11y');
+    await enterFullscreen(page);
+    const after = await cornerOf('btn-a11y');
+    // Regression guard: an earlier fullscreen override pinned #btn-a11y to a
+    // hardcoded 16px offset that only matched the desktop (>=960px) default —
+    // but #btn-fullscreen, and therefore fullscreen mode, only ever exists
+    // below 960px, where the real default is 12px. It must keep the exact
+    // same corner as whatever default applies at this viewport.
+    expect(after, 'fullscreen must not move #btn-a11y off its default corner').toEqual(before);
+  });
+
+  test('#btn-toggle-view and #btn-fullscreen stay bottom-anchored, above the bottombar, in fullscreen', async ({ page }) => {
+    await settle(page);
+    const defaultBottoms = await page.evaluate(() => ({
+      toggle: getComputedStyle(document.getElementById('btn-toggle-view')).bottom,
+      fullscreen: getComputedStyle(document.getElementById('btn-fullscreen')).bottom,
+    }));
+    await enterFullscreen(page);
+    const fsBottoms = await page.evaluate(() => ({
+      toggle: getComputedStyle(document.getElementById('btn-toggle-view')).bottom,
+      fullscreen: getComputedStyle(document.getElementById('btn-fullscreen')).bottom,
+    }));
+    // Same reasoning as above: compare only the authored side (bottom) against
+    // this viewport's own default, not a hardcoded pixel value.
+    expect(fsBottoms, 'fullscreen must keep the same bottom offset as default view')
+      .toEqual(defaultBottoms);
+  });
+
+  test('rotating the model in fullscreen no longer hides the control buttons', async ({ page }) => {
+    await settle(page);
+    await openA11yGroup(page);
+    await enterFullscreen(page);
+
+    const box = await page.locator('#media').boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2, { steps: 5 });
+
+    // Regression guard: #media.is-rotating used to fade every control button
+    // (and the a11y group) to opacity:0 with pointer-events:none while dragging.
+    const state = await page.evaluate(() => {
+      const opacityOf = (id) => Number(getComputedStyle(document.getElementById(id)).opacity);
+      return {
+        isRotating: document.getElementById('media').classList.contains('is-rotating'),
+        toggle: opacityOf('btn-toggle-view'),
+        a11y: opacityOf('btn-a11y'),
+        fullscreen: opacityOf('btn-fullscreen'),
+        a11yGroup: opacityOf('btn-a11y-group'),
+      };
+    });
+    await page.mouse.up();
+
+    expect(state.isRotating, 'the drag must actually trigger is-rotating').toBe(true);
+    expect(state.toggle, '#btn-toggle-view must stay visible while dragging').toBeGreaterThan(0);
+    expect(state.a11y, '#btn-a11y must stay visible while dragging').toBeGreaterThan(0);
+    expect(state.fullscreen, '#btn-fullscreen must stay visible while dragging').toBeGreaterThan(0);
+    expect(state.a11yGroup, '#btn-a11y-group must stay visible while dragging').toBeGreaterThan(0);
+  });
+});
+
 test.describe('B14 — the wheel label is a button only while truncated', () => {
   test('role and aria-expanded are derived, not hardcoded', async ({ page }) => {
     await settle(page);
