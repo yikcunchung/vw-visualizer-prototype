@@ -20,6 +20,7 @@ fullscreen only under SC 1.3.4 ("Not assessed"). Where the two disagree, this fi
 - `#visualizer` becomes a fixed layer, `z-index: 1000`, filling the screen. `#media` takes the height left after the bottom bar (`flex: 1 1 0`, the bar is content-height, 114px measured); `#bottombar` becomes a horizontal row.
 - **Portrait:** the layer is turned 90° (width and height swapped), so the phone shows a landscape view. The drag axis becomes vertical.
 - **Landscape (phones, under 960px wide):** turning the phone to landscape enters fullscreen automatically. Nothing is turned, and the drag axis stays horizontal.
+- It works in both views: the exterior car and the interior 360° panorama (the bar then shows the material swatches).
 - The button's name toggles between "Enter fullscreen mode" and "Exit fullscreen mode". `body` does not scroll while it is on. The rotation is instant, with no transition or animation.
 
 ## What a port must do (implementation rules)
@@ -29,7 +30,7 @@ fullscreen only under SC 1.3.4 ("Not assessed"). Where the two disagree, this fi
 3. **Focus:** on a manual exit (button, Escape) it goes to `#btn-fullscreen`. When fullscreen opens and focus was left on something now inert, it moves to `#btn-fullscreen`. Changes nobody asked for with a control (rotation, viewport change) do not move focus on the way out.
 4. **Offer fullscreen only where the bottom bar's row is 500px or more.** Portrait gives the row the viewport height, landscape the width. Hide the button (`display: none`) and leave fullscreen if it is on when any of these applies: viewport 960px or wider; portrait and 499px tall or less; landscape and 499px wide or less. Keep the CSS and the script on the same list.
 5. **Landscape = fullscreen, on rotation only.** A phone turned to landscape enters fullscreen when the viewer was on screen (not at page load, which would cover the page before anyone reached the viewer). Turning back leaves it if it was entered that way. Leaving with the button or Escape sticks until the next turn. In landscape do not apply the 90° turn.
-6. **The drag axis follows the layout:** vertical only while the viewer is turned (portrait fullscreen), horizontal otherwise.
+6. **The drag axis follows the layout.** While the viewer is turned (portrait fullscreen) the screen's axes are the canvas's turned 90° clockwise: exterior rotation uses the vertical drag, and the interior panorama maps a drag down the screen to a drag right across the image and a drag left to a drag down. Horizontal and unmapped otherwise.
 7. **Toggle by name, not by `aria-pressed`.** The `aria-label` swaps; the two icons are `aria-hidden`. Do not add `aria-pressed` as well.
 8. **Do not add a rotation transition.** If one is added, it must switch off under `prefers-reduced-motion: reduce`.
 9. **Never lock the orientation** (no Screen Orientation API). Both orientations must keep full content and function, and the exit must exist in both.
@@ -52,7 +53,7 @@ Status: ✅ verified by a test or measurement · 🔍 inspected in code · ⚪ n
 | **2.4.3** Focus Order | A | Modal example: "all web page content outside the dialog becomes inert and cannot receive focus … When the dialog is dismissed, focus returns to the button" | Rules 1 and 3 | ✅ | "Tab never reaches anything outside #visualizer, and inert is restored on exit"; "moves focus in when it was left outside" |
 | **2.4.7** Focus Visible | AA | A visible focus indicator | Every tab stop visible | ✅ | "every tab stop is fully visible" at portrait and five landscape sizes |
 | **2.4.11** Focus Not Obscured (Min.) | AA | Focused component "not entirely hidden due to author-created content"; non-modal dialogs "typically" dismissed with Esc | No stop hidden by the overlay, the disclaimer or clipping | ✅ | Same tests. The auto-opening disclaimer can cover controls until dismissed (Esc, existing behaviour); the tests close it first |
-| **2.5.1 / 2.5.7** Gestures, Dragging | A / AA | Single-pointer alternative to dragging | Rotate buttons and arrow keys still work | ✅ | Keydown handler does not depend on `in-fullscreen`; "the drag axis follows the layout" |
+| **2.5.1 / 2.5.7** Gestures, Dragging | A / AA | Single-pointer alternative to dragging | Rotate buttons and arrow keys still work in both views | ✅ | Keydown handler does not depend on `in-fullscreen`; "the drag axis follows the layout" (exterior) and "the panorama drag follows the layout" (interior) |
 | **2.5.8** Target Size (Minimum) | AA | ≥24×24, or the spacing exception | Button 32×32; other targets keep their spacing | ✅ | axe `target-size` clean at every tested size |
 | **3.2.1 / 3.2.2** On Focus, On Input | A | No context change on focus or input | Fullscreen starts only on activation, or on a device turn | 🔍 | Neither focus nor input triggers it; the turn is a device action and the exit is always available |
 | **4.1.2** Name, Role, Value | A | Names and states available to AT | Name follows state; outside content removed from the AT tree | ✅ | Label asserted in the Escape and toggle tests; `inert` |
@@ -94,6 +95,8 @@ screen is tall, so the colour and wheel sections collapsed, swatch strips were c
 | Turning to landscape moves focus in when it was left outside the viewer | 2.4.3 |
 | Leaving landscape fullscreen with Escape sticks until the next turn | 1.3.4, 2.1.2 |
 | The drag axis follows the layout | 2.5.1, 2.5.7 |
+| Interior view: every tab stop fully visible, axe clean (portrait; landscape 844×390, 640×320, 500×300) | 2.4.7, 2.4.11, 2.5.8 |
+| The panorama drag gives the same view turned or not (same canvas, same pixels) | 2.5.1, 2.5.7 |
 
 One unrelated test fails intermittently, on `main` as well: `structural.spec.js` "component has 0 violations" at desktop-1440.
 It samples the bottom bar while it is still fading in (contrast ratios of 1.05–1.12); with a 3-second wait it
@@ -103,7 +106,7 @@ reports none. It is a timing artefact of `settle()`, not a fullscreen finding.
 
 - **No screen-reader pass** (VoiceOver, TalkBack, NVDA) on fullscreen. `A11Y-REFERENCE.md` lists this as the standing method gap.
 - **Rotation is simulated** with a viewport resize, which fires the same media-query change events. A physical turn on iOS Safari and Android Chrome has not been tried.
-- **Interior (360° panorama) mode in fullscreen** is not covered by these tests.
+- **Interior mode** is covered for the tab sweep, axe and the drag mapping, not for panorama zoom or the auto-rotation pause in fullscreen.
 - **Ring contrast on the bar is calculated** (about 3.6:1), not pixel-measured.
 - **Text spacing** is a heuristic check, not a full audit.
 

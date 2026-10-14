@@ -107,8 +107,12 @@ test.describe('fullscreen — containment (SC 2.4.3, 2.4.11)', () => {
 // wide as the screen is TALL; landscape fullscreen does not turn it, so the row is as
 // wide as the screen is wide. Either way it needs 500px or more (measured 2026-10-14:
 // 500 is clean, 430 loses swatch strips). Below that the button is not offered.
-async function fullscreenFindings(page) {
+async function fullscreenFindings(page, { interior = false } = {}) {
   await enterFullscreen(page);
+  if (interior) {
+    await page.evaluate(() => { document.getElementById('btn-toggle-view').click(); closeDisclaimer(); });
+    await page.waitForFunction(() => interiorMode === true);
+  }
   await page.evaluate(() => document.getElementById('btn-fullscreen').focus({ preventScroll: true }));
   const problems = [];
   for (let i = 0; i < 30; i++) {
@@ -263,5 +267,54 @@ test.describe('fullscreen — turning the phone (SC 1.3.4)', () => {
     await enterFullscreen(page);
     expect(await framesMoved(0, 120), 'turned: vertical drag rotates').toBe(true);
     expect(await framesMoved(120, 0), 'turned: horizontal drag does not').toBe(false);
+  });
+});
+
+test.describe('fullscreen — interior view (SC 2.4.7, 2.4.11, 2.5.1, 2.5.7)', () => {
+  test('portrait: every tab stop is fully visible and axe is clean', async ({ page }) => {
+    const found = await fullscreenFindings(page, { interior: true });
+    expect(found.problems, 'tab stops hidden or covered in fullscreen').toEqual([]);
+    expect(found.violations, 'axe violations in fullscreen').toEqual([]);
+  });
+
+  for (const [w, h] of [[844, 390], [640, 320], [500, 300]]) {
+    test(`landscape ${w}x${h}: every tab stop is fully visible and axe is clean`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'mobile-390', 'one project is enough for explicit viewports');
+      await page.setViewportSize({ width: w, height: h });
+      const found = await fullscreenFindings(page, { interior: true });
+      expect(found.problems, 'tab stops hidden or covered in fullscreen').toEqual([]);
+      expect(found.violations, 'axe violations in fullscreen').toEqual([]);
+    });
+  }
+
+  // Portrait fullscreen turns the viewer 90deg clockwise, so a drag down the screen is
+  // a drag right across the panorama. 390x844 turned and 844x390 are the same 844x280
+  // canvas, so the same drag in each must leave identical pixels. The panorama starts
+  // from its reset view with auto-rotation stopped, so nothing else moves it.
+  test('the panorama drag follows the layout: the same drag gives the same view turned or not', async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-390', 'explicit viewports');
+    const view = async (w, h, dx, dy) => {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, baseURL: testInfo.project.use.baseURL });
+      const page = await ctx.newPage();
+      await enterFullscreen(page);
+      await page.evaluate(() => { document.getElementById('btn-toggle-view').click(); closeDisclaimer(); });
+      await page.waitForFunction(() => interiorMode === true);
+      await page.evaluate(() => { stopAutoRotate(); pano.reset(); pano.pan(0, 0); });
+      await page.waitForTimeout(300);
+      const box = await page.locator('#media').boundingBox();
+      const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+      await page.mouse.move(cx, cy);
+      await page.mouse.down();
+      await page.mouse.move(cx + dx, cy + dy, { steps: 10 });
+      await page.mouse.up();
+      await page.waitForTimeout(300);
+      const out = await page.evaluate(() => ({ url: pano.canvas.toDataURL(), size: pano.canvas.width + 'x' + pano.canvas.height }));
+      await ctx.close();
+      return out;
+    };
+    const landscape = await view(844, 390, 100, 0);
+    const turned = await view(390, 844, 0, 100);
+    expect(turned.size, 'both layouts must give the same canvas').toBe(landscape.size);
+    expect(turned.url, 'a drag down the turned screen is a drag right across the panorama').toBe(landscape.url);
   });
 });

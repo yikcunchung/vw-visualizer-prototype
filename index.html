@@ -2071,7 +2071,10 @@ function moveDrag(clientX, clientY) {
     const w = pano.canvas.offsetWidth  || 600;
     const h = pano.canvas.offsetHeight || 400;
     const sens = pano.fov / Math.max(w, h);
-    pano.pan(-dx * sens, dy * sens);
+    // Turned viewer (portrait fullscreen): the canvas is the screen turned 90deg
+    // clockwise, so canvas right is screen down and canvas down is screen left.
+    const [cx, cy] = fsRotated() ? [dy, -dx] : [dx, dy];
+    pano.pan(-cx * sens, cy * sens);
     syncTiltBtns();
     return;
   }
