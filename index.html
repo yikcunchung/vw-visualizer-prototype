@@ -2587,13 +2587,52 @@ document.getElementById('btn-toggle-view').addEventListener('click', () => {
   if (interiorMode) exitInterior(); else enterInterior();
 });
 
-document.getElementById('btn-fullscreen').addEventListener('click', () => {
-  const isFS = document.body.classList.toggle('in-fullscreen');
-  const fsBtn = document.getElementById('btn-fullscreen');
-  const fsLabel = isFS ? 'Exit fullscreen mode' : 'Enter fullscreen mode';
-  fsBtn.setAttribute('aria-label', fsLabel);
+// ── Fullscreen mode ──
+// While it is on, #visualizer is a fixed, rotated layer that covers the whole page.
+// Everything behind it is still in the tab order and the accessibility tree, so Tab
+// would land on a nav link nobody can see (SC 2.4.11 Focus Not Obscured, 2.4.7 Focus
+// Visible) and a screen reader would read the page under the overlay. WCAG's own
+// modal-dialog example for SC 2.4.3 is the pattern: everything outside becomes inert,
+// and on dismissal focus returns to the button.
+//
+// `inert` goes on the siblings of #visualizer and of each of its ancestors, never on
+// an ancestor itself. Only elements this code made inert are restored, so one that
+// was already inert (#btn-a11y-group while its toolbar is closed) stays that way.
+const btnFullscreen = document.getElementById('btn-fullscreen');
+let fsInerted = [];
+
+function setFullscreen(on) {
+  document.body.classList.toggle('in-fullscreen', on);
+  if (on) {
+    for (let el = document.getElementById('visualizer'); el !== document.body; el = el.parentElement) {
+      for (const sib of el.parentElement.children) {
+        if (sib === el || sib.inert || /^(SCRIPT|STYLE|TEMPLATE)$/.test(sib.tagName)) continue;
+        sib.inert = true;
+        fsInerted.push(sib);
+      }
+    }
+  } else {
+    fsInerted.forEach(el => { el.inert = false; });
+    fsInerted = [];
+  }
+  btnFullscreen.setAttribute('aria-label', on ? 'Exit fullscreen mode' : 'Enter fullscreen mode');
+  // SC 2.4.3: on exit, focus goes back to the toggle. After a mouse click the button
+  // already has it, but Safari does not focus a button on click and Escape can start
+  // from any control inside the viewer. A no-op if the button is not rendered.
+  if (!on) btnFullscreen.focus({ preventScroll: true });
   requestAnimationFrame(updateBBConstraint);
   requestAnimationFrame(() => { if (window.updateBBArrows) window.updateBBArrows(); });
+}
+
+btnFullscreen.addEventListener('click', () => {
+  setFullscreen(!document.body.classList.contains('in-fullscreen'));
+});
+
+// The button only exists below 960px. If the viewport grows past that while
+// fullscreen is on (a tablet turned to landscape), the only visible exit would vanish
+// and the page would stay covered, so leave fullscreen with it.
+window.matchMedia('(min-width: 960px)').addEventListener('change', e => {
+  if (e.matches && document.body.classList.contains('in-fullscreen')) setFullscreen(false);
 });
 
 window.addEventListener('resize', () => { if (interiorMode) pano.draw(); updateBBConstraint(); pinSelectModel(); });
@@ -3077,7 +3116,12 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
   lbl.addEventListener('click', () => toggle());
   lbl.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-    if (e.key === 'Escape') toggle(false);
+    if (e.key === 'Escape') {
+      // One Escape dismisses one thing. Collapsing the label uses this press up, so
+      // mark it handled; the document-level Escape handler skips handled events.
+      if (lbl.classList.contains('expanded')) e.preventDefault();
+      toggle(false);
+    }
   });
 })();
 
@@ -3122,8 +3166,15 @@ btnClose.addEventListener('click', closeDisclaimer);
 // controls, and it opens itself on scroll rather than by user action. W3C Note 2
 // only forgives an overlay if the user can reveal the focused component WITHOUT
 // advancing focus — so Escape must dismiss it from anywhere.
+//
+// Escape also leaves fullscreen (SC 2.1.2: Escape is the standard exit from a mode
+// that holds focus). One press dismisses one thing, innermost first: an expanded
+// wheel label (handled and prevented above), then the disclaimer, which can sit on
+// top of the fullscreen button, then fullscreen itself on the next press.
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeDisclaimer();
+  if (e.key !== 'Escape' || e.defaultPrevented) return;
+  if (disclaimerPanel.classList.contains('is-open')) { closeDisclaimer(); return; }
+  if (document.body.classList.contains('in-fullscreen')) setFullscreen(false);
 });
 
 // Show disclaimer when visualizer loads in
