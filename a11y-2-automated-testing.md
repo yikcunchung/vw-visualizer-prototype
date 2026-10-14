@@ -376,7 +376,7 @@ Do Step 0, then — **writing down the spoken words after each action:**
 
 1. `VO+Right` until you are on the car viewer itself.
 2. Continue until you reach the **row of 13 colour swatches** (the colour chips above the text
-   line reading *"Colours — <name>"* in the bottom bar).
+   line reading *"Colour — <name>"* in the bottom bar).
 3. Press **Right arrow** once.
 4. Press **Right arrow** twice more.
 5. Press **Fn+Right** (End).
@@ -448,7 +448,7 @@ the element is inside `#visualizer`** — the car viewer and the bottom bar.
 - [ ] **1** — record whether *car 360° viewer* (`aria-roledescription`) is **spoken**, ignored, or
       **replaces** the word "region". No pass/fail — only what happened. This is the one item axe
       hands back as needs-review because no engine can judge it.
-- [ ] **2** — announced as a **radio group** named *Colours*, with a position such as **"1 of 13"**.
+- [ ] **2** — announced as a **radio group** named *Colour*, with a position such as **"1 of 13"**.
 - [ ] **3** — focus **moved**, the new colour's **name was spoken**, and it announced as
       **selected**. In a radiogroup, moving *is* choosing — without "selected" the user hears
       where they landed but not that the car repainted.
@@ -566,7 +566,7 @@ Six items were confirmed by ear:
 | Interior materials | announced cleanly as *Material 1*…*5* — **mechanically fine, semantically empty** |
 | `#label-wheel` at ~768px | **plain text: skipped by Tab, announced by the VO cursor** — the truncation-derived-state check (SC 4.1.2) confirmed both ways |
 | `#label-wheel` activated while truncated | **reads the full wheel name** — the expand action works |
-| Colour group on entry | **"Colours, radio group"** then **"1 of 13"** |
+| Colour group on entry | **"Colour, radio group"** then **"1 of 13"** |
 | Arrow within the group | name + **"selected"** + position |
 | Home / End (`Fn`+arrows on macOS) | first and last colour, both announced |
 | Opening the disclaimer | **found a defect** — focus landed on `#btn-close`, *after* the text. Now lands on `#label-group`. See below |

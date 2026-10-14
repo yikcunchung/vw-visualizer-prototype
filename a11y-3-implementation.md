@@ -564,7 +564,7 @@ Representative structure:
 
 ## 10.3 Swatch names
 
-- Colours: 13 distinct names (including “Grenadilla Black Metallic”, “Scale Silver Metallic Black”, “Kings Red Premium Metallic Black”).  
+- Colour: 13 distinct names (including “Grenadilla Black Metallic”, “Scale Silver Metallic Black”, “Kings Red Premium Metallic Black”).  
 - Wheels: 5 distinct names with embedded quotes and long descriptions.  
 - Materials: 5 placeholder names (“Material 1” … “Material 5”) — to be replaced by real data in production.
 
@@ -629,7 +629,7 @@ by VoiceOver: there it is skipped by Tab and read only when the cursor lands on 
 (`scrollWidth === clientWidth`: 732 at 1440, 736 at 768), so both arrows are `disabled` and neither
 is a tab stop. At 390 the strip *does* overflow (732 > 358) and the **right** arrow is enabled while
 the left is not — there is nothing to scroll left to at `scrollLeft: 0`. Tab round once and
-*"Scroll colours left"* is absent; tab round a **second** time and it is there, because moving focus
+*"Scroll colour left"* is absent; tab round a **second** time and it is there, because moving focus
 through the swatches scrolled the strip and enabled it.
 
 ## 10.6 Live regions
