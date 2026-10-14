@@ -1,68 +1,55 @@
 # VW Visualizer — accessibility reference build
 
-A working, WCAG 2.2 AA reference build of the 360° car visualizer. **It is a behavioural
-specification, not source to copy.** Most of what matters here lives in JavaScript, not markup.
+A working example of the 360° car visualizer that meets WCAG 2.2 AA. **Use it as a guide to
+behaviour, not as code to copy.** Most of what matters is in the JavaScript, not the markup.
 
 **Live:** https://yikcunchung.github.io/vw-visualizer-prototype/
 
-**Building the fullscreen mode?** Also read [`FULLSCREEN-A11Y.md`](FULLSCREEN-A11Y.md): what to build, each WCAG criterion with the reason, and the tests.
+**Building the fullscreen mode?** Also read [`FULLSCREEN-A11Y.md`](FULLSCREEN-A11Y.md): what to build, the reason for each rule, and the tests.
 
 ---
 
-## If you are the developer porting this — read this section only
+## For the developer porting this: read this section
 
-You need **seven things**. Everything else in this repo is evidence for auditors.
+You need seven things. Everything else in this repo is evidence for auditors.
 
-### 1. `aria-expanded` must be set wherever the panel opens, not just on click
+### 1. Keep the "open" state in sync everywhere the panel opens
+
+The disclaimer panel also opens by itself when it scrolls into view. Set the button's
+`aria-expanded` there too, not only in the click handler.
 
 ```js
-// ✗ wrong — only the click handler maintains it
-btn.addEventListener('click', () => btn.setAttribute('aria-expanded', String(!open)));
-
-// ✓ correct — the IntersectionObserver that auto-opens it must set it too
-const obs = new IntersectionObserver(([entry]) => {
-  if (entry.isIntersecting) { panel.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true'); }
-});
+if (entry.isIntersecting) { panel.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true'); }
 ```
 
-**Why:** the disclaimer auto-opens on scroll into view. The click handler kept `aria-expanded`
-correct for a manual toggle, but the auto-open path never touched it — so it read `"false"` over
-an open panel from first paint until someone happened to click it. Every *other* state transition
-maintained the attribute correctly, which is exactly why review missed this one.
+**Why:** the auto-open was missed, so the button said "closed" over an open panel until someone
+clicked it. Scanners did not catch it.
 
-### 2. `role="radio"` needs roving tabindex wired explicitly — the role alone promises nothing
+### 2. Radio groups need real keyboard handling
 
-```js
-// One tab stop per group; arrows/Home/End move the roving tabindex and .click() the target
-function wireRadiogroup(grid) {
-  grid.addEventListener('keydown', e => {
-    // ArrowRight/Down → next, ArrowLeft/Up → prev, Home → first, End → last
-    // then: btns[next].click(); btns[next].focus();
-  });
-}
-```
+The swatches are radio buttons, so each group needs one tab stop, and the arrow keys, Home and End
+must move between them. Setting the role does none of this by itself. Work out which swatch is
+tabbable in one shared place, from which one is checked (`aria-checked`), so the six grids cannot
+drift apart.
 
-**Why:** all 13+ colour/wheel/material swatches shipped as `role="radio"` with `tabIndex="0"` on
-every one — a screen reader announced "radio button, 1 of 13" and told the user to press arrow
-keys, but nothing was listening, and all of them sat in the tab order. The role and the keyboard
-contract it implies are two separate things; setting the role does not give you the second one for
-free. Fixed by deriving roving tabindex from `aria-checked` via a single `MutationObserver` (there
-are six grids and three different selector functions that mutate `aria-checked` — deriving tabindex
-in one shared place is the only version that can't drift out of sync).
+**Why:** every swatch was a tab stop and the arrow keys did nothing, although the screen reader
+said to use them.
 
-### 3. A silent state change is still a defect, even if nothing looks broken
+### 3. Announce every change, not only the ones that look broken
+
+Zoom was announced to screen readers and rotation was not. Nothing looked wrong; it just stayed
+silent. Wait 600ms before announcing, so a drag does not announce every frame.
 
 ```js
-// Debounced — undebounced fires every frame during a drag
 const announceRotation = debounce((deg) => { mediaStatus.textContent = `Rotated to ${deg} degrees`; }, 600);
 ```
 
-**Why:** zoom level announced correctly; rotation did not. It wasn't obviously broken — nothing
-threw, nothing looked wrong on screen — it just never spoke. `2.1.1`/`4.1.2` both technically passed
-before this fix, so nothing here is caught by rule engines. It only surfaces by using the control
-with a screen reader running.
+**Why:** this only shows up when you use the control with a screen reader running.
 
-### 4. A select's neighbouring text is its **value**, not its label — split the two, don't drop either
+### 4. Give the model select a visible label
+
+Show a fixed "Model:" next to the current value, in two separate elements, and name the select
+by both.
 
 ```html
 <span class="select-label">
@@ -71,53 +58,32 @@ with a screen reader running.
 <select id="select-model-lg" aria-labelledby="model-static-label label-select-model-lg">…</select>
 ```
 
-**Why:** the control had `aria-label="Select car model"` — accurate, but invisible, so a sighted
-user had no on-screen purpose description. The fix isn't "point the name at a static label
-*instead of* the value" — it's both, in separate elements: a static "Model:" prefix nothing ever
-rewrites, plus the existing family-value span. The name legitimately updates when the family does
-("Model: ID.7" -> "Model: Grand California"); what must never happen is the *static* half moving
-too, which is what a single JS-rewritten string would risk. The box itself is grid-stacked
-(`.select-wrap { display: grid }`, label and native `<select>` sharing one cell) so its width tracks
-whichever is wider — no family name truncates, even with the prefix added.
+**Why:** it only had an invisible label, so sighted users saw no description. Never rewrite the
+"Model:" part; only the value changes. The box grows to fit the longer text, so no model name is
+cut off.
 
-### 5. Selection state must not be color alone
+### 5. Do not show selection with colour alone
+
+The selected swatch gets a checkmark and a thicker border (1px to 3px), not just a different
+colour (WCAG 1.4.1).
 
 ```css
-.btn-swatch.selected .checkmark { display: block; }     /* non-color signal */
-.btn-swatch.selected .stroke    { border: 3px solid #997f67; }  /* 1px → 3px, not just a hue */
+.btn-swatch.selected .checkmark { display: block; }
+.btn-swatch.selected .stroke    { border: 3px solid #997f67; }
 ```
 
-**Why:** SC 1.4.1. The selected swatch already changes border colour; a checkmark badge and a
-border-*width* change (not just colour) mean the state doesn't depend on colour perception alone.
+### 6. Use real names for swatches
 
-### 6. Swatch names must be the real variant name — not a numbered placeholder
+The five interior material swatches are still named `Material 1` to `Material 5`. Scanners accept
+that, but it describes nothing. Production data (JSON or translation keys) can be empty, repeated
+or wrong in the same way: four Grand California swatches once had the wrong colour name and every
+tool passed. Check the data itself: names must be filled in, unique and descriptive.
 
-The five interior material swatches are still named `Material 1`–`Material 5` in the data feeding
-`makeSwatchBtn()`. Every scanner passes this (a name is present), but it describes nothing.
+### 7. Make the colour and wheel selectors fit the panel
 
-**Why this isn't solved by production sourcing names from JSON/translation keys:** the risk doesn't
-disappear, it moves. A translation key can be null, empty, or duplicated just as easily as this
-placeholder is wrong — and no scanner catches either case. Four Grand California swatches once
-carried the wrong colour name while every tool scored clean. Validate the data layer itself —
-assert non-empty, unique, and actually descriptive — rather than assuming a working data pipeline
-is enough.
-
-### 7. The colour and wheel selectors must never let their combined width push the panel past the viewport
-
-```js
-// Give every section its natural width first. Only if that's too much to fit,
-// allocate smallest-natural-width first: each section gets min(its own need, an
-// equal share of what's left). The larger selector absorbs any shortfall.
-const order = [...sections].sort((a, b) => a.naturalWidth - b.naturalWidth);
-```
-
-**Why:** SC 1.4.10. The two selectors sit side by side in one panel that must never force
-page-level horizontal scroll. An equal 50/50 split would starve whichever selector has fewer
-swatches even though it has room to spare, while the selector with more swatches could still
-overflow the panel anyway. Allocating the smaller selector's full natural width first, then
-giving the larger one whatever's left, guarantees the panel itself always fits — only the
-larger selector's own swatch strip scrolls internally (`overflow-x: auto`) when there isn't
-enough room, never the whole panel.
+The two selectors sit side by side and must never push the page into horizontal scrolling
+(WCAG 1.4.10). Give each its natural width first. If they do not fit, the smaller one keeps its
+full width and the larger one gets what is left and scrolls inside itself.
 
 ---
 
@@ -128,30 +94,28 @@ npm install
 npm test
 ```
 
-**92 tests over 4 viewports** (1440/768/390/320×256 @ dsf4). They encode items 1–3 and 5 above, plus
-the scanner checks. Green means you have it — item 4 and item 6 are structural/content decisions
-the tests don't and can't fully encode, and item 7's cross-selector width allocation has no
-automated test at all yet.
+The tests run at four screen sizes (1440, 768, 390 and 320×256 at 400% zoom). They cover items
+1–3 and 5, the scanner checks, and the fullscreen mode. Green means those are right. Items 4 and 6
+are about structure and content, which tests cannot fully check, and item 7 has no test yet.
 
-> **Items 1–3 exist because axe returned 0 violations while each was wrong.** A clean scanner run
-> does not tell you this component works — pressing keys and listening to a screen reader does.
+> Items 1–3 exist because the scanner found nothing wrong while each one was wrong. A clean scan
+> does not prove this works. Pressing keys and listening with a screen reader does.
 
 ---
 
 ## Everything else in this repo
 
-You do not need these to build. They exist so an auditor can verify the claim.
+You do not need these to build. They let an auditor check the claims.
 
-| File | Who it is for |
+| File | What it is |
 |---|---|
-| [`a11y-3-implementation.md`](a11y-3-implementation.md) | The full version of the six rules, plus the remaining requirements, organized by WCAG success criterion. Read it if you want the reasoning. |
-| [`a11y-2-automated-testing.md`](a11y-2-automated-testing.md) | What the tools prove and what they cannot, the manual test procedure, and the recorded results. |
-| [`a11y-1-criteria.md`](a11y-1-criteria.md) | All 56 WCAG A/AA criteria, one row each, pass/fail. For the auditor. Look up a criterion; do not read it through. |
+| [`a11y-3-implementation.md`](a11y-3-implementation.md) | The rules in full, by WCAG criterion, with the reasoning. |
+| [`a11y-2-automated-testing.md`](a11y-2-automated-testing.md) | What the tools prove and what they cannot, the manual test steps, and the recorded results. |
+| [`a11y-1-criteria.md`](a11y-1-criteria.md) | All 56 WCAG A/AA criteria, one row each, pass or fail. Look things up; do not read it through. |
 
-## A deliberate departure from the core component
+## One deliberate difference from the core component
 
-The real core Select border, `rgb(161,164,172)`, is **2.29:1** against the page — below the
-3:1 SC 1.4.11 floor. This build uses `rgb(110,116,126)` (**4.32:1**) instead: darker than the
-core value on purpose, so the prototype demonstrates full outright compliance rather than
-reproducing a known upstream contrast bug. Do not "correct" it back toward `rgb(161,164,172)`
-— that direction was tried and reverted.
+The core Select border, `rgb(161,164,172)`, has a contrast of 2.29:1, below the 3:1 minimum
+(WCAG 1.4.11). This build uses `rgb(110,116,126)` (4.32:1) on purpose, so the prototype is fully
+compliant instead of copying a known contrast bug. Do not change it back; that was tried and
+reverted.
