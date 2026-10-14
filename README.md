@@ -5,6 +5,8 @@ specification, not source to copy.** Most of what matters here lives in JavaScri
 
 **Live:** https://yikcunchung.github.io/vw-visualizer-prototype/
 
+**Building the fullscreen mode?** Also read [`FULLSCREEN-A11Y.md`](FULLSCREEN-A11Y.md): what to build, each WCAG criterion with the reason, and the tests.
+
 ---
 
 ## If you are the developer porting this — read this section only
