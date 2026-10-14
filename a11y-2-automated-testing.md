@@ -178,7 +178,7 @@ rather than `element.click()`:
 ## Orientation and text spacing
 
 **SC 1.3.4 — pass.** Portrait *and* landscape at 390×844 / 844×390 / 320×640 / 640×320, normal and
-fullscreen. **No `@media (orientation:)` rule anywhere.** In all eight combinations: viewer and
+fullscreen. **Orientation queries only adapt fullscreen** (landscape phones enter it without the 90° turn; `FULLSCREEN-A11Y.md` has the fullscreen measurements and supersedes this paragraph for fullscreen). In all eight combinations: viewer and
 bottombar visible, 18 radios and 18 swatches present, no horizontal scroll, fullscreen exit visible
 and inside the viewport. The `rotate(90deg)` is user-invoked and reversible — not an orientation lock.
 

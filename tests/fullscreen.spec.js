@@ -103,11 +103,10 @@ test.describe('fullscreen — containment (SC 2.4.3, 2.4.11)', () => {
   });
 });
 
-// The layout rule: in fullscreen the viewer is rotated 90deg, so the bottom bar's
-// row is as wide as the screen is TALL. Portrait phones and tablets give it 800px
-// and more. Landscape phones and 400% zoom give it 256-430px, and the colour and
-// wheel sections collapse (measured 2026-10-14). These are known failures, kept as
-// test.fail so the suite goes red the day they are fixed and the marker can go.
+// Layout. Portrait fullscreen turns the viewer 90deg, so the bottom bar's row is as
+// wide as the screen is TALL; landscape fullscreen does not turn it, so the row is as
+// wide as the screen is wide. Either way it needs 500px or more (measured 2026-10-14:
+// 500 is clean, 430 loses swatch strips). Below that the button is not offered.
 async function fullscreenFindings(page) {
   await enterFullscreen(page);
   await page.evaluate(() => document.getElementById('btn-fullscreen').focus({ preventScroll: true }));
@@ -135,23 +134,134 @@ async function fullscreenFindings(page) {
   return { problems, violations: axe.violations.map((v) => v.id) };
 }
 
+const isLandscapeLayout = (page) => page.evaluate(() =>
+  getComputedStyle(document.getElementById('visualizer')).transform === 'none');
+
 test.describe('fullscreen — layout and focus visibility (SC 1.4.10, 2.4.7, 2.4.11, 2.5.8)', () => {
-  test('portrait: every tab stop is fully visible and axe is clean', async ({ page }, testInfo) => {
-    test.fail(testInfo.project.name === 'zoom-400',
-      'known: at 320x256 @400% the bottom bar collapses in fullscreen (FULLSCREEN-A11Y.md, finding F1)');
+  test('portrait: every tab stop is fully visible and axe is clean', async ({ page }) => {
     const found = await fullscreenFindings(page);
     expect(found.problems, 'tab stops hidden or covered in fullscreen').toEqual([]);
     expect(found.violations, 'axe violations in fullscreen').toEqual([]);
   });
 
-  for (const [w, h] of [[844, 390], [640, 320]]) {
-    test(`landscape ${w}x${h}: every tab stop is fully visible and axe is clean`, async ({ page }, testInfo) => {
+  for (const [w, h] of [[844, 390], [932, 430], [640, 320], [568, 320], [500, 300]]) {
+    test(`landscape ${w}x${h}: not turned, every tab stop fully visible, axe clean`, async ({ page }, testInfo) => {
       test.skip(testInfo.project.name !== 'mobile-390', 'one project is enough for explicit viewports');
-      test.fail(true, 'known: landscape phones collapse the bottom bar in fullscreen (FULLSCREEN-A11Y.md, finding F1)');
       await page.setViewportSize({ width: w, height: h });
       const found = await fullscreenFindings(page);
+      expect(await isLandscapeLayout(page), 'landscape must not be turned 90deg').toBe(true);
       expect(found.problems, 'tab stops hidden or covered in fullscreen').toEqual([]);
       expect(found.violations, 'axe violations in fullscreen').toEqual([]);
     });
   }
+
+  for (const [w, h, dsf, what] of [[499, 300, 1, 'landscape under 500px wide'], [320, 256, 4, '400% zoom (320x256)'], [390, 499, 1, 'portrait under 500px tall']]) {
+    test(`${what}: the button is not offered`, async ({ browser }, testInfo) => {
+      test.skip(testInfo.project.name !== 'mobile-390', 'one project is enough for explicit viewports');
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: dsf, baseURL: testInfo.project.use.baseURL });
+      const page = await ctx.newPage();
+      await settle(page);
+      expect(await page.locator('#btn-fullscreen').isVisible(), 'a row under 500px loses swatch strips').toBe(false);
+      await ctx.close();
+    });
+  }
+});
+
+test.describe('fullscreen — turning the phone (SC 1.3.4)', () => {
+  // Rotation is simulated with setViewportSize, which re-evaluates media queries and
+  // fires their change events like a real turn. The viewer must be on screen first:
+  // the mode only follows a turn made while looking at it.
+  async function viewerOnScreen(page) {
+    await page.evaluate(() => document.getElementById('visualizer').scrollIntoView({ block: 'center' }));
+    await page.waitForFunction(() => viewerOnScreen === true);
+  }
+  const turn = async (page, landscape) => {
+    const { width, height } = page.viewportSize();
+    const [w, h] = landscape ? [Math.max(width, height), Math.min(width, height)] : [Math.min(width, height), Math.max(width, height)];
+    await page.setViewportSize({ width: w, height: h });
+  };
+
+  test('turning to landscape enters fullscreen, not turned; turning back leaves', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-390', 'explicit viewports');
+    await settle(page);
+    await viewerOnScreen(page);
+    expect((await state(page)).fullscreen).toBe(false);
+
+    await turn(page, true);
+    await page.waitForFunction(() => document.body.classList.contains('in-fullscreen'));
+    expect(await isLandscapeLayout(page), 'landscape fullscreen is not turned 90deg').toBe(true);
+    expect((await state(page)).label).toBe('Exit fullscreen mode');
+
+    await turn(page, false);
+    await page.waitForFunction(() => !document.body.classList.contains('in-fullscreen'));
+    expect(await inertIds(page), 'nothing may stay inert after it leaves').not.toContain('stage');
+  });
+
+  test('loading the page in landscape does not cover it', async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-390', 'explicit viewports');
+    const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, baseURL: testInfo.project.use.baseURL });
+    const page = await ctx.newPage();
+    await settle(page);
+    await page.waitForTimeout(500);
+    expect((await state(page)).fullscreen, 'only a turn enters it').toBe(false);
+    await ctx.close();
+  });
+
+  test('turning to landscape moves focus in when it was left outside the viewer', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-390', 'explicit viewports');
+    await settle(page);
+    await viewerOnScreen(page);
+    // The skip link sits outside #visualizer and goes inert with everything else; a
+    // focus left on it would drop to <body> and the next Tab would start at the top.
+    await page.evaluate(() => document.querySelector('.skip-link').focus({ preventScroll: true }));
+    expect(await page.evaluate(() => document.getElementById('visualizer').contains(document.activeElement))).toBe(false);
+
+    await turn(page, true);
+    await page.waitForFunction(() => document.body.classList.contains('in-fullscreen'));
+    expect((await state(page)).active, 'focus moves to the toggle').toBe('btn-fullscreen');
+  });
+
+  test('leaving landscape fullscreen with Escape sticks until the next turn', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-390', 'explicit viewports');
+    await settle(page);
+    await viewerOnScreen(page);
+    await turn(page, true);
+    await page.waitForFunction(() => document.body.classList.contains('in-fullscreen'));
+
+    await page.evaluate(() => closeDisclaimer());
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    let s = await state(page);
+    expect(s.fullscreen, 'Escape leaves it').toBe(false);
+    expect(s.active, 'focus returns to the toggle').toBe('btn-fullscreen');
+
+    await turn(page, false);
+    await viewerOnScreen(page);
+    await turn(page, true);
+    await page.waitForFunction(() => document.body.classList.contains('in-fullscreen'));
+  });
+
+  test('the drag axis follows the layout: horizontal in landscape, vertical when turned', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-390', 'explicit viewports');
+    const framesMoved = async (dx, dy) => {
+      const box = await page.locator('#media').boundingBox();
+      const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+      const before = await page.evaluate(() => rotFrame);
+      await page.mouse.move(cx, cy);
+      await page.mouse.down();
+      await page.mouse.move(cx + dx, cy + dy, { steps: 8 });
+      await page.mouse.up();
+      return (await page.evaluate(() => rotFrame)) !== before;
+    };
+
+    await page.setViewportSize({ width: 844, height: 390 });
+    await enterFullscreen(page);
+    expect(await framesMoved(120, 0), 'landscape: horizontal drag rotates').toBe(true);
+    expect(await framesMoved(0, 120), 'landscape: vertical drag does not').toBe(false);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await enterFullscreen(page);
+    expect(await framesMoved(0, 120), 'turned: vertical drag rotates').toBe(true);
+    expect(await framesMoved(120, 0), 'turned: horizontal drag does not').toBe(false);
+  });
 });

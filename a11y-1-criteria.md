@@ -56,7 +56,7 @@ criteria are not required and are not listed.
 | **1.3.1** | Info and Relationships | A | Yes | ✅ Pass | axe 0 violations on all structure rules; `role="radiogroup"` + 18 radios correct in the AX tree. |
 | **1.3.2** | Meaningful Sequence | A | Yes | ✅ Pass* | DOM order matches visual order; 12 coherent Tab stops at 390 and 320 (exterior, `#btn-a11y` collapsed). |
 | **1.3.3** | Sensory Characteristics | A | Yes | ✅ Pass* | Instructions are textual ("Use the left and right arrow keys…"), not shape or position. |
-| **1.3.4** | Orientation | AA | Yes | ✅ Pass | Tested portrait **and** landscape at 390×844 / 844×390 / 320×640 / 640×320, in normal **and** fullscreen. No `@media (orientation:)` rule exists anywhere. Viewer and bottombar visible, 18 radios / 18 swatches present, no horizontal scroll, and the fullscreen exit control visible and inside the viewport in every case. The `rotate(90deg)` is a user-invoked fullscreen mode, reversible, and does not lock orientation. |
+| **1.3.4** | Orientation | AA | Yes | ✅ Pass | Tested portrait **and** landscape at 390×844 / 844×390 / 320×640 / 640×320, in normal **and** fullscreen. Orientation queries only *adapt* fullscreen and never remove content or function: a phone turned to landscape enters it without the 90° turn, and the exit stays available (see `FULLSCREEN-A11Y.md`, which supersedes this row for fullscreen). Viewer and bottombar visible, 18 radios / 18 swatches present, no horizontal scroll, and the fullscreen exit control visible and inside the viewport in every case. The portrait `rotate(90deg)` is a user-invoked fullscreen mode, reversible, and does not lock orientation. |
 | **1.3.5** | Identify Input Purpose | AA | No | ⚪ N/A | No fields collecting user information. |
 
 ## 1.4 Distinguishable

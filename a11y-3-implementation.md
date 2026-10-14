@@ -514,7 +514,7 @@ change, so re-check them after any reflow work:
 
 | SC | Constraint |
 |---|---|
-| **1.3.4** Orientation | No `@media (orientation:)` rule anywhere. Fullscreen's `rotate(90deg)` is user-invoked and reversible — it must never *restrict* content to one orientation. |
+| **1.3.4** Orientation | Orientation queries only adapt fullscreen (a landscape phone enters it without the 90° turn; see `FULLSCREEN-A11Y.md`). Fullscreen's portrait `rotate(90deg)` is user-invoked and reversible — nothing may *restrict* content or function to one orientation, and the exit must exist in both. |
 | **1.4.12** Text Spacing | Under the four overrides (line-height 1.5, letter-spacing .12em, word-spacing .16em, paragraph 2em) nothing may newly clip, no control may be lost, and no horizontal scroll may appear. |
 
 **The screen-reader pass is done.** VoiceOver, all fifteen checks, Safari and Chrome — see

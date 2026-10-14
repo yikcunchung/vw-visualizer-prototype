@@ -590,7 +590,11 @@ html {
   overflow: hidden;
 }
 #btn-fullscreen svg { width: 12px; height: 12px; display: block; }
-@media (min-width: 960px) { #btn-fullscreen { display: none; } }
+/* Same list as `fsUnavailable` in the script: desktop, or a bottom-bar row under 500px
+   (portrait gives it the viewport height, landscape the width). */
+@media (min-width: 960px),
+       (orientation: portrait) and (max-height: 499px),
+       (orientation: landscape) and (max-width: 499px) { #btn-fullscreen { display: none; } }
 #btn-fullscreen .icon-fs-exit { display: none; }
 body.in-fullscreen #btn-fullscreen .icon-fs-enter { display: none; }
 body.in-fullscreen #btn-fullscreen .icon-fs-exit  { display: block; }
@@ -610,6 +614,15 @@ body.in-fullscreen #visualizer {
   z-index: 1000;
   background: #f6f5f2;
   gap: 0; flex-shrink: 0;
+}
+/* Landscape: the screen already is a landscape view, so fill it without the 90deg turn. */
+@media (orientation: landscape) {
+  body.in-fullscreen #visualizer {
+    width: 100dvw; height: 100dvh;
+    max-width: 100dvw; max-height: 100dvh;
+    top: 0; left: 0;
+    transform: none;
+  }
 }
 body.in-fullscreen #media {
   flex: 1 1 0; min-height: 0;
@@ -2062,7 +2075,7 @@ function moveDrag(clientX, clientY) {
     syncTiltBtns();
     return;
   }
-  rotation += (document.body.classList.contains('in-fullscreen') ? dy : dx) * 0.8;
+  rotation += (fsRotated() ? dy : dx) * 0.8;
   const norm = ((rotation % 360) + 360) % 360;
   const newFrame = Math.round((norm / 360) * frameCount()) % frameCount();
   if (newFrame !== rotFrame) {
@@ -2601,10 +2614,36 @@ document.getElementById('btn-toggle-view').addEventListener('click', () => {
 const btnFullscreen = document.getElementById('btn-fullscreen');
 let fsInerted = [];
 
-function setFullscreen(on) {
+// Two ways in, one layout. Portrait: the button turns the viewer 90deg so the phone
+// shows a landscape view. Landscape: the screen already is one, so turning a phone
+// to landscape enters fullscreen by itself and nothing is rotated (the CSS switches
+// on orientation). The button stays as the exit in both.
+//
+// Fullscreen is only offered where the bottom bar's row can be 500px wide or more:
+// portrait gives it the viewport HEIGHT (the viewer is turned), landscape the WIDTH.
+// Measured 2026-10-14: 500px is clean, 430px loses swatch strips (FULLSCREEN-A11Y.md,
+// F1). The same list hides the button in the CSS.
+const fsUnavailable = window.matchMedia(
+  '(min-width: 960px), (orientation: portrait) and (max-height: 499px), (orientation: landscape) and (max-width: 499px)');
+const fsLandscape = window.matchMedia('(orientation: landscape)');
+let fsAuto = false;             // entered by turning the phone, so turning it back leaves
+let viewerOnScreen = false;     // last known, i.e. from before a rotation reflows the page
+new IntersectionObserver(es => { viewerOnScreen = es[es.length - 1].isIntersecting; })
+  .observe(document.getElementById('visualizer'));
+
+// Viewer turned 90deg (portrait fullscreen): its vertical drag is the screen's horizontal one.
+const fsRotated = () => document.body.classList.contains('in-fullscreen') && !fsLandscape.matches;
+
+// `auto` marks a change nobody asked for with a control (rotation, viewport change).
+// Those do not move focus on the way out: nothing was dismissed.
+function setFullscreen(on, auto = false) {
+  fsAuto = on && auto;
+  const viz = document.getElementById('visualizer');
+  const focusOutside = on && document.activeElement && document.activeElement !== document.body
+    && !viz.contains(document.activeElement);
   document.body.classList.toggle('in-fullscreen', on);
   if (on) {
-    for (let el = document.getElementById('visualizer'); el !== document.body; el = el.parentElement) {
+    for (let el = viz; el !== document.body; el = el.parentElement) {
       for (const sib of el.parentElement.children) {
         if (sib === el || sib.inert || /^(SCRIPT|STYLE|TEMPLATE)$/.test(sib.tagName)) continue;
         sib.inert = true;
@@ -2616,10 +2655,12 @@ function setFullscreen(on) {
     fsInerted = [];
   }
   btnFullscreen.setAttribute('aria-label', on ? 'Exit fullscreen mode' : 'Enter fullscreen mode');
-  // SC 2.4.3: on exit, focus goes back to the toggle. After a mouse click the button
-  // already has it, but Safari does not focus a button on click and Escape can start
-  // from any control inside the viewer. A no-op if the button is not rendered.
-  if (!on) btnFullscreen.focus({ preventScroll: true });
+  // SC 2.4.3, like the modal-dialog pattern: focus moves in when the mode opens if it
+  // was left on something now inert, and returns to the toggle when it is dismissed.
+  // After a mouse click the button already has focus, but Safari does not focus a
+  // button on click and Escape can start from any control inside the viewer. A no-op
+  // if the button is not rendered.
+  if (focusOutside || (!on && !auto)) btnFullscreen.focus({ preventScroll: true });
   requestAnimationFrame(updateBBConstraint);
   requestAnimationFrame(() => { if (window.updateBBArrows) window.updateBBArrows(); });
 }
@@ -2628,11 +2669,24 @@ btnFullscreen.addEventListener('click', () => {
   setFullscreen(!document.body.classList.contains('in-fullscreen'));
 });
 
-// The button only exists below 960px. If the viewport grows past that while
-// fullscreen is on (a tablet turned to landscape), the only visible exit would vanish
-// and the page would stay covered, so leave fullscreen with it.
-window.matchMedia('(min-width: 960px)').addEventListener('change', e => {
-  if (e.matches && document.body.classList.contains('in-fullscreen')) setFullscreen(false);
+// Turning the phone to landscape enters fullscreen, turning it back leaves it. Only on
+// the turn itself: entering at page load would cover the page before anyone reached the
+// viewer, so it also needs the viewer to have been on screen. Leaving by the button or
+// Escape sticks until the next turn.
+fsLandscape.addEventListener('change', e => {
+  const on = document.body.classList.contains('in-fullscreen');
+  if (e.matches) {
+    if (!on && !fsUnavailable.matches && viewerOnScreen) setFullscreen(true, true);
+  } else if (on && fsAuto) {
+    setFullscreen(false, true);
+  }
+});
+
+// Where fullscreen is not offered the button is gone, and so is the only visible exit.
+// Leave with it instead of leaving the page covered (a tablet turned past 960px wide,
+// or a window resized below the 500px row).
+fsUnavailable.addEventListener('change', e => {
+  if (e.matches && document.body.classList.contains('in-fullscreen')) setFullscreen(false, true);
 });
 
 window.addEventListener('resize', () => { if (interiorMode) pano.draw(); updateBBConstraint(); pinSelectModel(); });
