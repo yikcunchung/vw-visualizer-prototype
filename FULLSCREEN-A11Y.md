@@ -6,8 +6,10 @@ for that criterion (fetched 2026-10-14, `https://www.w3.org/WAI/WCAG22/Understan
 **Verified against:** `index.html`, by `tests/fullscreen.spec.js` (real key events, axe with the WCAG 2.0–2.2
 A/AA tags, simulated rotation) and by geometry measurements at the viewports listed below.
 
-This is the fullscreen delta to `A11Y-REFERENCE.md`, which was written for normal view and covers
-fullscreen only under SC 1.3.4 ("Not assessed"). Where the two disagree, this file is newer.
+This is the fullscreen delta to the main documents, which were written for normal view:
+[`a11y-1-criteria.md`](a11y-1-criteria.md) (all 56 criteria), [`a11y-3-implementation.md`](a11y-3-implementation.md)
+(what to build) and [`a11y-2-automated-testing.md`](a11y-2-automated-testing.md) (what the tools prove). Where they
+disagree about fullscreen, this file is newer (their orientation statements were updated to match).
 
 **Bottom line:** every row below passes in the cases tested. That is not a blanket compliance claim: see
 *Not verified* at the end (no screen-reader pass, simulated rather than physical rotation).
@@ -104,7 +106,7 @@ reports none. It is a timing artefact of `settle()`, not a fullscreen finding.
 
 ## Not verified
 
-- **No screen-reader pass** (VoiceOver, TalkBack, NVDA) on fullscreen. `A11Y-REFERENCE.md` lists this as the standing method gap.
+- **No screen-reader pass** (VoiceOver, TalkBack, NVDA) on fullscreen. `a11y-2-automated-testing.md` lists this as what automation cannot close.
 - **Rotation is simulated** with a viewport resize, which fires the same media-query change events. A physical turn on iOS Safari and Android Chrome has not been tried.
 - **Interior mode** is covered for the tab sweep, axe and the drag mapping, not for panorama zoom or the auto-rotation pause in fullscreen.
 - **Ring contrast on the bar is calculated** (about 3.6:1), not pixel-measured.
