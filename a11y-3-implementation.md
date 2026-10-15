@@ -218,6 +218,8 @@ onKeyDown={e => {
 
 Bind `stopAutoRotate()` to arrow keys and any rotate/tilt control; keyboard users must be able to stop motion that was started on their behalf.
 
+Bind the pointer side to `pointerdown`, not `mousedown`: a touch drag fires no mouse events, so a `mousedown` binding left the interior turning under the finger (fixed 2026-10-15; a tap worked only because browsers add a mouse event after it).
+
 ### SC 4.1.2 — Expand control exists only when there is something to expand
 
 Wheel label is a button **only while text is actually truncated**. Derive role, `tabIndex` and `aria-expanded` from measured overflow.
