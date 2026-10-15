@@ -57,6 +57,19 @@ async function settle(page) {
       || hint.getBoundingClientRect().height === 0;
   }, null, { timeout: 15_000 });
 
+  // The bottom bar and its controls fade in on entry (slideUpFade, dissolveFade,
+  // swatchFadeIn). Axe sampled mid-fade reads half-transparent text as a 1.05-1.12
+  // contrast ratio — a hard violation with nothing actually broken. Wait for every
+  // finite animation under the component to end; infinite ones (loops) are skipped
+  // or this would never resolve.
+  await page.waitForFunction(() => {
+    const root = document.getElementById('visualizer');
+    return root.getAnimations({ subtree: true }).every((a) => {
+      const t = a.effect && a.effect.getComputedTiming();
+      return !t || t.iterations === Infinity || a.playState === 'finished';
+    });
+  }, null, { timeout: 15_000 });
+
   return page.locator('#visualizer');
 }
 
