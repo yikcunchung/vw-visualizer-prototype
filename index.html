@@ -648,6 +648,16 @@ body.in-fullscreen .bb-section { flex: none; }
 body.in-fullscreen #select-model { align-self: center; }
 body.in-fullscreen #bottombar .swatch-fade { background: none; }
 body.in-fullscreen #img-car { will-change: transform; }
+/* The viewer is flush with the screen and #visualizer clips (overflow: hidden), so the
+   3px ring drawn outside the box showed on one side only. An inset outline is hidden
+   under the picture, so draw the ring as a layer on top instead. Outside fullscreen the
+   ring sits on the page colour (3.4:1, SC 1.4.11); over a photo it fell below 3:1, so it
+   gets a strip of the page colour on its inner side. */
+body.in-fullscreen #media:focus-visible { outline: none; }
+body.in-fullscreen #media:not(.ptr-focus):focus-visible::after {
+  content: ''; position: absolute; inset: 0; z-index: 10;
+  border: 3px solid #C86C03; box-shadow: inset 0 0 0 3px #f6f5f2; pointer-events: none;
+}
 
 /* Rotate overlay */
 #hint-rotate {
@@ -2314,7 +2324,13 @@ function updateBBConstraint() {
     if (h) h.style.display = 'none';
   });
   const swatchWidths = allSects.map(s => s.scrollWidth);
-  const panelNat    = panel.scrollWidth;
+  // Natural width with padding on both sides. panel.scrollWidth drops the trailing padding
+  // once the content overflows, so the model select ran over the bar's right padding
+  // (16px in fullscreen, 12px at desktop widths).
+  const prevWidth = panel.style.width, prevMax = panel.style.maxWidth;
+  panel.style.width = 'max-content'; panel.style.maxWidth = 'none';
+  const panelNat    = panel.offsetWidth;
+  panel.style.width = prevWidth; panel.style.maxWidth = prevMax;
   const totalSwatch = swatchWidths.reduce((a, b) => a + b, 0);
   const overhead    = panelNat - totalSwatch;
   allSects.forEach(s => {
@@ -2552,7 +2568,9 @@ function startAutoRotate() {
 function stopAutoRotate() {
   if (autoRotRaf) { cancelAnimationFrame(autoRotRaf); autoRotRaf = null; }
 }
-media.addEventListener('mousedown', stopAutoRotate);
+// pointerdown, not mousedown: a touch drag fires no mouse events, so the interior kept
+// turning under the finger.
+media.addEventListener('pointerdown', stopAutoRotate);
 
 const btnToggleView = document.getElementById('btn-toggle-view');
 

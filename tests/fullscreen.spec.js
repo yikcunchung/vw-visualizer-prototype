@@ -318,3 +318,156 @@ test.describe('fullscreen — interior view (SC 2.4.7, 2.4.11, 2.5.1, 2.5.7)', (
     expect(turned.url, 'a drag down the turned screen is a drag right across the panorama').toBe(landscape.url);
   });
 });
+
+// What works outside fullscreen must work the same inside it. Checked by hand against the
+// default view on 2026-10-15 (zoom, auto-rotation stops, ring); these keep it that way.
+test.describe('fullscreen — zoom, auto-rotation and focus ring behave as outside (SC 2.2.2, 2.4.7, 1.4.11)', () => {
+  const scaleOf = (page, sel) => page.evaluate((s) =>
+    +new DOMMatrix(getComputedStyle(document.querySelector(s)).transform).a.toFixed(2), sel);
+  const openControls = async (page) => {
+    await page.evaluate(() => document.getElementById('btn-a11y').click());
+    await page.waitForFunction(() => document.getElementById('btn-a11y-group').classList.contains('visible'));
+    await page.waitForTimeout(500);   // the buttons pop in; clicking mid-pop is a retry loop
+  };
+  const mediaCentre = async (page) => {
+    const b = await page.locator('#media').boundingBox();
+    return [b.x + b.width / 2, b.y + b.height / 2];
+  };
+
+  test('zoom: a click, Enter/Space and the buttons zoom in and back out, picture scaled 1.4', async ({ page }) => {
+    await enterFullscreen(page);
+    const [cx, cy] = await mediaCentre(page);
+    const zoomed = async (want) => {
+      await page.waitForFunction((w) => isZoomed === w, want);
+      // unzoomed is 1, or 1.03 while the pointer rests on the viewer (the hover nudge)
+      if (want) await expect.poll(() => scaleOf(page, '#img-car')).toBe(1.4);
+      else await expect.poll(() => scaleOf(page, '#img-car')).toBeLessThan(1.1);
+    };
+
+    await page.mouse.click(cx, cy);        await zoomed(true);
+    await page.mouse.click(cx, cy);        await zoomed(false);
+
+    await page.evaluate(() => document.getElementById('media').focus({ preventScroll: true }));
+    await page.keyboard.press('Enter');    await zoomed(true);
+    await page.keyboard.press('Space');    await zoomed(false);
+
+    await openControls(page);
+    await page.locator('#btn-zoom-in').click();   await zoomed(true);
+    await page.locator('#btn-zoom-out').click();  await zoomed(false);
+  });
+
+  test('auto-rotation: the interior turns by itself and a click, an arrow key or a button stops it', async ({ page }) => {
+    await enterFullscreen(page);
+    await page.evaluate(() => { document.getElementById('btn-toggle-view').click(); closeDisclaimer(); });
+    await page.waitForFunction(() => interiorMode === true);
+    expect(await page.evaluate(() => autoRotRaf !== null), 'auto-rotation starts with the interior').toBe(true);
+    await openControls(page);
+
+    const [cx, cy] = await mediaCentre(page);
+    const stoppedBy = async (what, act) => {
+      await page.evaluate(() => startAutoRotate());
+      await act();
+      await page.waitForFunction(() => autoRotRaf === null, null, { timeout: 2000 })
+        .catch(() => { throw new Error(`${what} did not stop the auto-rotation`); });
+    };
+    await stoppedBy('a click on the viewer', () => page.mouse.click(cx, cy));
+    await page.evaluate(() => { if (isZoomed) document.getElementById('btn-zoom-out').click(); });
+    await stoppedBy('an arrow key', async () => {
+      await page.evaluate(() => document.getElementById('media').focus({ preventScroll: true }));
+      await page.keyboard.press('ArrowRight');
+    });
+    await stoppedBy('the rotate button', () => page.locator('#btn-rot-left').click());
+    await stoppedBy('the tilt button', () => page.locator('#btn-tilt-up').click());
+  });
+
+  test('auto-rotation: a touch drag on the interior stops it, in normal view and in fullscreen', async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-390', 'needs a touch device; one project is enough');
+    for (const fullscreen of [false, true]) {
+      const ctx = await browser.newContext({
+        viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, baseURL: testInfo.project.use.baseURL });
+      const page = await ctx.newPage();
+      if (fullscreen) await enterFullscreen(page);
+      else { await settle(page); await page.evaluate(() => closeDisclaimer()); }
+      await page.evaluate(() => { document.getElementById('btn-toggle-view').click(); closeDisclaimer(); });
+      await page.waitForFunction(() => interiorMode === true);
+      if (!fullscreen) await page.evaluate(() => document.getElementById('media').scrollIntoView({ block: 'center' }));
+      expect(await page.evaluate(() => autoRotRaf !== null), 'auto-rotation starts with the interior').toBe(true);
+
+      const b = await page.locator('#media').boundingBox();
+      const x = Math.min(Math.max(b.x + b.width / 2, 1), 389), y = Math.min(Math.max(b.y + b.height / 2, 1), 843);
+      const cdp = await ctx.newCDPSession(page);
+      const at = (px, py) => [{ x: px, y: py }];
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: at(x, y) });
+      for (let i = 1; i <= 6; i++) {
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: at(x, y + i * 15) });
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await page.waitForFunction(() => autoRotRaf === null, null, { timeout: 2000 })
+        .catch(() => { throw new Error(`a touch drag did not stop the auto-rotation (${fullscreen ? 'fullscreen' : 'normal view'})`); });
+      await ctx.close();
+    }
+  });
+
+  test('focus ring: a 3px orange ring on all four sides of the viewer, backed by the page colour', async ({ page }) => {
+    await enterFullscreen(page);
+    const ring = () => page.evaluate(() => {
+      const m = document.getElementById('media'), s = getComputedStyle(m, '::after');
+      return {
+        shown: s.content !== 'none',
+        widths: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth],
+        colour: s.borderTopColor, backing: s.boxShadow,
+        fills: s.position === 'absolute' && [s.top, s.right, s.bottom, s.left].every((v) => v === '0px'),
+      };
+    });
+    await page.keyboard.press('Shift');   // a key press first, so the focus counts as keyboard focus
+    await page.evaluate(() => document.getElementById('media').focus({ preventScroll: true }));
+    const r = await ring();
+    expect(r.shown, 'keyboard focus draws the ring').toBe(true);
+    expect(r.widths, 'on all four sides, not only the side that is not clipped').toEqual(['3px', '3px', '3px', '3px']);
+    expect(r.colour).toBe('rgb(200, 108, 3)');
+    expect(r.fills, 'the ring covers the whole viewer').toBe(true);
+    expect(r.backing, 'page-colour strip inside it: 3.4:1 as outside, not left to the photo behind').toContain('rgb(246, 245, 242)');
+
+    await page.evaluate(() => document.getElementById('media').classList.add('ptr-focus'));
+    expect((await ring()).shown, 'pointer focus paints no ring, as outside').toBe(false);
+  });
+});
+
+// The bar's width calculation left out the trailing padding, so the model select (and the
+// info button) ran 16px into the bar's right padding in fullscreen, 12px at 960-1280 wide.
+test.describe('bottom bar — the model select stays inside the bar padding', () => {
+  const overflowOf = (page) => page.evaluate(() => {
+    const bar = document.getElementById('bottombar'), sm = document.getElementById('select-model');
+    const padR = parseFloat(getComputedStyle(bar).paddingRight);
+    const turned = getComputedStyle(document.getElementById('visualizer')).transform !== 'none';
+    if (turned) return (sm.offsetLeft + sm.offsetWidth) - (bar.offsetLeft + bar.offsetWidth - padR);
+    const b = bar.getBoundingClientRect(), s = sm.getBoundingClientRect();
+    return s.right - (b.right - padR);
+  });
+
+  for (const [w, h] of [[844, 390], [640, 320], [568, 320], [500, 300], [390, 844]]) {
+    for (const interior of [false, true]) {
+      test(`fullscreen ${w}x${h}, ${interior ? 'interior' : 'exterior'}`, async ({ page }, testInfo) => {
+        test.skip(testInfo.project.name !== 'mobile-390', 'one project is enough for explicit viewports');
+        await page.setViewportSize({ width: w, height: h });
+        await enterFullscreen(page);
+        if (interior) {
+          await page.evaluate(() => { document.getElementById('btn-toggle-view').click(); closeDisclaimer(); stopAutoRotate(); });
+          await page.waitForFunction(() => interiorMode === true);
+        }
+        await page.waitForTimeout(600);   // the bar re-measures after the layout settles
+        expect(await overflowOf(page), 'select-model must end inside the bar padding').toBeLessThanOrEqual(0.5);
+      });
+    }
+  }
+
+  for (const width of [960, 1024, 1280]) {
+    test(`desktop ${width} wide, exterior`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== 'desktop-1440', 'desktop widths are set here, one project is enough');
+      await page.setViewportSize({ width, height: 800 });
+      await settle(page);
+      await page.waitForTimeout(600);
+      expect(await overflowOf(page), 'select-model must end inside the bar padding').toBeLessThanOrEqual(0.5);
+    });
+  }
+});
